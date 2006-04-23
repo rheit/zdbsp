@@ -575,9 +575,16 @@ void FProcessor::Write (FWadWriter &out)
 
 	if (ShowMap)
 	{
-		ShowView (&Level);
+		if(BuildNodes||BuildGLNodes)
+		{
+			ShowView (&Level);
+		}
+		else
+		{
+			puts("  ERROR: You can't view the nodes (-v) if you don't build them! (-N).");
+		}
 	}
-
+	
 	if (Level.GLNodes != NULL )
 	{
 		compressGL = CompressGLNodes ||
