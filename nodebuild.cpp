@@ -952,9 +952,10 @@ DWORD FNodeBuilder::SplitSeg (DWORD segnum, int splitvert, int v1InFront)
 	newseg = Segs[segnum];
 	dx = double(Vertices[splitvert].x - Vertices[newseg.v1].x);
 	dy = double(Vertices[splitvert].y - Vertices[newseg.v1].y);
-	newseg.offset += fixed_t (sqrt (dx*dx + dy*dy));
 	if (v1InFront > 0)
 	{
+		newseg.offset += fixed_t (sqrt (dx*dx + dy*dy));
+
 		newseg.v1 = splitvert;
 		Segs[segnum].v2 = splitvert;
 
@@ -971,6 +972,8 @@ DWORD FNodeBuilder::SplitSeg (DWORD segnum, int splitvert, int v1InFront)
 	}
 	else
 	{
+		Segs[segnum].offset += fixed_t (sqrt (dx*dx + dy*dy));
+
 		Segs[segnum].v1 = splitvert;
 		newseg.v2 = splitvert;
 
