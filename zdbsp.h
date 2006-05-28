@@ -8,7 +8,7 @@
 #include <limits.h>
 #include <exception>
 
-#define ZDBSP_VERSION	"1.5"
+#define ZDBSP_VERSION	"1.6"
 
 enum EBlockmapMode
 {
