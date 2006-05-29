@@ -27,7 +27,7 @@ struct MapSideDef
 	char	toptexture[8];
 	char	bottomtexture[8];
 	char	midtexture[8];
-	short	sector;
+	WORD	sector;
 };
 
 struct MapLineDef

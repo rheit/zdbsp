@@ -3,7 +3,7 @@
 ** Templated, automatically resizing array
 **
 **---------------------------------------------------------------------------
-** Copyright 1998-2001 Randy Heit
+** Copyright 1998-2005 Randy Heit
 ** All rights reserved.
 **
 ** Redistribution and use in source and binary forms, with or without
@@ -36,11 +36,28 @@
 #define __TARRAY_H__
 
 #include <stdlib.h>
+#include <assert.h>
+#include <malloc.h>
+#include <new>
 
 template <class T>
 class TArray
 {
 public:
+	////////
+	// This is a dummy constructor that does nothing. The purpose of this
+	// is so you can create a global TArray in the data segment that gets
+	// used by code before startup without worrying about the constructor
+	// resetting it after it's already been used. You MUST NOT use it for
+	// heap- or stack-allocated TArrays.
+	enum ENoInit
+	{
+		NoInit
+	};
+	TArray (ENoInit dummy)
+	{
+	}
+	////////
 	TArray ()
 	{
 		Most = 0;
@@ -51,7 +68,11 @@ public:
 	{
 		Most = max;
 		Count = 0;
-		Array = new T[max];
+		Array = (T *)malloc (sizeof(T)*max);
+		if (Array == NULL)
+		{
+			throw std::bad_alloc();
+		}
 	}
 	TArray (const TArray<T> &other)
 	{
@@ -63,7 +84,11 @@ public:
 		{
 			if (Array != NULL)
 			{
-				delete[] Array;
+				if (Count > 0)
+				{
+					DoDelete (0, Count-1);
+				}
+				free (Array);
 			}
 			DoCopy (other);
 		}
@@ -72,20 +97,25 @@ public:
 	~TArray ()
 	{
 		if (Array)
+		{
+			if (Count > 0)
+			{
+				DoDelete (0, Count-1);
+			}
 			free (Array);
+			Array = NULL;
+			Count = 0;
+			Most = 0;
+		}
 	}
-	T &operator[] (size_t index) const
+	T &operator[] (unsigned int index) const
 	{
 		return Array[index];
 	}
-	size_t Push (const T &item)
+	unsigned int Push (const T &item)
 	{
-		if (Count >= Most)
-		{
-			Most = (Most >= 16) ? Most + Most / 2 : 16;
-			Realloc (Count, Most);
-		}
-		Array[Count] = item;
+		Grow (1);
+		::new((void*)&Array[Count]) T(item);
 		return Count++;
 	}
 	bool Pop (T &item)
@@ -93,26 +123,42 @@ public:
 		if (Count > 0)
 		{
 			item = Array[--Count];
+			Array[Count].~T();
 			return true;
 		}
 		return false;
 	}
-	void Delete (int index)
+	void Delete (unsigned int index)
 	{
-		if (index < Count-1)
-			memmove (Array + index, Array + index + 1, (Count - index) * sizeof(T));
-		else if (index < Count)
-			Count--;
-	}
-	void Realloc (size_t count, size_t most)
-	{
-		T *copy = new T[most];
-		for (size_t i = 0; i < count; ++i)
+		if (index < Count)
 		{
-			copy[i] = Array[i];
+			Array[index].~T();
+			memmove (&Array[index], &Array[index+1], sizeof(T)*(Count - index - 1));
+			Count--;
 		}
-		delete[] Array;
-		Array = copy;
+	}
+	// Inserts an item into the array, shifting elements as needed
+	void Insert (unsigned int index, const T &item)
+	{
+		if (index >= Count)
+		{
+			// Inserting somewhere past the end of the array, so we can
+			// just add it without moving things.
+			Resize (index + 1);
+			::new ((void *)&Array[index]) T(item);
+		}
+		else
+		{
+			// Inserting somewhere in the middle of the array,
+			// so make room for it
+			Resize (Count + 1);
+
+			// Now move items from the index and onward out of the way
+			memmove (&Array[index+1], &Array[index], sizeof(T)*(Count - index - 1));
+
+			// And put the new element in
+			::new ((void *)&Array[index]) T(item);
+		}
 	}
 	void ShrinkToFit ()
 	{
@@ -129,70 +175,82 @@ public:
 			}
 			else
 			{
-				Realloc (Count, Most);
+				DoResize ();
 			}
 		}
 	}
 	// Grow Array to be large enough to hold amount more entries without
 	// further growing.
-	void Grow (size_t amount)
+	void Grow (unsigned int amount)
 	{
 		if (Count + amount > Most)
 		{
-			const size_t choicea = Count + amount;
-			const size_t choiceb = Most + Most/2;
+			const unsigned int choicea = Count + amount;
+			const unsigned int choiceb = Most = (Most >= 16) ? Most + Most / 2 : 16;
 			Most = (choicea > choiceb ? choicea : choiceb);
-			Realloc (Count, Most);
+			DoResize ();
 		}
 	}
 	// Resize Array so that it has exactly amount entries in use.
-	void Resize (size_t amount)
+	void Resize (unsigned int amount)
 	{
 		if (Count < amount)
 		{
+			// Adding new entries
 			Grow (amount - Count);
+			for (unsigned int i = Count; i < amount; ++i)
+			{
+				::new((void *)&Array[i]) T;
+			}
 		}
-		else if (Count > amount)
+		else if (Count != amount)
 		{
-			Count = amount;
+			// Deleting old entries
+			DoDelete (amount, Count - 1);
 		}
+		Count = amount;
 	}
 	// Reserves amount entries at the end of the array, but does nothing
 	// with them.
-	size_t Reserve (size_t amount)
+	unsigned int Reserve (unsigned int amount)
 	{
-		if (Count + amount > Most)
-		{
-			Grow (amount);
-		}
-		size_t place = Count;
+		Grow (amount);
+		unsigned int place = Count;
 		Count += amount;
 		return place;
 	}
-	size_t Size () const
+	unsigned int Size () const
 	{
 		return Count;
 	}
-	size_t Max () const
+	unsigned int Max () const
 	{
 		return Most;
 	}
 	void Clear ()
 	{
-		Count = 0;
+		if (Count > 0)
+		{
+			DoDelete (0, Count-1);
+			Count = 0;
+		}
 	}
 private:
 	T *Array;
-	size_t Most;
-	size_t Count;
+	unsigned int Most;
+	unsigned int Count;
 
 	void DoCopy (const TArray<T> &other)
 	{
 		Most = Count = other.Count;
 		if (Count != 0)
 		{
-			Array = new T[Most];
-			for (size_t i = 0; i < Count; ++i)
+			Array = (T *)malloc (sizeof(T)*Most);
+			if (Array == NULL)
+			{
+				throw std::bad_alloc();
+			}
+			for (unsigned int i = 0; i < Count; ++i)
 			{
 				Array[i] = other.Array[i];
 			}
@@ -201,6 +259,51 @@ private:
 		{
 			Array = NULL;
 		}
+	}
+
+	void DoResize ()
+	{
+		size_t allocsize = sizeof(T)*Most;
+		Array = (T *)realloc (Array, allocsize);
+		if (Array == NULL)
+		{
+			throw std::bad_alloc();
+		}
+	}
+
+	void DoDelete (unsigned int first, unsigned int last)
+	{
+		assert (last != ~0u);
+		for (unsigned int i = first; i <= last; ++i)
+		{
+			Array[i].~T();
+		}
+	}
+};
+
+// An array with accessors that automatically grow the
+// array as needed. But can still be used as a normal
+// TArray if needed. Used by ACS world and global arrays.
+
+template <class T>
+class TAutoGrowArray : public TArray<T>
+{
+public:
+	T GetVal (unsigned int index)
+	{
+		if (index >= this->Size())
+		{
+			return 0;
+		}
+		return (*this)[index];
+	}
+	void SetVal (unsigned int index, T val)
+	{
+		if (index >= this->Size())
+		{
+			this->Resize (index + 1);
+		}
+		(*this)[index] = val;
 	}
 };
 

@@ -117,7 +117,7 @@ DWORD FNodeBuilder::CreateSubsector (DWORD set, fixed_t bbox[4])
 
 	assert (set != DWORD_MAX);
 
-#if defined(_DEBUG) || 1
+#if defined(_DEBUG)// || 1
 	// Check for segs with duplicate start/end vertices
 	DWORD s1, s2;
 
@@ -192,8 +192,14 @@ void FNodeBuilder::CreateSubsectorsForReal ()
 		qsort (&SegList[sub.firstline], sub.numlines, sizeof(int), SortSegs);
 
 		// Convert seg pointers into indices
+		D(printf ("Output subsector %d:\n", Subsectors.Size()));
 		for (size_t i = sub.firstline; i < SegList.Size(); ++i)
 		{
+			D(printf ("  Seg %5d (%5d,%5d)-(%5d,%5d)\n", SegList[i].SegPtr - &Segs[0],
+				Vertices[SegList[i].SegPtr->v1].x>>16,
+				Vertices[SegList[i].SegPtr->v1].y>>16,
+				Vertices[SegList[i].SegPtr->v2].x>>16,
+				Vertices[SegList[i].SegPtr->v2].y>>16));
 			SegList[i].SegNum = SegList[i].SegPtr - &Segs[0];
 		}
 		Subsectors.Push (sub);

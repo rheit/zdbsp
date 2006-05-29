@@ -92,7 +92,7 @@
 				AdditionalIncludeDirectories="zlib"
 				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="5"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Debug/zdbsp.pch"
 				AssemblerListingLocation=".\Debug/"

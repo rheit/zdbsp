@@ -19,10 +19,17 @@
 */
 #include <string.h>
 #include <stdio.h>
+#include <float.h>
 
 #include "zdbsp.h"
 #include "nodebuild.h"
 #include "templates.h"
+
+#if 0
+#define D(x) x
+#else
+#define D(x) do{}while(0)
+#endif
 
 void FNodeBuilder::GetGLNodes (MapNodeEx *&outNodes, int &nodeCount,
 	MapSegGLEx *&outSegs, int &segCount,
@@ -82,18 +89,31 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 	double accumx, accumy;
 	fixed_t midx, midy;
 	int i, j, first, max, count, firstVert;
+	bool diffplanes;
+	int firstplane;
 
 	first = Subsectors[subsector].firstline;
 	max = first + Subsectors[subsector].numlines;
 	count = 0;
 
 	accumx = accumy = 0.0;
+	diffplanes = false;
+	firstplane = Segs[SegList[first].SegNum].planenum;
 
+	// Calculate the midpoint of the subsector and also check for degenerate subsectors.
+	// A subsector is degenerate if it exists in only one dimension, which can be
+	// detected when all the segs lie in the same plane. This can happen if you have
+	// outward-facing lines in the void that don't point toward any sector. (Some of the
+	// polyobjects in Hexen are constructed like this.)
 	for (i = first; i < max; ++i)
 	{
 		seg = &Segs[SegList[i].SegNum];
 		accumx += double(Vertices[seg->v1].x) + double(Vertices[seg->v2].x);
 		accumy += double(Vertices[seg->v1].y) + double(Vertices[seg->v2].y);
+		if (firstplane != seg->planenum)
+		{
+			diffplanes = true;
+		}
 	}
 
 	midx = fixed_t(accumx / (max - first) / 2);
@@ -112,69 +132,228 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 	{
 		seg = &Segs[SegList[j].SegNum];
 		angle_t ang = PointToAngle (Vertices[seg->v1].x - midx, Vertices[seg->v1].y - midy);
-		printf ("%d: %5d(%5d,%5d)->%5d(%5d,%5d) - %3.3f\n", j,
+		printf ("%d: %5d(%5d,%5d)->%5d(%5d,%5d) - %3.3f  %d,%d\n", j,
 			seg->v1, Vertices[seg->v1].x>>16, Vertices[seg->v1].y>>16,
 			seg->v2, Vertices[seg->v2].x>>16, Vertices[seg->v2].y>>16,
-			double(ang/2)*180/(1<<30));
+			double(ang/2)*180/(1<<30),
+			seg->planenum, seg->planefront);
 	}
 #endif
 
-	for (i = first + 1; i < max; ++i)
-	{
-		angle_t bestdiff = ANGLE_MAX;
-		FPrivSeg *bestseg = NULL;
-		int bestj = -1;
-		for (j = first; j < max; ++j)
+	if (diffplanes)
+	{ // A well-behaved subsector. Output the segs sorted by the angle formed by connecting
+	  // the subsector's center to their first vertex.
+
+		D(printf("Well behaved subsector\n"));
+		for (i = first + 1; i < max; ++i)
 		{
-			seg = &Segs[SegList[j].SegNum];
-			angle_t ang = PointToAngle (Vertices[seg->v1].x - midx, Vertices[seg->v1].y - midy);
-			angle_t diff = prevAngle - ang;
-			if (seg->v1 == prev->v2)
+			angle_t bestdiff = ANGLE_MAX;
+			FPrivSeg *bestseg = NULL;
+			int bestj = -1;
+			for (j = first; j < max; ++j)
 			{
-				bestdiff = diff;
-				bestseg = seg;
-				bestj = j;
+				seg = &Segs[SegList[j].SegNum];
+				angle_t ang = PointToAngle (Vertices[seg->v1].x - midx, Vertices[seg->v1].y - midy);
+				angle_t diff = prevAngle - ang;
+				if (seg->v1 == prev->v2)
+				{
+					bestdiff = diff;
+					bestseg = seg;
+					bestj = j;
+					break;
+				}
+				if (diff < bestdiff && diff > 0)
+				{
+					bestdiff = diff;
+					bestseg = seg;
+					bestj = j;
+				}
+			}
+			if (bestseg != NULL)
+			{
+				seg = bestseg;
+			}
+			if (prev->v2 != seg->v1)
+			{
+				// Add a new miniseg to connect the two segs
+				PushConnectingGLSeg (subsector, segs, prev->v2, seg->v1);
+				count++;
+			}
+#if 0
+			printf ("+%d\n", bestj);
+#endif
+			prevAngle -= bestdiff;
+			seg->storedseg = PushGLSeg (segs, seg);
+			count++;
+			prev = seg;
+			if (seg->v2 == firstVert)
+			{
+				prev = seg;
 				break;
 			}
-			if (diff < bestdiff && diff > 0)
+		}
+#if 0
+		printf ("\n");
+#endif
+	}
+	else
+	{ // A degenerate subsector. These are handled in three stages:
+	  // Stage 1. Proceed in the same direction as the start seg until we
+	  //          hit the seg furthest from it.
+	  // Stage 2. Reverse direction and proceed until we hit the seg
+	  //          furthest from the start seg.
+	  // Stage 3. Reverse direction again and insert segs until we get
+	  //          to the start seg.
+	  // A dot product serves to determine distance from the start seg.
+
+		D(printf("degenerate subsector\n"));
+		seg = &Segs[SegList[first].SegNum];
+		double x1 = Vertices[seg->v1].x;
+		double y1 = Vertices[seg->v1].y;
+		double dx = Vertices[seg->v2].x - x1, dx2;
+		double dy = Vertices[seg->v2].y - y1, dy2;
+		double lastdot = 0, dot;
+		bool firstside = seg->planefront;
+
+#if 0
+		for (j = first + 1; j < max; ++j)
+		{
+			seg = &Segs[SegList[j].SegNum];
+			dx2 = Vertices[seg->v1].x - x1;
+			dy2 = Vertices[seg->v1].y - y1;
+			dot = dx*dx2 + dy*dy2;
+
+			printf ("Seg %d: dot %g\n", j, dot);
+		}
+#endif
+		// Stage 1. Go forward.
+		for (i = first + 1; i < max; ++i)
+		{
+			double bestdot = DBL_MAX;
+			FPrivSeg *bestseg = NULL;
+			for (j = first + 1; j < max; ++j)
 			{
-				bestdiff = diff;
-				bestseg = seg;
-				bestj = j;
+				seg = &Segs[SegList[j].SegNum];
+				if (seg->planefront != firstside)
+				{
+					continue;
+				}
+				dx2 = Vertices[seg->v1].x - x1;
+				dy2 = Vertices[seg->v1].y - y1;
+				dot = dx*dx2 + dy*dy2;
+
+				if (dot < bestdot && dot > lastdot)
+				{
+					bestdot = dot;
+					bestseg = seg;
+				}
+			}
+			if (bestseg != NULL)
+			{
+				if (prev->v2 != bestseg->v1)
+				{
+					PushConnectingGLSeg (subsector, segs, prev->v2, bestseg->v1);
+					count++;
+				}
+				seg->storedseg = PushGLSeg (segs, bestseg);
+				count++;
+				prev = bestseg;
+				lastdot = bestdot;
 			}
 		}
-		if (bestseg != NULL)
+
+		// Stage 2. Go backward.
+		lastdot = DBL_MAX;
+		for (i = first + 1; i < max; ++i)
 		{
-			seg = bestseg;
+			double bestdot = -DBL_MAX;
+			FPrivSeg *bestseg = NULL;
+			for (j = first + 1; j < max; ++j)
+			{
+				seg = &Segs[SegList[j].SegNum];
+				if (seg->planefront == firstside)
+				{
+					continue;
+				}
+				dx2 = Vertices[seg->v1].x - x1;
+				dy2 = Vertices[seg->v1].y - y1;
+				dot = dx*dx2 + dy*dy2;
+
+				if (dot > bestdot && dot < lastdot)
+				{
+					bestdot = dot;
+					bestseg = seg;
+				}
+			}
+			if (bestseg != NULL)
+			{
+				if (prev->v2 != bestseg->v1)
+				{
+					PushConnectingGLSeg (subsector, segs, prev->v2, bestseg->v1);
+					count++;
+				}
+				seg->storedseg = PushGLSeg (segs, bestseg);
+				count++;
+				prev = bestseg;
+				lastdot = bestdot;
+			}
 		}
-		if (prev->v2 != seg->v1)
+
+		// Stage 3. Go forward again.
+		lastdot = -DBL_MAX;
+		for (i = first + 1; i < max; ++i)
 		{
-			// Add a new miniseg to connect the two segs
-			PushConnectingGLSeg (subsector, segs, prev->v2, seg->v1);
-			count++;
-		}
-#if 0
-		printf ("+%d\n", bestj);
-#endif
-		prevAngle -= bestdiff;
-		seg->storedseg = PushGLSeg (segs, seg);
-		count++;
-		prev = seg;
-		if (seg->v2 == firstVert)
-		{
-			prev = seg;
-			break;
+			double bestdot = 0;
+			FPrivSeg *bestseg = NULL;
+			for (j = first + 1; j < max; ++j)
+			{
+				seg = &Segs[SegList[j].SegNum];
+				if (seg->planefront != firstside)
+				{
+					continue;
+				}
+				dx2 = Vertices[seg->v1].x - x1;
+				dy2 = Vertices[seg->v1].y - y1;
+				dot = dx*dx2 + dy*dy2;
+
+				if (dot < bestdot && dot > lastdot)
+				{
+					bestdot = dot;
+					bestseg = seg;
+				}
+			}
+			if (bestseg != NULL)
+			{
+				if (prev->v2 != bestseg->v1)
+				{
+					PushConnectingGLSeg (subsector, segs, prev->v2, bestseg->v1);
+					count++;
+				}
+				seg->storedseg = PushGLSeg (segs, bestseg);
+				count++;
+				prev = bestseg;
+				lastdot = bestdot;
+			}
 		}
 	}
-#if 0
-	printf ("\n");
-#endif
 
 	if (prev->v2 != firstVert)
 	{
 		PushConnectingGLSeg (subsector, segs, prev->v2, firstVert);
 		count++;
 	}
+#if 0
+	printf ("Output GL subsector %d:\n", subsector);
+	for (i = segs.Size() - count; i < (int)segs.Size(); ++i)
+	{
+		printf ("  Seg %5d%c(%5d,%5d)-(%5d,%5d)\n", i,
+			segs[i].linedef == NO_INDEX ? '+' : ' ',
+			Vertices[segs[i].v1].x>>16,
+			Vertices[segs[i].v1].y>>16,
+			Vertices[segs[i].v2].x>>16,
+			Vertices[segs[i].v2].y>>16);
+	}
+#endif
 
 	return count;
 }

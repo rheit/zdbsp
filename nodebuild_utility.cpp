@@ -124,6 +124,8 @@ void FNodeBuilder::MakeSegsFromSides ()
 				j = (int)Segs.Push (seg);
 				Vertices[seg.v1].segs = j;
 				Vertices[seg.v2].segs2 = j;
+				D(printf("Seg %4d: From line %d, side front (%5d,%5d)-(%5d,%5d)\n", j, i, Vertices[seg.v1].x>>16,
+					Vertices[seg.v1].y>>16, Vertices[seg.v2].x>>16, Vertices[seg.v2].y>>16));
 			}
 			else
 			{
@@ -162,6 +164,8 @@ void FNodeBuilder::MakeSegsFromSides ()
 					Segs[j-1].partner = j;
 					Segs[j].partner = j-1;
 				}
+				D(printf("Seg %4d: From line %d, side back  (%5d,%5d)-(%5d,%5d)\n", j, i, Vertices[seg.v1].x>>16,
+					Vertices[seg.v1].y>>16, Vertices[seg.v2].x>>16, Vertices[seg.v2].y>>16));
 			}
 			else if (share2->linedef != share1->linedef)
 			{
@@ -280,7 +284,7 @@ void FNodeBuilder::GroupSegPlanes ()
 		}
 	}
 
-	D(Printf ("%d planes from %d segs\n", planenum, Segs.Size()));
+	D(printf ("%d planes from %d segs\n", planenum, Segs.Size()));
 
 	planenum = (planenum+7)/8;
 	PlaneChecked.Reserve (planenum);
