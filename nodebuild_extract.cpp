@@ -132,7 +132,8 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 	{
 		seg = &Segs[SegList[j].SegNum];
 		angle_t ang = PointToAngle (Vertices[seg->v1].x - midx, Vertices[seg->v1].y - midy);
-		printf ("%d: %5d(%5d,%5d)->%5d(%5d,%5d) - %3.3f  %d,%d\n", j,
+		printf ("%d%c %5d(%5d,%5d)->%5d(%5d,%5d) - %3.3f  %d,%d\n", j,
+			seg->linedef == -1 ? '+' : ':',
 			seg->v1, Vertices[seg->v1].x>>16, Vertices[seg->v1].y>>16,
 			seg->v2, Vertices[seg->v2].x>>16, Vertices[seg->v2].y>>16,
 			double(ang/2)*180/(1<<30),
@@ -208,17 +209,6 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 
 		D(printf("degenerate subsector\n"));
 
-#if 0
-		for (j = first + 1; j < max; ++j)
-		{
-			seg = &Segs[SegList[j].SegNum];
-			dx2 = Vertices[seg->v1].x - x1;
-			dy2 = Vertices[seg->v1].y - y1;
-			dot = dx*dx2 + dy*dy2;
-
-			printf ("Seg %d: dot %g\n", j, dot);
-		}
-#endif
 		// Stage 1. Go forward.
 		count += OutputDegenerateSubsector (segs, subsector, true, 0, prev);
 

@@ -140,6 +140,7 @@ private:
 	TArray<FSplitSharer> SplitSharers;	// Segs collinear with the current splitter
 
 	DWORD HackSeg;			// Seg to force to back of splitter
+	DWORD HackMate;			// Seg to use in front of hack seg
 	FLevel &Level;
 	bool GLNodes;
 
@@ -151,7 +152,7 @@ private:
 	int SelectVertexExact (FPrivVert &vertex);
 	void BuildTree ();
 	void MakeSegsFromSides ();
-	FPrivSeg *CheckSegForDuplicate (const FPrivSeg *check);
+	int CreateSeg (int linenum, int sidenum);
 	void GroupSegPlanes ();
 	void FindPolyContainers (TArray<FPolyStart> &spots, TArray<FPolyStart> &anchors);
 	bool GetPolyExtents (int polynum, fixed_t bbox[4]);
@@ -161,6 +162,8 @@ private:
 	DWORD CreateSubsector (DWORD set, fixed_t bbox[4]);
 	void CreateSubsectorsForReal ();
 	bool CheckSubsector (DWORD set, node_t &node, DWORD &splitseg, int setsize);
+	bool CheckSubsectorOverlappingSegs (DWORD set, node_t &node, DWORD &splitseg);
+	bool ShoveSegBehind (DWORD set, node_t &node, DWORD seg, DWORD mate);
 	int SelectSplitter (DWORD set, node_t &node, DWORD &splitseg, int step, bool nosplit);
 	void SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &outset0, DWORD &outset1);
 	DWORD SplitSeg (DWORD segnum, int splitvert, int v1InFront);

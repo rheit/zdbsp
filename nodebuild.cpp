@@ -65,6 +65,7 @@ void FNodeBuilder::BuildTree ()
 
 	fprintf (stderr, "   BSP:   0.0%%\r");
 	HackSeg = DWORD_MAX;
+	HackMate = DWORD_MAX;
 	CreateNode (0, bbox);
 	CreateSubsectorsForReal ();
 	fprintf (stderr, "   BSP: 100.0%%\n");
@@ -195,7 +196,8 @@ void FNodeBuilder::CreateSubsectorsForReal ()
 		D(printf ("Output subsector %d:\n", Subsectors.Size()));
 		for (unsigned int i = sub.firstline; i < SegList.Size(); ++i)
 		{
-			D(printf ("  Seg %5d (%5d,%5d)-(%5d,%5d)\n", SegList[i].SegPtr - &Segs[0],
+			D(printf ("  Seg %5d%c(%5d,%5d)-(%5d,%5d)\n", SegList[i].SegPtr - &Segs[0],
+				SegList[i].SegPtr->linedef == -1 ? '+' : ' ',
 				Vertices[SegList[i].SegPtr->v1].x>>16,
 				Vertices[SegList[i].SegPtr->v1].y>>16,
 				Vertices[SegList[i].SegPtr->v2].x>>16,
@@ -293,7 +295,8 @@ bool FNodeBuilder::CheckSubsector (DWORD set, node_t &node, DWORD &splitseg, int
 
 	do
 	{
-		D(Printf (" - seg %d(%d,%d)-(%d,%d) line %d front %d back %d\n", seg,
+		D(Printf (" - seg %d%c(%d,%d)-(%d,%d) line %d front %d back %d\n", seg,
+			Segs[seg].linedef == -1 ? '+' : ' ',
 			Vertices[Segs[seg].v1].x>>16, Vertices[Segs[seg].v1].y>>16,
 			Vertices[Segs[seg].v2].x>>16, Vertices[Segs[seg].v2].y>>16,
 			Segs[seg].linedef, Segs[seg].frontsector, Segs[seg].backsector));
@@ -322,7 +325,11 @@ bool FNodeBuilder::CheckSubsector (DWORD set, node_t &node, DWORD &splitseg, int
 	} while (seg != DWORD_MAX);
 
 	if (seg == DWORD_MAX)
-	{ // It's a valid subsector
+	{ // It's a valid non-GL subsector, and probably a valid GL subsector too.
+		if (GLNodes)
+		{
+			return CheckSubsectorOverlappingSegs (set, node, splitseg);
+		}
 		return false;
 	}
 
@@ -333,20 +340,60 @@ bool FNodeBuilder::CheckSubsector (DWORD set, node_t &node, DWORD &splitseg, int
 	// from multiple sectors, and it seems ZenNode does something
 	// similar. It is the only technique I could find that makes the
 	// "transparent water" in nb_bmtrk.wad work properly.
-	//
-	// The seg is marked to indicate that it should be forced to the
-	// back of the splitter. Because these segs already form a convex
-	// set, all the other segs will be in front of the splitter. Since
-	// the splitter is formed from this seg, the back of the splitter
-	// will have a one-dimensional subsector. SplitSegs() will add two
-	// new minisegs to close it: one seg replaces this one on the front
-	// of the splitter, and the other is its partner on the back.
-	//
-	// Old code that will actually create valid two-dimensional sectors
-	// is included below for reference but is not likely to be used again.
+	return ShoveSegBehind (set, node, seg, DWORD_MAX);
+}
 
+// When creating GL nodes, we need to check for segs with the same start and
+// end vertices and split them into two subsectors.
+
+bool FNodeBuilder::CheckSubsectorOverlappingSegs (DWORD set, node_t &node, DWORD &splitseg)
+{
+	int v1, v2;
+	DWORD seg1, seg2;
+
+	for (seg1 = set; seg1 != DWORD_MAX; seg1 = Segs[seg1].next)
+	{
+		if (Segs[seg1].linedef == -1)
+		{ // Do not check minisegs.
+			continue;
+		}
+		v1 = Segs[seg1].v1;
+		v2 = Segs[seg1].v2;
+		for (seg2 = Segs[seg1].next; seg2 != DWORD_MAX; seg2 = Segs[seg2].next)
+		{
+			if (Segs[seg2].v1 == v1 && Segs[seg2].v2 == v2)
+			{
+				if (Segs[seg2].linedef == -1)
+				{ // Do not put minisegs into a new subsector.
+					swap (seg1, seg2);
+				}
+				D(Printf("Need to synthesize a splitter for set %d on seg %d (ov)\n", set, seg2));
+				splitseg = DWORD_MAX;
+
+				return ShoveSegBehind (set, node, seg2, seg1);
+			}
+		}
+	}
+	// It really is a good subsector.
+	return false;
+}
+
+// The seg is marked to indicate that it should be forced to the
+// back of the splitter. Because these segs already form a convex
+// set, all the other segs will be in front of the splitter. Since
+// the splitter is formed from this seg, the back of the splitter
+// will have a one-dimensional subsector. SplitSegs() will add one
+// or two new minisegs to close it: If mate is DWORD_MAX, then a
+// new seg is created to replace this one on the front of the
+// splitter. Otherwise, mate takes its place. In either case, the
+// seg in front of the splitter is partnered with a new miniseg on
+// the back so that the back will have two segs.
+
+bool FNodeBuilder::ShoveSegBehind (DWORD set, node_t &node, DWORD seg, DWORD mate)
+{
 	SetNodeFromSeg (node, &Segs[seg]);
 	HackSeg = seg;
+	HackMate = mate;
 	if (!Segs[seg].planefront)
 	{
 		node.x += node.dx;
@@ -355,79 +402,6 @@ bool FNodeBuilder::CheckSubsector (DWORD set, node_t &node, DWORD &splitseg, int
 		node.dy = -node.dy;
 	}
 	return Heuristic (node, set, false) != 0;
-
-#if 0
-	// If there are only two segs in the set, and they form two sides
-	// of a triangle, the splitter should pass through their shared
-	// point and the (imaginary) third side of the triangle
-	if (setsize == 2)
-	{
-		FPrivVert *v1, *v2, *v3;
-
-		if (Vertices[Segs[set].v2] == Vertices[Segs[seg].v1])
-		{
-			v1 = &Vertices[Segs[set].v1];
-			v2 = &Vertices[Segs[seg].v2];
-			v3 = &Vertices[Segs[set].v2];
-		}
-		else if (Vertices[Segs[set].v1] == Vertices[Segs[seg].v2])
-		{
-			v1 = &Vertices[Segs[seg].v1];
-			v2 = &Vertices[Segs[set].v2];
-			v3 = &Vertices[Segs[seg].v2];
-		}
-		else
-		{
-			v1 = v2 = v3 = NULL;
-		}
-		if (v1 != NULL)
-		{
-			node.x = v3->x;
-			node.y = v3->y;
-			node.dx = v1->x + (v2->x-v1->x)/2 - node.x;
-			node.dy = v1->y + (v2->y-v1->y)/2 - node.y;
-			return Heuristic (node, set, false) != 0;
-		}
-	}
-
-	bool nosplit = true;
-	int firsthit = seg;
-
-	do
-	{
-		seg = firsthit;
-		do
-		{
-			if (Segs[seg].linedef != -1 &&
-				Segs[seg].frontsector != sec &&
-				Segs[seg].frontsector == Segs[seg].backsector)
-			{
-				node.x = Vertices[Segs[set].v1].x;
-				node.y = Vertices[Segs[set].v1].y;
-				node.dx = Vertices[Segs[seg].v2].x - node.x;
-				node.dy = Vertices[Segs[seg].v2].y - node.y;
-
-				if (Heuristic (node, set, nosplit) != 0)
-				{
-					return true;
-				}
-
-				node.dx = Vertices[Segs[seg].v1].x - node.x;
-				node.dy = Vertices[Segs[seg].v1].y - node.y;
-
-				if (Heuristic (node, set, nosplit) != 0)
-				{
-					return true;
-				}
-			}
-
-			seg = Segs[seg].next;
-		} while (seg != DWORD_MAX);
-	} while ((nosplit ^= 1) == 0);
-
-	// Give up.
-	return false;
-#endif
 }
 
 // Splitters are chosen to coincide with segs in the given set. To reduce the
@@ -474,7 +448,9 @@ int FNodeBuilder::SelectSplitter (DWORD set, node_t &node, DWORD &splitseg, int 
 
 				int value = Heuristic (node, set, nosplit);
 
-				D(Printf ("Seg %5d (%5d,%5d)-(%5d,%5d) scores %d\n", seg, node.x>>16, node.y>>16,
+				D(Printf ("Seg %5d%c(%5d,%5d)-(%5d,%5d) scores %d\n", seg,
+					Segs[seg].linedef == -1 ? '+' : ' ',
+					node.x>>16, node.y>>16,
 					(node.x+node.dx)>>16, (node.y+node.dy)>>16, value));
 
 				if (value > bestvalue)
@@ -919,15 +895,24 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			DWORD newback, newfront;
 
 			newback = AddMiniseg (seg->v2, seg->v1, DWORD_MAX, set, splitseg);
-			newfront = AddMiniseg (Segs[set].v1, Segs[set].v2, newback, set, splitseg);
+			if (HackMate == DWORD_MAX)
+			{
+				newfront = AddMiniseg (Segs[set].v1, Segs[set].v2, newback, set, splitseg);
+				Segs[newfront].next = outset0;
+				outset0 = newfront;
+			}
+			else
+			{
+				newfront = HackMate;
+				Segs[newfront].partner = newback;
+				Segs[newback].partner = newfront;
+			}
 			Segs[newback].frontsector = Segs[newback].backsector =
 				Segs[newfront].frontsector = Segs[newfront].backsector =
 				Segs[set].frontsector;
 
 			Segs[newback].next = outset1;
 			outset1 = newback;
-			Segs[newfront].next = outset0;
-			outset0 = newfront;
 		}
 		set = next;
 	}
@@ -1115,7 +1100,9 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 	Printf ("set %d:\n", l);
 	for (; set != DWORD_MAX; set = Segs[set].next)
 	{
-		Printf ("\t%lu(%d):%d(%d,%d)-%d(%d,%d)\n", set, Segs[set].frontsector,
+		Printf ("\t%lu(%d)%c%d(%d,%d)-%d(%d,%d)\n", set,
+			Segs[set].frontsector,
+			Segs[set].linedef == -1 ? '+' : ':',
 			Segs[set].v1,
 			Vertices[Segs[set].v1].x>>16, Vertices[Segs[set].v1].y>>16,
 			Segs[set].v2,
