@@ -7,6 +7,7 @@
 
 #include <limits.h>
 #include <exception>
+#include <stdexcept>
 
 #define ZDBSP_VERSION	"1.7"
 
@@ -124,6 +125,11 @@ inline fixed_t MulScale30 (fixed_t a, fixed_t b)
 inline fixed_t DMulScale30 (fixed_t a, fixed_t b, fixed_t c, fixed_t d)
 {
 	return (fixed_t)((double(a)*double(b)+double(c)*double(d))/double(1<<30));
+}
+
+inline fixed_t DMulScale32 (fixed_t a, fixed_t b, fixed_t c, fixed_t d)
+{
+	return (fixed_t)((double(a)*double(b)+double(c)*double(d))/4294967296.0);
 }
 
 #endif

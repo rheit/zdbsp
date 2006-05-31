@@ -17,6 +17,8 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 */
+#ifndef NO_MAP_VIEWER
+
 #define WIN32_LEAN_AND_MEAN
 #define _WIN32_WINNT 0x0400
 #include <windows.h>
@@ -256,12 +258,10 @@ static void DrawSubsectorGL (HDC dc, int ssec, HPEN miniPen, HPEN badPen)
 	MoveToEx (dc, GLVERTX(Level->GLSegs[seg].v1), GLVERTY(Level->GLSegs[seg].v1), NULL);
 	for (DWORD i = 0; i < Level->GLSubsectors[ssec].numlines; ++i)
 	{
-		bool mini = false;
-		HPEN oldPen;
+		HPEN oldPen = NULL;
 		seg = Level->GLSubsectors[ssec].firstline + i;
 		if (Level->GLSegs[seg].linedef == NO_INDEX)
 		{
-			mini = true;
 			if (Level->GLSegs[seg].partner == NO_INDEX)
 			{
 				oldPen = (HPEN)SelectObject (dc, badPen);
@@ -281,7 +281,7 @@ static void DrawSubsectorGL (HDC dc, int ssec, HPEN miniPen, HPEN badPen)
 			//MoveToEx (dc, GLVERTX(Level->GLSegs[seg].v2), GLVERTY(Level->GLSegs[seg].v2), NULL);
 			LineTo (dc, GLVERTX(Level->GLSegs[seg].v1), GLVERTY(Level->GLSegs[seg].v1));
 		}
-		if (mini)
+		if (oldPen != NULL)
 		{
 			SelectObject (dc, oldPen);
 		}
@@ -527,7 +527,7 @@ static void SetDesiredSubsector (int x, int y)
 static void SetDesiredNode (int x, int y)
 {
 	int node, parent;
-	size_t depth = 0;
+	unsigned int depth = 0;
 
 	// Traverse the tree until we find a node that is not on the
 	// path to the previous desired node.
@@ -649,6 +649,7 @@ static void DrawLevelReject (HDC dc)
 				case CANT_SEE:	SelectObject (dc, cantSee);	break;
 				case CAN_SEE:	SelectObject (dc, canSee); break;
 				case SEE_FROM:	SelectObject (dc, seeFrom); break;
+				default: break;
 				}
 			}
 			MoveToEx (dc, VERTX(Level->Lines[i].v1), VERTY(Level->Lines[i].v1), NULL);
@@ -1047,3 +1048,5 @@ void ResetViews ()
 	DesiredSubsector = 0;
 	DesiredSector = 0;
 }
+
+#endif /* !NO_MAP_VIEWER */

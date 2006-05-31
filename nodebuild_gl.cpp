@@ -66,7 +66,7 @@ void FNodeBuilder::FixSplitSharers ()
 {
 	D(printf("events:\n"));
 	D(Events.PrintTree());
-	for (size_t i = 0; i < SplitSharers.Size(); ++i)
+	for (unsigned int i = 0; i < SplitSharers.Size(); ++i)
 	{
 		DWORD seg = SplitSharers[i].Seg;
 		int v2 = Segs[seg].v2;

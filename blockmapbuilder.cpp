@@ -355,7 +355,7 @@ void FBlockmapBuilder::CreateUnpackedBlockmap (TArray<WORD> *blocks, int bmapwid
 		BlockMap[4+i] = WORD(BlockMap.Size());
 		BlockMap.Push (zero);
 		block = &blocks[i];
-		for (size_t j = 0; j < block->Size(); ++j)
+		for (unsigned int j = 0; j < block->Size(); ++j)
 		{
 			BlockMap.Push ((*block)[j]);
 		}

@@ -69,16 +69,16 @@ void FNodeBuilder::FindUsedVertices (WideVertex *oldverts, int max)
 			map[v2] = SelectVertexExact (newvert);
 		}
 
-		Level.Lines[i].v1 = map[v1];
-		Level.Lines[i].v2 = map[v2];
+		Level.Lines[i].v1 = (WORD)map[v1];
+		Level.Lines[i].v2 = (WORD)map[v2];
 	}
 	InitialVertices = Vertices.Size ();
-	Level.NumOrgVerts = InitialVertices;
+	Level.NumOrgVerts = (int)InitialVertices;
 }
 
 int FNodeBuilder::SelectVertexExact (FPrivVert &vertex)
 {
-	for (size_t i = 0; i < Vertices.Size(); ++i)
+	for (unsigned int i = 0; i < Vertices.Size(); ++i)
 	{
 		if (Vertices[i].x == vertex.x && Vertices[i].y == vertex.y)
 		{
@@ -103,6 +103,7 @@ void FNodeBuilder::MakeSegsFromSides ()
 
 	for (i = 0; i < Level.NumLines; ++i)
 	{
+		share1 = NULL;
 		if (Level.Lines[i].sidenum[0] != NO_INDEX)
 		{
 			WORD backside;
@@ -302,7 +303,7 @@ void FNodeBuilder::FindPolyContainers (TArray<FPolyStart> &spots, TArray<FPolySt
 {
 	int loop = 1;
 
-	for (size_t i = 0; i < spots.Size(); ++i)
+	for (unsigned int i = 0; i < spots.Size(); ++i)
 	{
 		FPolyStart *spot = &spots[i];
 		fixed_t bbox[4];
@@ -310,8 +311,7 @@ void FNodeBuilder::FindPolyContainers (TArray<FPolyStart> &spots, TArray<FPolySt
 		if (GetPolyExtents (spot->polynum, bbox))
 		{
 			FPolyStart *anchor;
-
-			size_t j;
+			unsigned int j;
 
 			for (j = 0; j < anchors.Size(); ++j)
 			{
@@ -340,7 +340,7 @@ void FNodeBuilder::FindPolyContainers (TArray<FPolyStart> &spots, TArray<FPolySt
 
 				P(Printf ("start %d,%d -- center %d, %d\n", spot->x>>16, spot->y>>16, center.x>>16, center.y>>16));
 
-				for (size_t j = 0; j < Segs.Size(); ++j)
+				for (unsigned int j = 0; j < Segs.Size(); ++j)
 				{
 					FPrivSeg *seg = &Segs[j];
 					FPrivVert *v1 = &Vertices[seg->v1];
@@ -428,7 +428,7 @@ int FNodeBuilder::MarkLoop (DWORD firstseg, int loopnum)
 		}
 
 		seg = bestseg;
-	} while (seg != DWORD_MAX && Segs[seg].loopnum == 0);
+	} while (seg != (int)DWORD_MAX && Segs[seg].loopnum == 0);
 
 	return loopnum + 1;
 }
@@ -437,7 +437,7 @@ int FNodeBuilder::MarkLoop (DWORD firstseg, int loopnum)
 
 bool FNodeBuilder::GetPolyExtents (int polynum, fixed_t bbox[4])
 {
-	size_t i;
+	unsigned int i;
 
 	bbox[BOXLEFT] = bbox[BOXBOTTOM] = FIXED_MAX;
 	bbox[BOXRIGHT] = bbox[BOXTOP] = FIXED_MIN;
@@ -455,7 +455,7 @@ bool FNodeBuilder::GetPolyExtents (int polynum, fixed_t bbox[4])
 	if (i < Segs.Size())
 	{
 		vertex_t start;
-		size_t vert;
+		unsigned int vert;
 
 		vert = Segs[i].v1;
 

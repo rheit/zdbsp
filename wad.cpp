@@ -66,7 +66,7 @@ FWadReader::FWadReader (const char *filename)
 	File = fopen (filename, "rb");
 	if (File == NULL)
 	{
-		throw exception("Could not open input file");
+		throw std::runtime_error("Could not open input file");
 	}
 
 	SafeRead (&Header, sizeof(Header));
@@ -77,7 +77,7 @@ FWadReader::FWadReader (const char *filename)
 	{
 		fclose (File);
 		File = NULL;
-		throw exception("Input file is not a wad");
+		throw std::runtime_error("Input file is not a wad");
 	}
 
 	Header.NumLumps = LONG(Header.NumLumps);
@@ -85,7 +85,7 @@ FWadReader::FWadReader (const char *filename)
 
 	if (fseek (File, Header.Directory, SEEK_SET))
 	{
-		throw exception("Could not read wad directory");
+		throw std::runtime_error("Could not read wad directory");
 	}
 
 	Lumps = new WadLump[Header.NumLumps];
@@ -301,7 +301,7 @@ void FWadReader::SafeRead (void *buffer, size_t size)
 {
 	if (fread (buffer, 1, size, File) != size)
 	{
-		throw exception("Failed to read");
+		throw std::runtime_error("Failed to read");
 	}
 }
 
@@ -319,7 +319,7 @@ FWadWriter::FWadWriter (const char *filename, bool iwad)
 	File = fopen (filename, "wb");
 	if (File == NULL)
 	{
-		throw exception("Could not open output file");
+		throw std::runtime_error("Could not open output file");
 	}
 
 	WadHeader head;
@@ -416,7 +416,7 @@ void FWadWriter::SafeWrite (const void *buffer, size_t size)
 	{
 		fclose (File);
 		File = NULL;
-		throw exception(
+		throw std::runtime_error(
 			"Failed to write. Check that this directory is writable and\n"
 			"that you have enough free disk space.");
 	}

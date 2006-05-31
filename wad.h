@@ -68,7 +68,7 @@ void ReadLump (FWadReader &wad, int index, T *&data, int &size)
 	}
 	if (fseek (wad.File, wad.Lumps[index].FilePos, SEEK_SET))
 	{
-		throw exception("Failed to seek");
+		throw std::runtime_error("Failed to seek");
 	}
 	size = wad.Lumps[index].Size / sizeof(T);
 	data = new T[size];

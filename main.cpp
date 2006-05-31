@@ -169,7 +169,7 @@ int main (int argc, char **argv)
 
 			if (out == NULL)
 			{
-				throw exception("Could not create temporary file name.");
+				throw std::runtime_error("Could not create temporary file name.");
 			}
 
 			strcpy (out, OutName);
@@ -247,7 +247,7 @@ int main (int argc, char **argv)
 
 		END_COUNTER(t1a, t1b, t1c, "\nTotal time: %g seconds.\n")
 	}
-	catch (exception msg)
+	catch (std::exception msg)
 	{
 		printf ("%s\n", msg.what());
 		return 20;

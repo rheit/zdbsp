@@ -170,7 +170,7 @@ DWORD FNodeBuilder::CreateSubsector (DWORD set, fixed_t bbox[4])
 
 void FNodeBuilder::CreateSubsectorsForReal ()
 {
-	size_t i;
+	unsigned int i;
 
 	for (i = 0; i < SubsectorSets.Size(); ++i)
 	{
@@ -193,14 +193,14 @@ void FNodeBuilder::CreateSubsectorsForReal ()
 
 		// Convert seg pointers into indices
 		D(printf ("Output subsector %d:\n", Subsectors.Size()));
-		for (size_t i = sub.firstline; i < SegList.Size(); ++i)
+		for (unsigned int i = sub.firstline; i < SegList.Size(); ++i)
 		{
 			D(printf ("  Seg %5d (%5d,%5d)-(%5d,%5d)\n", SegList[i].SegPtr - &Segs[0],
 				Vertices[SegList[i].SegPtr->v1].x>>16,
 				Vertices[SegList[i].SegPtr->v1].y>>16,
 				Vertices[SegList[i].SegPtr->v2].x>>16,
 				Vertices[SegList[i].SegPtr->v2].y>>16));
-			SegList[i].SegNum = SegList[i].SegPtr - &Segs[0];
+			SegList[i].SegNum = DWORD(SegList[i].SegPtr - &Segs[0]);
 		}
 		Subsectors.Push (sub);
 	}
@@ -526,7 +526,7 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 	int sidev1, sidev2;
 	int side;
 	bool splitter = false;
-	size_t max, m2, p, q;
+	unsigned int max, m2, p, q;
 	double frac;
 
 	Touched.Clear ();
@@ -824,14 +824,14 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 		default: // seg needs to be split
 			double frac;
 			FPrivVert newvert;
-			size_t vertnum;
+			unsigned int vertnum;
 			int seg2;
-			size_t i;
+			unsigned int i;
 
 			//Printf ("%lu is cut\n", set);
 			if (seg->loopnum)
 			{
-				Printf ("   Split seg %lu (%ld,%ld)-(%ld,%ld) of sector %d on line %d\n",
+				Printf ("   Split seg %lu (%d,%d)-(%d,%d) of sector %d on line %d\n",
 					set,
 					Vertices[seg->v1].x>>16, Vertices[seg->v1].y>>16,
 					Vertices[seg->v2].x>>16, Vertices[seg->v2].y>>16,
@@ -1115,7 +1115,7 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 	Printf ("set %d:\n", l);
 	for (; set != DWORD_MAX; set = Segs[set].next)
 	{
-		Printf ("\t%lu(%d):%d(%ld,%ld)-%d(%ld,%ld)\n", set, Segs[set].frontsector,
+		Printf ("\t%lu(%d):%d(%d,%d)-%d(%d,%d)\n", set, Segs[set].frontsector,
 			Segs[set].v1,
 			Vertices[Segs[set].v1].x>>16, Vertices[Segs[set].v1].y>>16,
 			Segs[set].v2,

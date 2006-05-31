@@ -464,7 +464,7 @@ void FProcessor::Write (FWadWriter &out)
 			builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), BuildGLNodes);
 			if (builder == NULL)
 			{
-				throw exception("   Not enough memory to build nodes!");
+				throw std::runtime_error("   Not enough memory to build nodes!");
 			}
 
 			delete[] Level.Vertices;
@@ -500,7 +500,7 @@ void FProcessor::Write (FWadWriter &out)
 						builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), false);
 						if (builder == NULL)
 						{
-							throw exception("   Not enough memory to build regular nodes!");
+							throw std::runtime_error("   Not enough memory to build regular nodes!");
 						}
 						delete[] Level.Vertices;
 						builder->GetVertices (Level.Vertices, Level.NumVertices);
@@ -575,6 +575,7 @@ void FProcessor::Write (FWadWriter &out)
 
 	if (ShowMap)
 	{
+#ifndef NO_MAP_VIEWER
 		if(BuildNodes||BuildGLNodes)
 		{
 			ShowView (&Level);
@@ -583,6 +584,9 @@ void FProcessor::Write (FWadWriter &out)
 		{
 			puts("  ERROR: You can't view the nodes (-v) if you don't build them! (-N).");
 		}
+#else
+		puts ("  This version of ZDBSP was not compiled with the map viewer enabled.");
+#endif
 	}
 	
 	if (Level.GLNodes != NULL )
@@ -944,7 +948,7 @@ void FProcessor::WriteBlockmap (FWadWriter &out)
 	{
 		blocks[i] = SHORT(blocks[i]);
 	}
-	out.WriteLump ("BLOCKMAP", blocks, sizeof(*blocks)*count);
+	out.WriteLump ("BLOCKMAP", blocks, int(sizeof(*blocks)*count));
 
 #ifdef BLOCK_TEST
 	FILE *f = fopen ("blockmap.lm2", "wb");
@@ -1178,7 +1182,7 @@ ZLibOut::ZLibOut (FWadWriter &out)
 
 	if (err != Z_OK)
 	{
-		throw exception("Could not initialize deflate buffer.");
+		throw std::runtime_error("Could not initialize deflate buffer.");
 	}
 
 	Stream.next_out = Buffer;
@@ -1206,7 +1210,7 @@ ZLibOut::~ZLibOut ()
 	deflateEnd (&Stream);
 	if (err != Z_STREAM_END)
 	{
-		throw exception("Error deflating data.");
+		throw std::runtime_error("Error deflating data.");
 	}
 	Out.AddToLump (Buffer, BUFFER_SIZE - Stream.avail_out);
 }
@@ -1230,7 +1234,7 @@ void ZLibOut::Write (BYTE *data, int len)
 	}
 	if (err != Z_OK)
 	{
-		throw exception("Error deflating data.");
+		throw std::runtime_error("Error deflating data.");
 	}
 }
 
