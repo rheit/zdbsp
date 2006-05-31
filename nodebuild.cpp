@@ -527,6 +527,7 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 	int side;
 	bool splitter = false;
 	size_t max, m2, p, q;
+	double frac;
 
 	Touched.Clear ();
 	Colinear.Clear ();
@@ -617,6 +618,13 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 				{
 					splitter = true;
 				}
+			}
+
+			// Splitters that are too close to a vertex are bad.
+			frac = InterceptVector (node, *test);
+			if (frac < 0.001 || frac > 0.999)
+			{
+				score -= int(1 / frac);
 			}
 
 			counts[0]++;

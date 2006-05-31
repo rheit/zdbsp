@@ -34,6 +34,7 @@
 				StringPooling="TRUE"
 				RuntimeLibrary="4"
 				EnableFunctionLevelLinking="TRUE"
+				EnableEnhancedInstructionSet="2"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/zdbsp.pch"
 				AssemblerListingLocation=".\Release/"
@@ -53,7 +54,9 @@
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/zdbsp.pdb"
 				SubSystem="1"
-				OptimizeForWindows98="1"/>
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				OptimizeForWindows98="0"/>
 			<Tool
 				Name="VCMIDLTool"
 				TypeLibraryName=".\Release/zdbsp.tlb"/>

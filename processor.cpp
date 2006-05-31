@@ -876,12 +876,6 @@ void FProcessor::WriteSSectors2 (FWadWriter &out, const char *name, const MapSub
 		ssec[i].numlines = SHORT((WORD)subs[i].numlines);
 	}
 	out.WriteLump (name, ssec, sizeof(*ssec)*count);
-	FILE *f = fopen (name, "wb");
-	if (f)
-	{
-		fwrite (ssec, count, sizeof(*ssec), f);
-		fclose (f);
-	}
 	delete[] ssec;
 
 	if (count >= 65536)

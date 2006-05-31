@@ -17,12 +17,17 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 */
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
 #include "zdbsp.h"
 #include "nodebuild.h"
 
 FEventTree::FEventTree ()
 : Root (&Nil), Spare (NULL)
 {
+	memset (&Nil, 0, sizeof(Nil));
+	Nil.Color = FEvent::BLACK;
 }
 
 FEventTree::~FEventTree ()
@@ -65,7 +70,7 @@ void FEventTree::LeftRotate (FEvent *x)
 		y->Left->Parent = x;
 	}
 	y->Parent = x->Parent;
-	if (x->Parent != &Nil)
+	if (x->Parent == &Nil)
 	{
 		Root = y;
 	}
@@ -90,7 +95,7 @@ void FEventTree::RightRotate (FEvent *x)
 		y->Right->Parent = x;
 	}
 	y->Parent = x->Parent;
-	if (x->Parent != &Nil)
+	if (x->Parent == &Nil)
 	{
 		Root = y;
 	}
@@ -154,9 +159,11 @@ void FEventTree::Insert (FEvent *z)
 	}
 	z->Left = &Nil;
 	z->Right = &Nil;
+//	printf ("Inserted      distance %g, vertex %d, seg %d\n",
+//		sqrt(z->Distance/4294967296.0), z->Info.Vertex, z->Info.FrontSeg);
 
 	z->Color = FEvent::RED;
-	while (z != Root && z->Parent->Color != FEvent::RED)
+	while (z != Root && z->Parent->Color == FEvent::RED)
 	{
 		if (z->Parent == z->Parent->Parent->Left)
 		{
@@ -199,10 +206,11 @@ void FEventTree::Insert (FEvent *z)
 				}
 				z->Parent->Color = FEvent::BLACK;
 				z->Parent->Parent->Color = FEvent::RED;
-				RightRotate (z->Parent->Parent);
+				LeftRotate (z->Parent->Parent);
 			}
 		}
 	}
+	Root->Color = FEvent::BLACK;
 }
 
 void FEventTree::Delete (FEvent *z)
@@ -404,4 +412,18 @@ FEvent *FEventTree::GetMinimum ()
 		node = node->Left;
 	}
 	return node;
+}
+
+void FEventTree::PrintTree (const FEvent *event) const
+{
+	if (event->Left != &Nil)
+	{
+		PrintTree (event->Left);
+	}
+	printf (" Color %s, distance %g, vertex %d, seg %d\n", event->Color ? "BLACK" : " RED ",
+		sqrt(event->Distance/4294967296.0), event->Info.Vertex, event->Info.FrontSeg);
+	if (event->Right != &Nil)
+	{
+		PrintTree (event->Right);
+	}
 }

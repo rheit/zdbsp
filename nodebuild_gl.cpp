@@ -18,6 +18,7 @@
 
 */
 #include <assert.h>
+#include <math.h>
 #include "zdbsp.h"
 #include "nodebuild.h"
 
@@ -40,24 +41,7 @@ double FNodeBuilder::AddIntersection (const node_t &node, int vertex)
 	// Calculate signed distance of intersection vertex from start of splitter.
 	// Only ordering is important, so we don't need a sqrt.
 	FPrivVert *v = &Vertices[vertex];
-	double dx = double(v->x - node.x);
-	double dy = double(v->y - node.y);
-	double dist = dx*dx + dy*dy;
-
-	if (node.dx != 0)
-	{
-		if ((node.dx > 0 && dx < 0.0) || (node.dx < 0 && dx > 0.0))
-		{
-			dist = -dist;
-		}
-	}
-	else
-	{
-		if ((node.dy > 0 && dy < 0.0) || (node.dy < 0 && dy > 0.0))
-		{
-			dist = -dist;
-		}
-	}
+	double dist = (double(v->x) - node.x)*(node.dx) + (double(v->y) - node.y)*(node.dy);
 
 	FEvent *event = Events.FindEvent (dist);
 
@@ -80,6 +64,8 @@ double FNodeBuilder::AddIntersection (const node_t &node, int vertex)
 // seg information will be messed up in the generated tree.
 void FNodeBuilder::FixSplitSharers ()
 {
+	D(printf("events:\n"));
+	D(Events.PrintTree());
 	for (size_t i = 0; i < SplitSharers.Size(); ++i)
 	{
 		DWORD seg = SplitSharers[i].Seg;
@@ -91,6 +77,15 @@ void FNodeBuilder::FixSplitSharers ()
 		{ // Should not happen
 			continue;
 		}
+
+		D(printf("Considering events on seg %d(%d[%d,%d]->%d[%d,%d]) [%g:%g]\n", seg,
+			Segs[seg].v1,
+			Vertices[Segs[seg].v1].x>>16,
+			Vertices[Segs[seg].v1].y>>16,
+			Segs[seg].v2,
+			Vertices[Segs[seg].v2].x>>16,
+			Vertices[Segs[seg].v2].y>>16,
+			SplitSharers[i].Distance, event->Distance));
 
 		if (SplitSharers[i].Forward)
 		{
@@ -113,11 +108,17 @@ void FNodeBuilder::FixSplitSharers ()
 
 		while (event != NULL && next != NULL && event->Info.Vertex != v2)
 		{
-			D(Printf("Forced split of seg %d(%d->%d) at %d(%d,%d)\n", seg,
-				Segs[seg].v1, Segs[seg].v2,
+			D(printf("Forced split of seg %d(%d[%d,%d]->%d[%d,%d]) at %d(%d,%d):%g\n", seg,
+				Segs[seg].v1,
+				Vertices[Segs[seg].v1].x>>16,
+				Vertices[Segs[seg].v1].y>>16,
+				Segs[seg].v2,
+				Vertices[Segs[seg].v2].x>>16,
+				Vertices[Segs[seg].v2].y>>16,
 				event->Info.Vertex,
 				Vertices[event->Info.Vertex].x>>16,
-				Vertices[event->Info.Vertex].y>>16));
+				Vertices[event->Info.Vertex].y>>16,
+				event->Distance));
 
 			DWORD newseg = SplitSeg (seg, event->Info.Vertex, 1);
 

@@ -32,6 +32,8 @@ public:
 	FEvent *FindEvent (double distance) const;
 	void DeleteAll ();
 
+	void PrintTree () const { PrintTree (Root); }
+
 private:
 	FEvent Nil;
 	FEvent *Root;
@@ -43,6 +45,8 @@ private:
 	void DeletionTraverser (FEvent *event);
 	FEvent *Successor (FEvent *event) const;
 	FEvent *Predecessor (FEvent *event) const;
+
+	void PrintTree (const FEvent *event) const;
 };
 
 class FNodeBuilder
@@ -180,6 +184,7 @@ private:
 	int CloseSubsector (TArray<MapSegGLEx> &segs, int subsector);
 	DWORD PushGLSeg (TArray<MapSegGLEx> &segs, const FPrivSeg *seg);
 	void PushConnectingGLSeg (int subsector, TArray<MapSegGLEx> &segs, int v1, int v2);
+	int OutputDegenerateSubsector (TArray<MapSegGLEx> &segs, int subsector, bool bForward, double lastdot, FPrivSeg *&prev); 
 
 	static int SortSegs (const void *a, const void *b);
 
