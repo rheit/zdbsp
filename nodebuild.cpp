@@ -190,7 +190,7 @@ void FNodeBuilder::CreateSubsectorsForReal ()
 		sub.numlines = (DWORD)(SegList.Size() - sub.firstline);
 
 		// Sort segs by linedef for special effects
-		qsort (&SegList[sub.firstline], sub.numlines, sizeof(int), SortSegs);
+		qsort (&SegList[sub.firstline], sub.numlines, sizeof(USegPtr), SortSegs);
 
 		// Convert seg pointers into indices
 		D(printf ("Output subsector %d:\n", Subsectors.Size()));
@@ -478,7 +478,7 @@ int FNodeBuilder::SelectSplitter (DWORD set, node_t &node, DWORD &splitseg, int 
 		return nosplitters ? -1 : 0;
 	}
 
-	D(Printf ("split seg %lu in set %d, score %d, step %d, nosplit %d\n", bestseg, set, bestvalue, step, nosplit));
+	D(Printf ("split seg %u in set %u, score %d, step %d, nosplit %d\n", bestseg, set, bestvalue, step, nosplit));
 
 	splitseg = bestseg;
 	SetNodeFromSeg (node, &Segs[bestseg]);
@@ -787,13 +787,13 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 		{
 		case 0: // seg is entirely in front
 			seg->next = outset0;
-			//Printf ("%lu in front\n", set);
+			//Printf ("%u in front\n", set);
 			outset0 = set;
 			break;
 
 		case 1: // seg is entirely in back
 			seg->next = outset1;
-			//Printf ("%lu in back\n", set);
+			//Printf ("%u in back\n", set);
 			outset1 = set;
 			break;
 
@@ -804,10 +804,10 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			int seg2;
 			unsigned int i;
 
-			//Printf ("%lu is cut\n", set);
+			//Printf ("%u is cut\n", set);
 			if (seg->loopnum)
 			{
-				Printf ("   Split seg %lu (%d,%d)-(%d,%d) of sector %d on line %d\n",
+				Printf ("   Split seg %u (%d,%d)-(%d,%d) of sector %d on line %d\n",
 					set,
 					Vertices[seg->v1].x>>16, Vertices[seg->v1].y>>16,
 					Vertices[seg->v2].x>>16, Vertices[seg->v2].y>>16,
@@ -1100,7 +1100,7 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 	Printf ("set %d:\n", l);
 	for (; set != DWORD_MAX; set = Segs[set].next)
 	{
-		Printf ("\t%lu(%d)%c%d(%d,%d)-%d(%d,%d)\n", set,
+		Printf ("\t%u(%d)%c%d(%d,%d)-%d(%d,%d)\n", set,
 			Segs[set].frontsector,
 			Segs[set].linedef == -1 ? '+' : ':',
 			Segs[set].v1,

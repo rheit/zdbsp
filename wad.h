@@ -14,14 +14,14 @@
 struct WadHeader
 {
 	char	Magic[4];
-	__int32 NumLumps;
-	__int32 Directory;
+	int32_t NumLumps;
+	int32_t Directory;
 };
 
 struct WadLump
 {
-	__int32 FilePos;
-	__int32 Size;
+	int32_t FilePos;
+	int32_t Size;
 	char	Name[8];
 };
 

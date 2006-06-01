@@ -9,6 +9,13 @@
 #include <exception>
 #include <stdexcept>
 
+#ifdef _WIN32
+typedef unsigned __int32 uint32_t;
+typedef __int32 int32_t;
+#else
+#include <stdint.h>
+#endif
+
 #define ZDBSP_VERSION	"1.7"
 
 enum EBlockmapMode
@@ -49,8 +56,12 @@ typedef int fixed_t;
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
 typedef   signed short SWORD;
+#ifdef _WIN32
 typedef unsigned long DWORD;
-typedef unsigned __int32 angle_t;
+#else
+typedef uint32_t DWORD;
+#endif
+typedef uint32_t angle_t;
 
 angle_t PointToAngle (fixed_t x, fixed_t y);
 

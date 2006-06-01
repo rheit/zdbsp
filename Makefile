@@ -1,5 +1,15 @@
-CFLAGS = -O3 -Wall -fomit-frame-pointer -Izlib -pipe -ffast-math -MMD \
-	-mtune=i686
+CFLAGS = -Wall -fomit-frame-pointer -Izlib -pipe -ffast-math -MMD
+
+# Optimization flags
+CFLAGS += -O3 -fomit-frame-pointer
+
+# Unoptimization flags
+#CFLAGS += -g
+
+# Processor features flags
+CFLAGS += -mtune=i686
+#CFLAGS += -march=k8
+
 LDFLAGS =
 RM = rm -f FILE
 ZLIBDIR = zlib/

@@ -35,9 +35,13 @@
 
 #else
 
-#define HAVE_TIMING 0
-#define START_COUNTER(s,e,f)
-#define END_COUNTER(s,e,f)
+#include <time.h>
+#define HAVE_TIMING 1
+#define START_COUNTER(s,e,f) \
+	clock_t s, e; s = clock();
+#define END_COUNTER(s,e,f,l) \
+	e = clock(); \
+	if (!NoTiming) printf (l, double(e - s) / CLOCKS_PER_SEC);
 
 // Need these to check if input/output are the same file
 #include <sys/types.h>
@@ -414,6 +418,9 @@ static void ShowUsage ()
 #endif
 "  -V, --version            Display version information\n"
 "      --help               Display this usage information"
+#ifndef _WIN32
+"\n"
+#endif
 	);
 }
 

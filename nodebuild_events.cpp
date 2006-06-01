@@ -420,7 +420,7 @@ void FEventTree::PrintTree (const FEvent *event) const
 	{
 		PrintTree (event->Left);
 	}
-	printf (" Color %s, distance %g, vertex %d, seg %lu\n", event->Color ? "BLACK" : " RED ",
+	printf (" Color %s, distance %g, vertex %d, seg %u\n", event->Color ? "BLACK" : " RED ",
 		sqrt(event->Distance/4294967296.0), event->Info.Vertex, event->Info.FrontSeg);
 	if (event->Right != &Nil)
 	{

@@ -1115,7 +1115,7 @@ void FProcessor::WriteGLSegs5 (FWadWriter &out)
 		}
 		else
 		{
-			segdata[i].v1 = LittleLong(0x800000000u | ((int)Level.GLSegs[i].v1 - Level.NumOrgVerts));
+			segdata[i].v1 = LittleLong(0x80000000u | ((int)Level.GLSegs[i].v1 - Level.NumOrgVerts));
 		}
 		if (Level.GLSegs[i].v2 < (DWORD)Level.NumOrgVerts)
 		{
@@ -1123,7 +1123,7 @@ void FProcessor::WriteGLSegs5 (FWadWriter &out)
 		}
 		else
 		{
-			segdata[i].v2 = LittleLong(0x800000000u | ((int)Level.GLSegs[i].v2 - Level.NumOrgVerts));
+			segdata[i].v2 = LittleLong(0x80000000u | ((int)Level.GLSegs[i].v2 - Level.NumOrgVerts));
 		}
 		segdata[i].linedef = LittleShort(Level.GLSegs[i].linedef);
 		segdata[i].side = LittleShort(Level.GLSegs[i].side);

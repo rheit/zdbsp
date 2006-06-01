@@ -351,7 +351,7 @@ void FWadWriter::Close ()
 {
 	if (File)
 	{
-		__int32 head[2];
+		int32_t head[2];
 
 		head[0] = LittleLong(Lumps.Size());
 		head[1] = LittleLong(ftell (File));
