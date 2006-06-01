@@ -37,7 +37,7 @@ extern int				 SplitCost;
 extern int				 AAPreference;
 extern bool				 CheckPolyobjs;
 extern bool				 ShowMap;
-extern bool				 CompressNodes, CompressGLNodes;
+extern bool				 CompressNodes, CompressGLNodes, V5GLNodes;
 
 
 #define FIXED_MAX		INT_MAX
@@ -62,7 +62,7 @@ static const angle_t ANGLE_EPSILON = 5000;
 
 void Warn (const char *format, ...);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 
 #pragma warning (disable: 4035)
 
@@ -134,7 +134,8 @@ inline fixed_t DMulScale32 (fixed_t a, fixed_t b, fixed_t c, fixed_t d)
 
 #endif
 
-#define SHORT(x)	(x)
-#define LONG(x)		(x)
+// FIXME: No macros defined for big-endian machines.
+#define LittleShort(x)	(x)
+#define LittleLong(x)	(x)
 
 #endif //__ZDBSP_H__

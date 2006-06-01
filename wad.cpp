@@ -80,8 +80,8 @@ FWadReader::FWadReader (const char *filename)
 		throw std::runtime_error("Input file is not a wad");
 	}
 
-	Header.NumLumps = LONG(Header.NumLumps);
-	Header.Directory = LONG(Header.Directory);
+	Header.NumLumps = LittleLong(Header.NumLumps);
+	Header.Directory = LittleLong(Header.Directory);
 
 	if (fseek (File, Header.Directory, SEEK_SET))
 	{
@@ -93,8 +93,8 @@ FWadReader::FWadReader (const char *filename)
 
 	for (int i = 0; i < Header.NumLumps; ++i)
 	{
-		Lumps[i].FilePos = LONG(Lumps[i].FilePos);
-		Lumps[i].Size = LONG(Lumps[i].Size);
+		Lumps[i].FilePos = LittleLong(Lumps[i].FilePos);
+		Lumps[i].Size = LittleLong(Lumps[i].Size);
 	}
 }
 
@@ -353,8 +353,8 @@ void FWadWriter::Close ()
 	{
 		__int32 head[2];
 
-		head[0] = LONG(Lumps.Size());
-		head[1] = LONG(ftell (File));
+		head[0] = LittleLong(Lumps.Size());
+		head[1] = LittleLong(ftell (File));
 
 		SafeWrite (&Lumps[0], sizeof(WadLump)*Lumps.Size());
 		fseek (File, 4, SEEK_SET);
@@ -369,7 +369,7 @@ void FWadWriter::CreateLabel (const char *name)
 	WadLump lump;
 
 	strncpy (lump.Name, name, 8);
-	lump.FilePos = LONG(ftell (File));
+	lump.FilePos = LittleLong(ftell (File));
 	lump.Size = 0;
 	Lumps.Push (lump);
 }
@@ -379,8 +379,8 @@ void FWadWriter::WriteLump (const char *name, const void *data, int len)
 	WadLump lump;
 
 	strncpy (lump.Name, name, 8);
-	lump.FilePos = LONG(ftell (File));
-	lump.Size = LONG(len);
+	lump.FilePos = LittleLong(ftell (File));
+	lump.Size = LittleLong(len);
 	Lumps.Push (lump);
 
 	SafeWrite (data, len);

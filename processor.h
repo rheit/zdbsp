@@ -64,10 +64,11 @@ private:
 	void WriteBlockmap (FWadWriter &out);
 	void WriteReject (FWadWriter &out);
 
-	void WriteGLVertices (FWadWriter &out);
-	void WriteGLSegs (FWadWriter &out);
-	void WriteGLSSect (FWadWriter &out);
-	void WriteGLNodes (FWadWriter &out);
+	void WriteGLVertices (FWadWriter &out, bool v5);
+	void WriteGLSegs (FWadWriter &out, bool v5);
+	void WriteGLSegs5 (FWadWriter &out);
+	void WriteGLSSect (FWadWriter &out, bool v5);
+	void WriteGLNodes (FWadWriter &out, bool v5);
 
 	void WriteBSPZ (FWadWriter &out, const char *label);
 	void WriteGLBSPZ (FWadWriter &out, const char *label);
@@ -80,6 +81,8 @@ private:
 
 	void WriteNodes2 (FWadWriter &out, const char *name, const MapNodeEx *zaNodes, int count) const;
 	void WriteSSectors2 (FWadWriter &out, const char *name, const MapSubsectorEx *zaSubs, int count) const;
+	void WriteNodes5 (FWadWriter &out, const char *name, const MapNodeEx *zaNodes, int count) const;
+	void WriteSSectors5 (FWadWriter &out, const char *name, const MapSubsectorEx *zaSubs, int count) const;
 
 	FLevel Level;
 

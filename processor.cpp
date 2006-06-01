@@ -101,11 +101,11 @@ void FProcessor::LoadThings ()
 
 		for (int i = 0; i < Level.NumThings; ++i)
 		{
-			Level.Things[i].x = SHORT(Level.Things[i].x);
-			Level.Things[i].y = SHORT(Level.Things[i].y);
-			Level.Things[i].angle = SHORT(Level.Things[i].angle);
-			Level.Things[i].type = SHORT(Level.Things[i].type);
-			Level.Things[i].flags = SHORT(Level.Things[i].flags);
+			Level.Things[i].x = LittleShort(Level.Things[i].x);
+			Level.Things[i].y = LittleShort(Level.Things[i].y);
+			Level.Things[i].angle = LittleShort(Level.Things[i].angle);
+			Level.Things[i].type = LittleShort(Level.Things[i].type);
+			Level.Things[i].flags = LittleShort(Level.Things[i].flags);
 		}
 	}
 	else
@@ -117,11 +117,11 @@ void FProcessor::LoadThings ()
 		memset (Level.Things, 0, sizeof(*Level.Things)*Level.NumThings);
 		for (int i = 0; i < Level.NumThings; ++i)
 		{
-			Level.Things[i].x = SHORT(mt[i].x);
-			Level.Things[i].y = SHORT(mt[i].y);
-			Level.Things[i].angle = SHORT(mt[i].angle);
-			Level.Things[i].type = SHORT(mt[i].type);
-			Level.Things[i].flags = SHORT(mt[i].flags);
+			Level.Things[i].x = LittleShort(mt[i].x);
+			Level.Things[i].y = LittleShort(mt[i].y);
+			Level.Things[i].angle = LittleShort(mt[i].angle);
+			Level.Things[i].type = LittleShort(mt[i].type);
+			Level.Things[i].flags = LittleShort(mt[i].flags);
 		}
 		delete[] mt;
 	}
@@ -135,11 +135,11 @@ void FProcessor::LoadLines ()
 
 		for (int i = 0; i < Level.NumLines; ++i)
 		{
-			Level.Lines[i].v1 = SHORT(Level.Lines[i].v1);
-			Level.Lines[i].v2 = SHORT(Level.Lines[i].v2);
-			Level.Lines[i].flags = SHORT(Level.Lines[i].flags);
-			Level.Lines[i].sidenum[0] = SHORT(Level.Lines[i].sidenum[0]);
-			Level.Lines[i].sidenum[1] = SHORT(Level.Lines[i].sidenum[1]);
+			Level.Lines[i].v1 = LittleShort(Level.Lines[i].v1);
+			Level.Lines[i].v2 = LittleShort(Level.Lines[i].v2);
+			Level.Lines[i].flags = LittleShort(Level.Lines[i].flags);
+			Level.Lines[i].sidenum[0] = LittleShort(Level.Lines[i].sidenum[0]);
+			Level.Lines[i].sidenum[1] = LittleShort(Level.Lines[i].sidenum[1]);
 		}
 	}
 	else
@@ -151,17 +151,17 @@ void FProcessor::LoadLines ()
 		memset (Level.Lines, 0, sizeof(*Level.Lines)*Level.NumLines);
 		for (int i = 0; i < Level.NumLines; ++i)
 		{
-			Level.Lines[i].v1 = SHORT(ml[i].v1);
-			Level.Lines[i].v2 = SHORT(ml[i].v2);
-			Level.Lines[i].flags = SHORT(ml[i].flags);
-			Level.Lines[i].sidenum[0] = SHORT(ml[i].sidenum[0]);
-			Level.Lines[i].sidenum[1] = SHORT(ml[i].sidenum[1]);
+			Level.Lines[i].v1 = LittleShort(ml[i].v1);
+			Level.Lines[i].v2 = LittleShort(ml[i].v2);
+			Level.Lines[i].flags = LittleShort(ml[i].flags);
+			Level.Lines[i].sidenum[0] = LittleShort(ml[i].sidenum[0]);
+			Level.Lines[i].sidenum[1] = LittleShort(ml[i].sidenum[1]);
 
 			// Store the special and tag in the args array so we don't lose them
-			short t = SHORT(ml[i].special);
+			short t = LittleShort(ml[i].special);
 			Level.Lines[i].args[2] = t & 255;
 			Level.Lines[i].args[3] = t >> 8;
-			t = SHORT(ml[i].tag);
+			t = LittleShort(ml[i].tag);
 			Level.Lines[i].args[0] = t & 255;
 			Level.Lines[i].args[1] = t >> 8;
 		}
@@ -178,8 +178,8 @@ void FProcessor::LoadVertices ()
 
 	for (int i = 0; i < Level.NumVertices; ++i)
 	{
-		Level.Vertices[i].x = SHORT(verts[i].x) << FRACBITS;
-		Level.Vertices[i].y = SHORT(verts[i].y) << FRACBITS;
+		Level.Vertices[i].x = LittleShort(verts[i].x) << FRACBITS;
+		Level.Vertices[i].y = LittleShort(verts[i].y) << FRACBITS;
 	}
 }
 
@@ -189,7 +189,7 @@ void FProcessor::LoadSides ()
 
 	for (int i = 0; i < Level.NumSides; ++i)
 	{
-		Level.Sides[i].sector = SHORT(Level.Sides[i].sector);
+		Level.Sides[i].sector = LittleShort(Level.Sides[i].sector);
 	}
 }
 
@@ -437,7 +437,7 @@ void FProcessor::Write (FWadWriter &out)
 		return;
 	}
 
-	bool compress, compressGL;
+	bool compress, compressGL, gl5;
 
 #ifdef BLOCK_TEST
 	int size;
@@ -591,12 +591,12 @@ void FProcessor::Write (FWadWriter &out)
 	
 	if (Level.GLNodes != NULL )
 	{
-		compressGL = CompressGLNodes ||
-			(Level.NumVertices > 32767) ||
-			(Level.NumGLVertices > 32767) ||
-			(Level.NumGLSegs > 65535) ||
-			(Level.NumGLNodes > 32767) ||
-			(Level.NumGLSubsectors > 32767);
+		gl5 = V5GLNodes ||
+			  (Level.NumGLVertices > 32767) ||
+			  (Level.NumGLSegs > 65534) ||
+			  (Level.NumGLNodes > 32767) ||
+			  (Level.NumGLSubsectors > 32767);
+		compressGL = CompressGLNodes || (Level.NumVertices > 32767);
 	}
 	else
 	{
@@ -676,10 +676,10 @@ void FProcessor::Write (FWadWriter &out)
 		glname[8] = 0;
 		strncpy (glname+3, Wad.LumpName (Lump), 5);
 		out.CreateLabel (glname);
-		WriteGLVertices (out);
-		WriteGLSegs (out);
-		WriteGLSSect (out);
-		WriteGLNodes (out);
+		WriteGLVertices (out, gl5);
+		WriteGLSegs (out, gl5);
+		WriteGLSSect (out, gl5);
+		WriteGLNodes (out, gl5);
 	}
 }
 
@@ -700,11 +700,11 @@ MapNodeEx *FProcessor::NodesToEx (const MapNode *nodes, int count)
 
 		for (i = 0; i < 4+2*4; ++i)
 		{
-			*((WORD *)&Nodes[x] + i) = SHORT(*((WORD *)&nodes[x] + i));
+			*((WORD *)&Nodes[x] + i) = LittleShort(*((WORD *)&nodes[x] + i));
 		}
 		for (i = 0; i < 2; ++i)
 		{
-			child = SHORT(nodes[x].children[i]);
+			child = LittleShort(nodes[x].children[i]);
 			if (child & NF_SUBSECTOR)
 			{
 				Nodes[x].children[i] = child + (NFX_SUBSECTOR - NF_SUBSECTOR);
@@ -730,8 +730,8 @@ MapSubsectorEx *FProcessor::SubsectorsToEx (const MapSubsector *ssec, int count)
 
 	for (x = 0; x < count; ++x)
 	{
-		out[x].numlines = SHORT(ssec[x].numlines);
-		out[x].firstline = SHORT(ssec[x].firstline);
+		out[x].numlines = LittleShort(ssec[x].numlines);
+		out[x].firstline = LittleShort(ssec[x].firstline);
 	}
 	
 	return out;
@@ -749,11 +749,11 @@ MapSegGLEx *FProcessor::SegGLsToEx (const MapSegGL *segs, int count)
 
 	for (x = 0; x < count; ++x)
 	{
-		out[x].v1 = SHORT(segs[x].v1);
-		out[x].v2 = SHORT(segs[x].v2);
-		out[x].linedef = SHORT(segs[x].linedef);
-		out[x].side = SHORT(segs[x].side);
-		out[x].partner = SHORT(segs[x].partner);
+		out[x].v1 = LittleShort(segs[x].v1);
+		out[x].v2 = LittleShort(segs[x].v2);
+		out[x].linedef = LittleShort(segs[x].linedef);
+		out[x].side = LittleShort(segs[x].side);
+		out[x].partner = LittleShort(segs[x].partner);
 	}
 
 	return out;
@@ -769,7 +769,7 @@ void FProcessor::WriteVertices (FWadWriter &out, int count)
 
 	for (i = 0; i < count; ++i)
 	{
-		verts[i] = SHORT(vertdata[i] >> FRACBITS);
+		verts[i] = LittleShort(vertdata[i] >> FRACBITS);
 	}
 	out.WriteLump ("VERTEXES", verts, sizeof(*verts)*count);
 	delete[] verts;
@@ -788,11 +788,11 @@ void FProcessor::WriteLines (FWadWriter &out)
 	{
 		for (i = 0; i < Level.NumLines; ++i)
 		{
-			Level.Lines[i].v1 = SHORT(Level.Lines[i].v1);
-			Level.Lines[i].v2 = SHORT(Level.Lines[i].v2);
-			Level.Lines[i].flags = SHORT(Level.Lines[i].flags);
-			Level.Lines[i].sidenum[0] = SHORT(Level.Lines[i].sidenum[0]);
-			Level.Lines[i].sidenum[1] = SHORT(Level.Lines[i].sidenum[1]);
+			Level.Lines[i].v1 = LittleShort(Level.Lines[i].v1);
+			Level.Lines[i].v2 = LittleShort(Level.Lines[i].v2);
+			Level.Lines[i].flags = LittleShort(Level.Lines[i].flags);
+			Level.Lines[i].sidenum[0] = LittleShort(Level.Lines[i].sidenum[0]);
+			Level.Lines[i].sidenum[1] = LittleShort(Level.Lines[i].sidenum[1]);
 		}
 		out.WriteLump ("LINEDEFS", Level.Lines, Level.NumLines*sizeof(*Level.Lines));
 	}
@@ -804,17 +804,17 @@ void FProcessor::WriteLines (FWadWriter &out)
 		{
 			short t;
 
-			ld[i].v1 = SHORT(Level.Lines[i].v1);
-			ld[i].v2 = SHORT(Level.Lines[i].v2);
-			ld[i].flags = SHORT(Level.Lines[i].flags);
-			ld[i].sidenum[0] = SHORT(Level.Lines[i].sidenum[0]);
-			ld[i].sidenum[1] = SHORT(Level.Lines[i].sidenum[1]);
+			ld[i].v1 = LittleShort(Level.Lines[i].v1);
+			ld[i].v2 = LittleShort(Level.Lines[i].v2);
+			ld[i].flags = LittleShort(Level.Lines[i].flags);
+			ld[i].sidenum[0] = LittleShort(Level.Lines[i].sidenum[0]);
+			ld[i].sidenum[1] = LittleShort(Level.Lines[i].sidenum[1]);
 
 			t = Level.Lines[i].args[2] + (Level.Lines[i].args[3]<<8);
-			ld[i].special = SHORT(t);
+			ld[i].special = LittleShort(t);
 
 			t = Level.Lines[i].args[0] + (Level.Lines[i].args[1]<<8);
-			ld[i].tag = SHORT(t);
+			ld[i].tag = LittleShort(t);
 		}
 		out.WriteLump ("LINEDEFS", ld, Level.NumLines*sizeof(*ld));
 		delete[] ld;
@@ -827,7 +827,7 @@ void FProcessor::WriteSides (FWadWriter &out)
 
 	for (i = 0; i < Level.NumSides; ++i)
 	{
-		Level.Sides[i].sector = SHORT(Level.Sides[i].sector);
+		Level.Sides[i].sector = LittleShort(Level.Sides[i].sector);
 	}
 	out.WriteLump ("SIDEDEFS", Level.Sides, Level.NumSides*sizeof(*Level.Sides));
 }
@@ -847,7 +847,7 @@ void FProcessor::WriteSegs (FWadWriter &out)
 
 	for (i = 0; i < count; ++i)
 	{
-		segdata[i] = SHORT(segdata[i]);
+		segdata[i] = LittleShort(segdata[i]);
 	}
 	out.WriteLump ("SEGS", segdata, sizeof(*segdata)*count);
 
@@ -876,8 +876,8 @@ void FProcessor::WriteSSectors2 (FWadWriter &out, const char *name, const MapSub
 
 	for (i = 0; i < count; ++i)
 	{
-		ssec[i].firstline = SHORT((WORD)subs[i].firstline);
-		ssec[i].numlines = SHORT((WORD)subs[i].numlines);
+		ssec[i].firstline = LittleShort((WORD)subs[i].firstline);
+		ssec[i].numlines = LittleShort((WORD)subs[i].numlines);
 	}
 	out.WriteLump (name, ssec, sizeof(*ssec)*count);
 	delete[] ssec;
@@ -886,6 +886,22 @@ void FProcessor::WriteSSectors2 (FWadWriter &out, const char *name, const MapSub
 	{
 		printf ("   %s is too big. (%d subsectors)\n", name, count);
 	}
+}
+
+void FProcessor::WriteSSectors5 (FWadWriter &out, const char *name, const MapSubsectorEx *subs, int count) const
+{
+	int i;
+	MapSubsectorEx *ssec;
+
+	ssec = new MapSubsectorEx[count];
+
+	for (i = 0; i < count; ++i)
+	{
+		ssec[i].firstline = LittleLong(subs[i].firstline);
+		ssec[i].numlines = LittleLong(subs[i].numlines);
+	}
+	out.WriteLump (name, ssec, sizeof(*ssec)*count);
+	delete[] ssec;
 }
 
 void FProcessor::WriteNodes (FWadWriter &out) const
@@ -905,7 +921,7 @@ void FProcessor::WriteNodes2 (FWadWriter &out, const char *name, const MapNodeEx
 		short *inodes = (short *)&zaNodes[i];
 		for (j = 0; j < 4+2*4; ++j)
 		{
-			nodes[j] = SHORT(inodes[j]);
+			nodes[j] = LittleShort(inodes[j]);
 		}
 		nodes += j;
 		for (j = 0; j < 2; ++j)
@@ -913,11 +929,11 @@ void FProcessor::WriteNodes2 (FWadWriter &out, const char *name, const MapNodeEx
 			DWORD child = zaNodes[i].children[j];
 			if (child & NFX_SUBSECTOR)
 			{
-				*nodes++ = SHORT(WORD(child - (NFX_SUBSECTOR + NF_SUBSECTOR)));
+				*nodes++ = LittleShort(WORD(child - (NFX_SUBSECTOR + NF_SUBSECTOR)));
 			}
 			else
 			{
-				*nodes++ = SHORT((WORD)child);
+				*nodes++ = LittleShort((WORD)child);
 			}
 		}
 	}
@@ -928,6 +944,28 @@ void FProcessor::WriteNodes2 (FWadWriter &out, const char *name, const MapNodeEx
 	{
 		printf ("   %s is too big. (%d nodes)\n", name, count);
 	}
+}
+
+void FProcessor::WriteNodes5 (FWadWriter &out, const char *name, const MapNodeEx *zaNodes, int count) const
+{
+	int i, j;
+	MapNodeEx *const nodes = new MapNodeEx[count * sizeof(MapNodeEx)];
+
+	for (i = 0; i < count; ++i)
+	{
+		const short *inodes = &zaNodes[i].x;
+		short *coord = &nodes[i].x;
+		for (j = 0; j < 4+2*4; ++j)
+		{
+			coord[j] = LittleShort(inodes[j]);
+		}
+		for (j = 0; j < 2; ++j)
+		{
+			nodes[i].children[j] = LittleLong(zaNodes[i].children[j]);
+		}
+	}
+	out.WriteLump (name, nodes, count * sizeof(MapNodeEx));
+	delete[] nodes;
 }
 
 void FProcessor::WriteBlockmap (FWadWriter &out)
@@ -946,7 +984,7 @@ void FProcessor::WriteBlockmap (FWadWriter &out)
 
 	for (i = 0; i < count; ++i)
 	{
-		blocks[i] = SHORT(blocks[i]);
+		blocks[i] = LittleShort(blocks[i]);
 	}
 	out.WriteLump ("BLOCKMAP", blocks, int(sizeof(*blocks)*count));
 
@@ -961,7 +999,7 @@ void FProcessor::WriteBlockmap (FWadWriter &out)
 
 	for (i = 0; i < count; ++i)
 	{
-		blocks[i] = SHORT(blocks[i]);
+		blocks[i] = LittleShort(blocks[i]);
 	}
 
 	if (count >= 65536)
@@ -988,7 +1026,7 @@ void FProcessor::WriteReject (FWadWriter &out)
 	}
 }
 
-void FProcessor::WriteGLVertices (FWadWriter &out)
+void FProcessor::WriteGLVertices (FWadWriter &out, bool v5)
 {
 	int i, count = (Level.NumGLVertices - Level.NumOrgVerts) * 2;
 	fixed_t *vertdata = (fixed_t *)Level.GLVertices + Level.NumOrgVerts * 2;
@@ -998,11 +1036,11 @@ void FProcessor::WriteGLVertices (FWadWriter &out)
 	magic[0] = 'g';
 	magic[1] = 'N';
 	magic[2] = 'd';
-	magic[3] = '2';
+	magic[3] = v5 ? '5' : '2';
 
 	for (i = 0; i < count; ++i)
 	{
-		verts[i+1] = LONG(vertdata[i]);
+		verts[i+1] = LittleLong(vertdata[i]);
 	}
 	out.WriteLump ("GL_VERT", verts, sizeof(*verts)*(count+1));
 	delete[] verts;
@@ -1013,8 +1051,13 @@ void FProcessor::WriteGLVertices (FWadWriter &out)
 	}
 }
 
-void FProcessor::WriteGLSegs (FWadWriter &out)
+void FProcessor::WriteGLSegs (FWadWriter &out, bool v5)
 {
+	if (v5)
+	{
+		WriteGLSegs5 (out);
+		return;
+	}
 	int i, count;
 	MapSegGL *segdata;
 
@@ -1023,27 +1066,28 @@ void FProcessor::WriteGLSegs (FWadWriter &out)
 
 	for (i = 0; i < count; ++i)
 	{
-		if (Level.GLSegs[i].v1 < Level.NumOrgVerts)
+		if (Level.GLSegs[i].v1 < (DWORD)Level.NumOrgVerts)
 		{
-			segdata[i].v1 = SHORT(Level.GLSegs[i].v1);
+			segdata[i].v1 = LittleShort((WORD)Level.GLSegs[i].v1);
 		}
 		else
 		{
-			segdata[i].v1 = SHORT(0x8000 | (Level.GLSegs[i].v1 - Level.NumOrgVerts));
+			segdata[i].v1 = LittleShort(0x8000 | (WORD)(Level.GLSegs[i].v1 - Level.NumOrgVerts));
 		}
-		if (Level.GLSegs[i].v2 < Level.NumOrgVerts)
+		if (Level.GLSegs[i].v2 < (DWORD)Level.NumOrgVerts)
 		{
-			segdata[i].v2 = SHORT(Level.GLSegs[i].v2);
+			segdata[i].v2 = (WORD)LittleShort(Level.GLSegs[i].v2);
 		}
 		else
 		{
-			segdata[i].v2 = SHORT(0x8000 | (Level.GLSegs[i].v2 - Level.NumOrgVerts));
+			segdata[i].v2 = LittleShort(0x8000 | (WORD)(Level.GLSegs[i].v2 - Level.NumOrgVerts));
 		}
-		segdata[i].linedef = SHORT(Level.GLSegs[i].linedef);
-		segdata[i].side = SHORT(Level.GLSegs[i].side);
-		segdata[i].partner = SHORT((WORD)Level.GLSegs[i].partner);
+		segdata[i].linedef = LittleShort(Level.GLSegs[i].linedef);
+		segdata[i].side = LittleShort(Level.GLSegs[i].side);
+		segdata[i].partner = LittleShort((WORD)Level.GLSegs[i].partner);
 	}
 	out.WriteLump ("GL_SEGS", segdata, sizeof(MapSegGL)*count);
+	delete[] segdata;
 
 	if (count >= 65536)
 	{
@@ -1055,14 +1099,62 @@ void FProcessor::WriteGLSegs (FWadWriter &out)
 	}
 }
 
-void FProcessor::WriteGLSSect (FWadWriter &out)
+void FProcessor::WriteGLSegs5 (FWadWriter &out)
 {
-	WriteSSectors2 (out, "GL_SSECT", Level.GLSubsectors, Level.NumGLSubsectors);
+	int i, count;
+	MapSegGLEx *segdata;
+
+	count = Level.NumGLSegs;
+	segdata = new MapSegGLEx[count];
+
+	for (i = 0; i < count; ++i)
+	{
+		if (Level.GLSegs[i].v1 < (DWORD)Level.NumOrgVerts)
+		{
+			segdata[i].v1 = LittleLong(Level.GLSegs[i].v1);
+		}
+		else
+		{
+			segdata[i].v1 = LittleLong(0x800000000u | ((int)Level.GLSegs[i].v1 - Level.NumOrgVerts));
+		}
+		if (Level.GLSegs[i].v2 < (DWORD)Level.NumOrgVerts)
+		{
+			segdata[i].v2 = LittleLong(Level.GLSegs[i].v2);
+		}
+		else
+		{
+			segdata[i].v2 = LittleLong(0x800000000u | ((int)Level.GLSegs[i].v2 - Level.NumOrgVerts));
+		}
+		segdata[i].linedef = LittleShort(Level.GLSegs[i].linedef);
+		segdata[i].side = LittleShort(Level.GLSegs[i].side);
+		segdata[i].partner = LittleLong(Level.GLSegs[i].partner);
+	}
+	out.WriteLump ("GL_SEGS", segdata, sizeof(MapSegGLEx)*count);
+	delete[] segdata;
 }
 
-void FProcessor::WriteGLNodes (FWadWriter &out)
+void FProcessor::WriteGLSSect (FWadWriter &out, bool v5)
 {
-	WriteNodes2 (out, "GL_NODES", Level.GLNodes, Level.NumGLNodes);
+	if (!v5)
+	{
+		WriteSSectors2 (out, "GL_SSECT", Level.GLSubsectors, Level.NumGLSubsectors);
+	}
+	else
+	{
+		WriteSSectors5 (out, "GL_SSECT", Level.GLSubsectors, Level.NumGLSubsectors);
+	}
+}
+
+void FProcessor::WriteGLNodes (FWadWriter &out, bool v5)
+{
+	if (!v5)
+	{
+		WriteNodes2 (out, "GL_NODES", Level.GLNodes, Level.NumGLNodes);
+	}
+	else
+	{
+		WriteNodes5 (out, "GL_NODES", Level.GLNodes, Level.NumGLNodes);
+	}
 }
 
 void FProcessor::WriteBSPZ (FWadWriter &out, const char *label)
@@ -1246,28 +1338,28 @@ ZLibOut &ZLibOut::operator << (BYTE val)
 
 ZLibOut &ZLibOut::operator << (WORD val)
 {
-	val = SHORT(val);
+	val = LittleShort(val);
 	Write ((BYTE *)&val, 2);
 	return *this;
 }
 
 ZLibOut &ZLibOut::operator << (SWORD val)
 {
-	val = SHORT(val);
+	val = LittleShort(val);
 	Write ((BYTE *)&val, 2);
 	return *this;
 }
 
 ZLibOut &ZLibOut::operator << (DWORD val)
 {
-	val = LONG(val);
+	val = LittleLong(val);
 	Write ((BYTE *)&val, 4);
 	return *this;
 }
 
 ZLibOut &ZLibOut::operator << (fixed_t val)
 {
-	val = LONG(val);
+	val = LittleLong(val);
 	Write ((BYTE *)&val, 4);
 	return *this;
 }

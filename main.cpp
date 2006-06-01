@@ -101,6 +101,7 @@ bool			 NoTiming = false;
 bool			 CompressNodes = false;
 bool			 CompressGLNodes = false;
 bool			 GLOnly = false;
+bool			 V5GLNodes = false;
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
 
@@ -131,10 +132,11 @@ static option long_opts[] =
 	{"compress",		no_argument,		0,	'z'},
 	{"compress-normal",	no_argument,		0,	'Z'},
 	{"gl-only",			no_argument,		0,	'x'},
+	{"gl-v5",			no_argument,		0,	'5'},
 	{0,0,0,0}
 };
 
-static const char short_opts[] = "wVgGvbNrReEm:o:f:p:s:d:PqtzZx";
+static const char short_opts[] = "wVgGvbNrReEm:o:f:p:s:d:PqtzZx5";
 
 // CODE --------------------------------------------------------------------
 
@@ -351,6 +353,9 @@ static void ParseArgs (int argc, char **argv)
 			BuildGLNodes = true;
 			ConformNodes = false;
 			break;
+		case '5':
+			V5GLNodes = true;
+			break;
 		case 'q':
 			NoPrune = true;
 			break;
@@ -388,6 +393,7 @@ static void ShowUsage ()
 "  -g, --gl                 Build GL-friendly nodes\n"
 "  -G, --gl-matching        Build GL-friendly nodes that match normal nodes\n"
 "  -x, --gl-only            Only build GL-friendly nodes\n"
+"  -5, --gl-v5              Create v5 GL-friedly nodes (ignored if -z is used)\n"
 "  -b, --empty-blockmap     Create an empty blockmap\n"
 "  -r, --empty-reject       Create an empty reject table\n"
 "  -R, --zero-reject        Create a reject table of all zeroes\n"
@@ -407,7 +413,7 @@ static void ShowUsage ()
 "  -t, --no-timing          Suppress timing information\n"
 #endif
 "  -V, --version            Display version information\n"
-"      --help               Display this usage information\n"
+"      --help               Display this usage information"
 	);
 }
 

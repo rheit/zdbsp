@@ -94,8 +94,8 @@ struct MapSegGL
 
 struct MapSegGLEx
 {
-	WORD	v1;
-	WORD	v2;
+	DWORD	v1;
+	DWORD	v2;
 	WORD	linedef;
 	WORD	side;
 	DWORD	partner;
