@@ -8,7 +8,7 @@ CFLAGS += -O3 -fomit-frame-pointer
 
 # Processor features flags
 CFLAGS += -mtune=i686
-#CFLAGS += -march=k8
+#CFLAGS += -march=k8 -mfpmath=sse
 
 LDFLAGS =
 RM = rm -f FILE
@@ -24,6 +24,17 @@ ifeq (Windows_NT,$(OS))
 else
   EXE = zdbsp
   CFLAGS += -Dstricmp=strcasecmp -Dstrnicmp=strncasecmp -DNO_MAP_VIEWER=1
+endif
+
+# To generate profiling information for gprof, pass gprof=1 to make.
+ifneq ($(gprof),)
+  CFLAGS += -g -fno-omit-frame-pointer -pg
+  LDFLAGS += -g -pg
+endif
+
+# To strip debugging symbols, pass strip=1 to make.
+ifneq ($(strip),)
+  LDFLAGS += -s
 endif
 
 CC = gcc

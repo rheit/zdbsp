@@ -9,7 +9,7 @@
 #include <exception>
 #include <stdexcept>
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 typedef unsigned __int32 uint32_t;
 typedef __int32 int32_t;
 #else
@@ -115,6 +115,55 @@ inline fixed_t DMulScale32 (fixed_t a, fixed_t b, fixed_t c, fixed_t d)
 }
 
 #pragma warning (default: 4035)
+
+#elif defined(__GNUC__)
+
+inline fixed_t Scale (fixed_t a, fixed_t b, fixed_t c)
+{
+	fixed_t result, dummy;
+
+	asm volatile
+		("imull %3\n\t"
+		 "idivl %4"
+		 : "=a,a,a,a,a,a" (result),
+		   "=&d,&d,&d,&d,d,d" (dummy)
+		 :   "a,a,a,a,a,a" (a),
+		     "m,r,m,r,d,d" (b),
+		     "r,r,m,m,r,m" (c)
+		 : "%cc"
+			);
+
+	return result;
+}
+
+inline fixed_t DivScale30 (fixed_t a, fixed_t b)
+{
+	fixed_t result, dummy;
+	asm volatile
+		("idivl %4"
+		: "=a,a" (result),
+		  "=d,d" (dummy)
+		: "a,a" (a<<30),
+		  "d,d" (a>>2),
+		  "r,m" (b) \
+		: "%cc");
+	return result;
+}
+
+inline fixed_t MulScale30 (fixed_t a, fixed_t b)
+{
+	return ((int64_t)a * b) >> 30;
+}
+
+inline fixed_t DMulScale30 (fixed_t a, fixed_t b, fixed_t c, fixed_t d)
+{
+	return (((int64_t)a * b) + ((int64_t)c * d)) >> 30;
+}
+
+inline fixed_t DMulScale32 (fixed_t a, fixed_t b, fixed_t c, fixed_t d)
+{
+	return (((int64_t)a * b) + ((int64_t)c * d)) >> 32;
+}
 
 #else
 

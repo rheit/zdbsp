@@ -712,14 +712,81 @@ int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, 
 {
 	const FPrivVert *v1 = &Vertices[seg->v1];
 	const FPrivVert *v2 = &Vertices[seg->v2];
-	sidev1 = PointOnSide (v1->x, v1->y, node.x, node.y, node.dx, node.dy);
-	sidev2 = PointOnSide (v2->x, v2->y, node.x, node.y, node.dx, node.dy);
+
+	double d_x1 = double(node.x);
+	double d_y1 = double(node.y);
+	double d_dx = double(node.dx);
+	double d_dy = double(node.dy);
+	double d_xv1 = double(v1->x);
+	double d_xv2 = double(v2->x);
+	double d_yv1 = double(v1->y);
+	double d_yv2 = double(v2->y);
+
+	double s_num1 = (d_y1 - d_yv1)*d_dx - (d_x1 - d_xv1) * d_dy;
+	double s_num2 = (d_y1 - d_yv2)*d_dx - (d_x1 - d_xv2) * d_dy;
+
+	if (s_num1 <= -17179869184.0 && s_num2 <= -17179869184.0)
+	{
+		sidev1 = sidev2 = 1;
+		return 1;
+	}
+	if (s_num1 >= 17179869184.0 && s_num2 >= 17179869184.0)
+	{
+		sidev1 = sidev2 = -1;
+		return 0;
+	}
+
+	int near = (fabs(s_num1) < 17179869184.0) | ((fabs(s_num2) < 17179869184.0) << 1);
+	if (near)
+	{
+		double l = d_dx*d_dx + d_dy*d_dy;
+		if (near & 1)
+		{
+			double dist = s_num1 * s_num1 / l;
+			if (dist < SIDE_EPSILON*SIDE_EPSILON)
+			{
+				sidev1 = 0;
+			}
+			else
+			{
+				sidev1 = s_num1 > 0.0 ? -1 : 1;
+			}
+		}
+		else
+		{
+			sidev1 = s_num1 > 0.0 ? -1 : 1;
+		}
+		if (near & 2)
+		{
+			double dist = s_num2 * s_num2 / l;
+			if (dist < SIDE_EPSILON*SIDE_EPSILON)
+			{
+				sidev2 = 0;
+			}
+			else
+			{
+				sidev2 = s_num2 > 0.0 ? -1 : 1;
+			}
+		}
+		else
+		{
+			sidev2 = s_num2 > 0.0 ? -1 : 1;
+		}
+	}
+	else
+	{
+		sidev1 = s_num1 > 0.0 ? -1 : 1;
+		sidev2 = s_num2 > 0.0 ? -1 : 1;
+	}
 
 	if ((sidev1 | sidev2) == 0)
 	{ // seg is coplanar with the splitter, so use its orientation to determine
 	  // which child it ends up in. If it faces the same direction as the splitter,
 	  // it goes in front. Otherwise, it goes in back.
 
+//		return DMulScale32 (node.dx, v2->x - v1->x, node.dy, v2->y - v1->y) < 0;
+//		return (d_dx * (d_xv2 - d_xv1) + d_dy * (d_yv2 - d_yv1)) < 0.0;
+#if 1
 		if (node.dx != 0)
 		{
 			if ((node.dx > 0 && v2->x > v1->x) || (node.dx < 0 && v2->x < v1->x))
@@ -742,6 +809,7 @@ int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, 
 				return 1;
 			}
 		}
+#endif
 	}
 	else if (sidev1 <= 0 && sidev2 <= 0)
 	{
@@ -823,6 +891,8 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			{
 				if (abs(Vertices[i].x - newvert.x) < VERTEX_EPSILON &&
 					abs(Vertices[i].y - newvert.y) < VERTEX_EPSILON)
+//				if (uint32_t(Vertices[i].x - newvert.x + VERTEX_EPSILON) < 2u*VERTEX_EPSILON &&
+//					uint32_t(Vertices[i].y - newvert.y + VERTEX_EPSILON) < 2u*VERTEX_EPSILON)
 				{
 					break;
 				}
@@ -1063,9 +1133,7 @@ double FNodeBuilder::InterceptVector (const node_t &splitter, const FPrivSeg &se
 	double v1y = (double)splitter.y;
 
 	double num = (v1x - v2x)*v1dy + (v2y - v1y)*v1dx;
-	double frac = num / den;
-
-	return frac;
+	return num / den;
 }
 
 int FNodeBuilder::PointOnSide (int x, int y, int x1, int y1, int dx, int dy)
@@ -1085,9 +1153,9 @@ int FNodeBuilder::PointOnSide (int x, int y, int x1, int y1, int dx, int dy)
 		// Either the point is very near the line, or the segment defining
 		// the line is very short: Do a more expensive test to determine
 		// just how far from the line the point is.
-		double l = sqrt(d_dx*d_dx+d_dy*d_dy);
-		double dist = fabs(s_num)/l;
-		if (dist < SIDE_EPSILON)
+		double l = d_dx*d_dx + d_dy*d_dy;		// double l = sqrt(d_dx*d_dx+d_dy*d_dy);
+		double dist = s_num * s_num / l;		// double dist = fabs(s_num)/l;
+		if (dist < SIDE_EPSILON*SIDE_EPSILON)	// if (dist < SIDE_EPSILON)
 		{
 			return 0;
 		}
