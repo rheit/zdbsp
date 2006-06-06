@@ -1,3 +1,4 @@
+#include <math.h>
 #include "doomdata.h"
 #include "workdata.h"
 #include "tarray.h"
@@ -150,7 +151,7 @@ public:
 	// == 0 : on line
 	//  > 0 : behind line
 
-	static int PointOnSide (int x, int y, int x1, int y1, int dx, int dy);
+	static inline int PointOnSide (int x, int y, int x1, int y1, int dx, int dy);
 
 private:
 	FVertexMap *VertexMap;
@@ -225,3 +226,35 @@ private:
 
 	void PrintSet (int l, DWORD set);
 };
+
+// Points within this distance of a line will be considered on the line.
+// Units are in fixed_ts.
+const double SIDE_EPSILON = 6.5536;
+
+inline int FNodeBuilder::PointOnSide (int x, int y, int x1, int y1, int dx, int dy)
+{
+	// For most cases, a simple dot product is enough.
+	double d_dx = double(dx);
+	double d_dy = double(dy);
+	double d_x = double(x);
+	double d_y = double(y);
+	double d_x1 = double(x1);
+	double d_y1 = double(y1);
+
+	double s_num = (d_y1-d_y)*d_dx - (d_x1-d_x)*d_dy;
+
+	if (fabs(s_num) < 17179869184.f)	// 4<<32
+	{
+		// Either the point is very near the line, or the segment defining
+		// the line is very short: Do a more expensive test to determine
+		// just how far from the line the point is.
+		double l = d_dx*d_dx + d_dy*d_dy;		// double l = sqrt(d_dx*d_dx+d_dy*d_dy);
+		double dist = s_num * s_num / l;		// double dist = fabs(s_num)/l;
+		if (dist < SIDE_EPSILON*SIDE_EPSILON)	// if (dist < SIDE_EPSILON)
+		{
+			return 0;
+		}
+	}
+	return s_num > 0.0 ? -1 : 1;
+}
+
