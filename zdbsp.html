@@ -103,6 +103,15 @@
 				information from them to create the normal nodes. Because of this, it is faster 
 				than the previous option when you want to create GL nodes, but the normal nodes 
 				will generally be less efficient because they were created from the GL nodes.</dd>
+			<dt>--gl-v5 org -5</dt>
+			<dd>
+				Always write GL nodes using the v5 GL node specification. Normally, v5 GL nodes
+				are only written if they exceed the limits of v2 GL nodes. Since v2 GL nodes are
+				more widely supported than v5 GL nodes and v5 GL nodes are only useful for very
+				large maps, you should generally not use this option. If you do not specify this
+				option, v5 GL nodes will still be automatically written if they are required, and
+				if they are not, the more space-efficient v2 GL nodes will be created instead.
+			</dd>
 			<dt>--compress or -z</dt>
 			<dd>Compresses the node information. Compressed nodes take up less space than
 			uncompressed nodes, and they are also the only way to save nodes with more than 65535 segs.
@@ -143,6 +152,9 @@
 			<dd>
 				If you don't care how long it takes to build nodes, use this option and ZDBSP 
 				won't tell you.</dd>
+			<dt>--no-sse or --no-sse2</dt>
+			<dd>Disable SSE2 optimizations in the nodebuilder, which can be useful if you just
+				want to measure the kind of speed up SSE2 provides.</dd>
 			<dt>--warn or -w</dt>
 			<dd>
 				Displays extra warning messages that ZDBSP might generate while building GL 
