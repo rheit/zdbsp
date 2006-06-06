@@ -735,30 +735,43 @@ int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, 
 	double s_num1 = (d_y1 - d_yv1) * d_dx - (d_x1 - d_xv1) * d_dy;
 	double s_num2 = (d_y1 - d_yv2) * d_dx - (d_x1 - d_xv2) * d_dy;
 
-	if (s_num1 <= -FAR_ENOUGH && s_num2 <= -FAR_ENOUGH)
+	int near = 0;
+
+	if (s_num1 <= -FAR_ENOUGH)
 	{
-		sidev1 = sidev2 = 1;
-		return 1;
+		if (s_num2 <= -FAR_ENOUGH)
+		{
+			sidev1 = sidev2 = 1;
+			return 1;
+		}
+		if (s_num2 >= FAR_ENOUGH)
+		{
+			sidev1 = 1;
+			sidev2 = -1;
+			return -1;
+		}
+		near = 2;
 	}
-	if (s_num1 >= FAR_ENOUGH && s_num2 >= FAR_ENOUGH)
+	else if (s_num1 >= FAR_ENOUGH)
 	{
-		sidev1 = sidev2 = -1;
-		return 0;
+		if (s_num2 >= FAR_ENOUGH)
+		{
+			sidev1 = sidev2 = -1;
+			return 0;
+		}
+		if (s_num2 <= -FAR_ENOUGH)
+		{
+			sidev1 = -1;
+			sidev2 = 1;
+			return -1;
+		}
+		near = 2;
 	}
-	if (s_num1 <= -FAR_ENOUGH && s_num2 >= FAR_ENOUGH)
+	else
 	{
-		sidev1 = 1;
-		sidev2 = -1;
-		return -1;
-	}
-	if (s_num1 >= FAR_ENOUGH && s_num2 <= -FAR_ENOUGH)
-	{
-		sidev1 = -1;
-		sidev2 = 1;
-		return -1;
+		near = 1 | ((fabs(s_num2) < FAR_ENOUGH) << 1);
 	}
 
-	int near = (fabs(s_num1) < FAR_ENOUGH) | ((fabs(s_num2) < FAR_ENOUGH) << 1);
 	if (near)
 	{
 		double l = 1.0 / (d_dx*d_dx + d_dy*d_dy);
