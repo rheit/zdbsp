@@ -39,12 +39,13 @@ RSC=rc.exe
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir ".\Release"
 # PROP Intermediate_Dir ".\Release"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE MTL /nologo /tlb".\Release\zdbsp.tlb" /win32
 # ADD MTL /nologo /tlb".\Release\zdbsp.tlb" /win32
 # ADD BASE CPP /nologo /W3 /GX /Zi /Ot /Og /Oi /Oy /Ob2 /Gy /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /GA /GF /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /Ot /Og /Oi /Oy /Ob2 /Gy /I "zlib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /GA /GF /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /Ot /Og /Oi /Oy /Ob2 /Gy /I "zlib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D _MSC_VER=1200 /GA /GF /c
 # SUBTRACT CPP /YX /Yc /Yu
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
@@ -73,7 +74,7 @@ MTL=midl.exe
 # ADD BASE MTL /nologo /tlb".\Debug\zdbsp.tlb" /win32
 # ADD MTL /nologo /tlb".\Debug\zdbsp.tlb" /win32
 # ADD BASE CPP /nologo /W3 /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /GZ /c
-# ADD CPP /nologo /W3 /GX /ZI /Od /I "zlib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /GZ /c
+# ADD CPP /nologo /W3 /GX /ZI /Od /I "zlib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D _MSC_VER=1200 /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -157,6 +158,8 @@ DEP_CPP_MAIN_=\
 	".\wad.h"\
 	".\workdata.h"\
 	".\zdbsp.h"\
+	".\zlib\zconf.h"\
+	".\zlib\zlib.h"\
 	
 # End Source File
 # Begin Source File
@@ -173,7 +176,7 @@ DEP_CPP_NODEB=\
 # End Source File
 # Begin Source File
 
-SOURCE=nodebuild_events.cpp
+SOURCE=.\nodebuild_classify_nosse2.cpp
 DEP_CPP_NODEBU=\
 	".\doomdata.h"\
 	".\nodebuild.h"\
@@ -184,8 +187,30 @@ DEP_CPP_NODEBU=\
 # End Source File
 # Begin Source File
 
-SOURCE=nodebuild_extract.cpp
+SOURCE=.\nodebuild_classify_sse2.cpp
 DEP_CPP_NODEBUI=\
+	".\doomdata.h"\
+	".\nodebuild.h"\
+	".\tarray.h"\
+	".\workdata.h"\
+	".\zdbsp.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=nodebuild_events.cpp
+DEP_CPP_NODEBUIL=\
+	".\doomdata.h"\
+	".\nodebuild.h"\
+	".\tarray.h"\
+	".\workdata.h"\
+	".\zdbsp.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=nodebuild_extract.cpp
+DEP_CPP_NODEBUILD=\
 	".\doomdata.h"\
 	".\nodebuild.h"\
 	".\tarray.h"\
@@ -197,7 +222,7 @@ DEP_CPP_NODEBUI=\
 # Begin Source File
 
 SOURCE=nodebuild_gl.cpp
-DEP_CPP_NODEBUIL=\
+DEP_CPP_NODEBUILD_=\
 	".\doomdata.h"\
 	".\nodebuild.h"\
 	".\tarray.h"\
@@ -208,10 +233,11 @@ DEP_CPP_NODEBUIL=\
 # Begin Source File
 
 SOURCE=nodebuild_utility.cpp
-DEP_CPP_NODEBUILD=\
+DEP_CPP_NODEBUILD_U=\
 	".\doomdata.h"\
 	".\nodebuild.h"\
 	".\tarray.h"\
+	".\templates.h"\
 	".\workdata.h"\
 	".\zdbsp.h"\
 	
@@ -228,6 +254,8 @@ DEP_CPP_PROCE=\
 	".\wad.h"\
 	".\workdata.h"\
 	".\zdbsp.h"\
+	".\zlib\zconf.h"\
+	".\zlib\zlib.h"\
 	
 # End Source File
 # Begin Source File

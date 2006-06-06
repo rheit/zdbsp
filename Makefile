@@ -8,7 +8,7 @@ CFLAGS += -O3 -fomit-frame-pointer -DNDEBUG
 
 # Processor features flags
 CFLAGS += -mtune=i686
-#CFLAGS += -march=k8 -mfpmath=sse
+#CFLAGS += -march=k8
 
 LDFLAGS =
 RM = rm -f FILE
@@ -37,6 +37,11 @@ ifneq ($(strip),)
   LDFLAGS += -s
 endif
 
+# To use SSE2 math for everything, pass sse=1 to make.
+ifneq ($(sse),)
+  CFLAGS += -msse -msse2 -mfpmath=sse
+endif
+
 CC = gcc
 CXX = g++
 
@@ -44,7 +49,7 @@ CXXFLAGS = $(CFLAGS)
 
 OBJS = main.o getopt.o getopt1.o blockmapbuilder.o processor.o view.o wad.o \
 	nodebuild.o nodebuild_events.o nodebuild_extract.o nodebuild_gl.o \
-	nodebuild_utility.o \
+	nodebuild_utility.o nodebuild_classify_sse2.o nodebuild_classify_nosse2.o \
 	zlib/adler32.o zlib/compress.o zlib/crc32.o zlib/deflate.o zlib/trees.o \
 	zlib/zutil.o
 
@@ -61,6 +66,9 @@ profile-use:
 
 $(EXE): $(OBJS)
 	$(CCDV) $(CXX) -o $(EXE) $(OBJS) $(LDFLAGS)
+
+nodebuild_classify_sse2.o: nodebuild_classify_sse2.cpp nodebuild.h
+	$(CXX) $(CXXFLAGS) -msse2 -mfpmath=sse -c -o $@ $<
 
 .PHONY: clean
 

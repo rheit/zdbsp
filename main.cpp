@@ -78,6 +78,7 @@ static void ParseArgs (int argc, char **argv);
 static void ShowUsage ();
 static void ShowVersion ();
 static bool CheckInOutNames ();
+static void VerifySSE2 ();
 
 // EXTERNAL DATA DECLARATIONS ----------------------------------------------
 
@@ -106,6 +107,7 @@ bool			 CompressNodes = false;
 bool			 CompressGLNodes = false;
 bool			 GLOnly = false;
 bool			 V5GLNodes = false;
+bool			 HaveSSE2 = true;
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
 
@@ -137,6 +139,8 @@ static option long_opts[] =
 	{"compress-normal",	no_argument,		0,	'Z'},
 	{"gl-only",			no_argument,		0,	'x'},
 	{"gl-v5",			no_argument,		0,	'5'},
+	{"no-sse",			no_argument,		0,  1002},
+	{"no-sse2",			no_argument,		0,  1002},
 	{0,0,0,0}
 };
 
@@ -149,6 +153,7 @@ int main (int argc, char **argv)
 	bool fixSame = false;
 
 	ParseArgs (argc, argv);
+	VerifySSE2 ();
 
 	if (InName == NULL)
 	{
@@ -370,6 +375,9 @@ static void ParseArgs (int argc, char **argv)
 			ShowVersion ();
 			exit (0);
 			break;
+		case 1002:		// Disable SSE2 ClassifyLine routine
+			HaveSSE2 = false;
+			break;
 		case 1000:
 			ShowUsage ();
 			exit (0);
@@ -501,6 +509,89 @@ static bool CheckInOutNames ()
 
 //==========================================================================
 //
+// VerifySSE2
+//
+// Ensure that if HaveSSE2 is set, that we actually do have SSE2.
+//
+//==========================================================================
+
+static void VerifySSE2 ()
+{
+#ifdef __SSE2__
+	// If we compiled with SSE2 support enabled for everything, then
+	// obviously it's available, or the program won't get very far.
+	return;
+#endif
+#if defined(_MSC_VER) && defined(_M_X64)
+#endif
+
+#if defined(_MSC_VER)
+
+#ifdef _M_X64
+	// Processors implementing AMD64 are required to support SSE2.
+	return;
+#else
+	if (!HaveSSE2)
+	{
+		return;
+	}
+	HaveSSE2 = false;
+	__asm
+	{
+		pushfd				// save EFLAGS
+		pop eax				// store EFLAGS in EAX
+		mov edx,eax			// save in EDX for later testing
+		xor eax,0x00200000	// toggle bit 21
+		push eax			// put to stack
+		popfd				// save changed EAX to EFLAGS
+		pushfd				// push EFLAGS to TOS
+		pop eax				// store EFLAGS in EAX
+		cmp eax,edx			// see if bit 21 has changed
+		jz noid				// if no change, then no CPUID
+
+		// Check the feature flag for SSE2
+		mov eax,1
+		cpuid
+		test edx,(1<<26)
+		setnz HaveSSE2
+noid:
+	}
+#endif
+
+#elif defined(__GNUC__)
+
+	// Same as above, but for GCC
+	if (!HaveSSE2)
+	{
+		return;
+	}
+	HaveSSE2 = false;
+	asm volatile
+		("pushfl\n\t"
+		 "popl %%eax\n\t"
+		 "movl %%eax,%%edx\n\t"
+		 "xorl $0x200000,%%eax\n\t"
+		 "pushl %%eax\n\t"
+		 "popfl\n\t"
+		 "pushfl\n\t"
+		 "popl %%eax\n\t"
+		 "cmp %%edx,%%eax\n\t"
+		 "jz noid\n\t"
+		 "mov $1,%%eax\n\t"
+		 "cpuid\n\t"
+		 "test $(1<<26),%%edx\n\t"
+		 "setneb %0\n"
+		 "noid:"
+		 :"=m" (HaveSSE2)::"eax","ebx","ecx","edx");
+
+#else
+	// Can't compile a check, so assume SSE2 is not present.
+	HaveSSE2 = false;
+#endif
+}
+
+//==========================================================================
+//
 // PointToAngle
 //
 //==========================================================================
@@ -509,13 +600,8 @@ angle_t PointToAngle (fixed_t x, fixed_t y)
 {
 	double ang = atan2 (double(y), double(x));
 	const double rad2bam = double(1<<30) / M_PI;
-#if 0
-	if (ang < 0.0)
-	{
-		ang = 2*M_PI+ang;
-	}
-#endif
-	return angle_t(ang * rad2bam) << 1;
+	double dbam = ang * rad2bam;
+	return angle_t(dbam) << 1;
 }
 
 //==========================================================================

@@ -125,6 +125,8 @@ class FNodeBuilder
 		}
 	};
 
+	friend class FVertexMap;
+
 
 public:
 	struct FPolyStart
@@ -135,7 +137,7 @@ public:
 
 	FNodeBuilder (FLevel &level,
 		TArray<FPolyStart> &polyspots, TArray<FPolyStart> &anchors,
-		const char *name, bool makeGLnodes);
+		const char *name, bool makeGLnodes, bool enableSSE2);
 	~FNodeBuilder ();
 
 	void GetVertices (WideVertex *&verts, int &count);
@@ -175,6 +177,7 @@ private:
 	DWORD HackMate;			// Seg to use in front of hack seg
 	FLevel &Level;
 	bool GLNodes;
+	bool EnableSSE2;
 
 	// Progress meter stuff
 	int SegsStuffed;
@@ -199,8 +202,16 @@ private:
 	void SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &outset0, DWORD &outset1);
 	DWORD SplitSeg (DWORD segnum, int splitvert, int v1InFront);
 	int Heuristic (node_t &node, DWORD set, bool honorNoSplit);
-	int ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2);
 	int CountSegs (DWORD set) const;
+
+	// Returns:
+	//	0 = seg is in front
+	//  1 = seg is in back
+	// -1 = seg cuts the node
+
+	inline int ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2);
+	int ClassifyLine2 (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2);
+	int ClassifyLineSSE2 (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2);
 
 	void FixSplitSharers ();
 	double AddIntersection (const node_t &node, int vertex);
@@ -258,3 +269,19 @@ inline int FNodeBuilder::PointOnSide (int x, int y, int x1, int y1, int dx, int 
 	return s_num > 0.0 ? -1 : 1;
 }
 
+inline int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2)
+{
+#ifdef __SSE2__
+	// If compiling with SSE2 support everywhere, just use the SSE2 version.
+	return ClassifyLineSSE2 (node, seg, sidev1, sidev2);
+#elif defined(_MSC_VER) && _MSC_VER < 1300
+	// VC 6 does not support SSE2 optimizations.
+	return ClassifyLine2 (node, seg, sidev1, sidev2);
+#else
+	// Select the routine based on our flag.
+	if (EnableSSE2)
+		return ClassifyLineSSE2 (node, seg, sidev1, sidev2);
+	else
+		return ClassifyLine2 (node, seg, sidev1, sidev2);
+#endif
+}

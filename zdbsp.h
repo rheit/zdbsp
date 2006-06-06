@@ -45,6 +45,7 @@ extern int				 AAPreference;
 extern bool				 CheckPolyobjs;
 extern bool				 ShowMap;
 extern bool				 CompressNodes, CompressGLNodes, V5GLNodes;
+extern bool				 HaveSSE2;
 
 
 #define FIXED_MAX		INT_MAX

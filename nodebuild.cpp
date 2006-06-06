@@ -40,11 +40,12 @@
 
 FNodeBuilder::FNodeBuilder (FLevel &level,
 							TArray<FPolyStart> &polyspots, TArray<FPolyStart> &anchors,
-							const char *name, bool makeGLnodes)
+							const char *name, bool makeGLnodes, bool enableSSE2)
 	: Level(level), SegsStuffed(0), MapName(name)
 {
 	VertexMap = new FVertexMap (*this, Level.MinX, Level.MinY, Level.MaxX, Level.MaxY);
 	GLNodes = makeGLnodes;
+	EnableSSE2 = enableSSE2;
 	FindUsedVertices (Level.Vertices, Level.NumVertices);
 	MakeSegsFromSides ();
 	FindPolyContainers (polyspots, anchors);
@@ -707,150 +708,6 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 	score += (counts[0] + counts[1]) - abs(counts[0] - counts[1]);
 
 	return score;
-}
-
-// Returns:
-//	0 = seg is in front
-//  1 = seg is in back
-// -1 = seg cuts the node
-int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2)
-{
-#define FAR_ENOUGH 17179869184.f		// 4<<32
-	const FPrivVert *v1 = &Vertices[seg->v1];
-	const FPrivVert *v2 = &Vertices[seg->v2];
-
-	double d_x1 = double(node.x);
-	double d_y1 = double(node.y);
-	double d_dx = double(node.dx);
-	double d_dy = double(node.dy);
-	double d_xv1 = double(v1->x);
-	double d_xv2 = double(v2->x);
-	double d_yv1 = double(v1->y);
-	double d_yv2 = double(v2->y);
-
-	double s_num1 = (d_y1 - d_yv1) * d_dx - (d_x1 - d_xv1) * d_dy;
-	double s_num2 = (d_y1 - d_yv2) * d_dx - (d_x1 - d_xv2) * d_dy;
-
-	int near = 0;
-
-	if (s_num1 <= -FAR_ENOUGH)
-	{
-		if (s_num2 <= -FAR_ENOUGH)
-		{
-			sidev1 = sidev2 = 1;
-			return 1;
-		}
-		if (s_num2 >= FAR_ENOUGH)
-		{
-			sidev1 = 1;
-			sidev2 = -1;
-			return -1;
-		}
-		near = 2;
-	}
-	else if (s_num1 >= FAR_ENOUGH)
-	{
-		if (s_num2 >= FAR_ENOUGH)
-		{
-			sidev1 = sidev2 = -1;
-			return 0;
-		}
-		if (s_num2 <= -FAR_ENOUGH)
-		{
-			sidev1 = -1;
-			sidev2 = 1;
-			return -1;
-		}
-		near = 2;
-	}
-	else
-	{
-		near = 1 | ((fabs(s_num2) < FAR_ENOUGH) << 1);
-	}
-
-	if (near)
-	{
-		double l = 1.0 / (d_dx*d_dx + d_dy*d_dy);
-		if (near & 1)
-		{
-			double dist = s_num1 * s_num1 * l;
-			if (dist < SIDE_EPSILON*SIDE_EPSILON)
-			{
-				sidev1 = 0;
-			}
-			else
-			{
-				sidev1 = s_num1 > 0.0 ? -1 : 1;
-			}
-		}
-		else
-		{
-			sidev1 = s_num1 > 0.0 ? -1 : 1;
-		}
-		if (near & 2)
-		{
-			double dist = s_num2 * s_num2 * l;
-			if (dist < SIDE_EPSILON*SIDE_EPSILON)
-			{
-				sidev2 = 0;
-			}
-			else
-			{
-				sidev2 = s_num2 > 0.0 ? -1 : 1;
-			}
-		}
-		else
-		{
-			sidev2 = s_num2 > 0.0 ? -1 : 1;
-		}
-	}
-	else
-	{
-		sidev1 = s_num1 > 0.0 ? -1 : 1;
-		sidev2 = s_num2 > 0.0 ? -1 : 1;
-	}
-
-	if ((sidev1 | sidev2) == 0)
-	{ // seg is coplanar with the splitter, so use its orientation to determine
-	  // which child it ends up in. If it faces the same direction as the splitter,
-	  // it goes in front. Otherwise, it goes in back.
-
-//		return DMulScale32 (node.dx, v2->x - v1->x, node.dy, v2->y - v1->y) < 0;
-//		return (d_dx * (d_xv2 - d_xv1) + d_dy * (d_yv2 - d_yv1)) < 0.0;
-#if 1
-		if (node.dx != 0)
-		{
-			if ((node.dx > 0 && v2->x > v1->x) || (node.dx < 0 && v2->x < v1->x))
-			{
-				return 0;
-			}
-			else
-			{
-				return 1;
-			}
-		}
-		else
-		{
-			if ((node.dy > 0 && v2->y > v1->y) || (node.dy < 0 && v2->y < v1->y))
-			{
-				return 0;
-			}
-			else
-			{
-				return 1;
-			}
-		}
-#endif
-	}
-	else if (sidev1 <= 0 && sidev2 <= 0)
-	{
-		return 0;
-	}
-	else if (sidev1 >= 0 && sidev2 >= 0)
-	{
-		return 1;
-	}
-	return -1;
 }
 
 void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &outset0, DWORD &outset1)

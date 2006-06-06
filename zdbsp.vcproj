@@ -162,7 +162,7 @@
 				OptimizeForProcessor="0"
 				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="zlib"
-				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
+				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE,__SSE2__"
 				StringPooling="TRUE"
 				RuntimeLibrary="4"
 				EnableFunctionLevelLinking="TRUE"
@@ -232,6 +232,36 @@
 			</File>
 			<File
 				RelativePath=".\nodebuild.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						AssemblerOutput="4"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release (SSE2)|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						AssemblerOutput="4"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\nodebuild_classify_nosse2.cpp">
+			</File>
+			<File
+				RelativePath=".\nodebuild_classify_sse2.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						EnableEnhancedInstructionSet="2"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						EnableEnhancedInstructionSet="2"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="nodebuild_events.cpp">
