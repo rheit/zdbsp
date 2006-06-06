@@ -11,7 +11,6 @@ struct FEventInfo
 struct FEvent
 {
 	FEvent *Parent, *Left, *Right;
-	enum { RED, BLACK } Color;
 	double Distance;
 	FEventInfo Info;
 };
@@ -28,7 +27,6 @@ public:
 
 	FEvent *GetNewNode ();
 	void Insert (FEvent *event);
-	void Delete (FEvent *event);
 	FEvent *FindEvent (double distance) const;
 	void DeleteAll ();
 
@@ -39,9 +37,6 @@ private:
 	FEvent *Root;
 	FEvent *Spare;
 
-	void LeftRotate (FEvent *event);
-	void RightRotate (FEvent *event);
-	void DeleteFixUp (FEvent *event);
 	void DeletionTraverser (FEvent *event);
 	FEvent *Successor (FEvent *event) const;
 	FEvent *Predecessor (FEvent *event) const;

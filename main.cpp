@@ -507,12 +507,14 @@ static bool CheckInOutNames ()
 
 angle_t PointToAngle (fixed_t x, fixed_t y)
 {
-	const double rad2bam = double(1<<30) / M_PI;
 	double ang = atan2 (double(y), double(x));
+	const double rad2bam = double(1<<30) / M_PI;
+#if 0
 	if (ang < 0.0)
 	{
 		ang = 2*M_PI+ang;
 	}
+#endif
 	return angle_t(ang * rad2bam) << 1;
 }
 

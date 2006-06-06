@@ -236,8 +236,7 @@ void FNodeBuilder::GroupSegPlanes ()
 
 	D(printf ("%d planes from %d segs\n", planenum, Segs.Size()));
 
-	planenum = (planenum+7)/8;
-	PlaneChecked.Reserve (planenum);
+	PlaneChecked.Reserve ((planenum + 7) / 8);
 }
 
 // Find "loops" of segs surrounding polyobject's origin. Note that a polyobject's origin

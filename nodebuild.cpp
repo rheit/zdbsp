@@ -713,8 +713,13 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 	return score;
 }
 
+// Returns:
+//	0 = seg is in front
+//  1 = seg is in back
+// -1 = seg cuts the node
 int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2)
 {
+#define FAR_ENOUGH 17179869184.f		// 4<<32
 	const FPrivVert *v1 = &Vertices[seg->v1];
 	const FPrivVert *v2 = &Vertices[seg->v2];
 
@@ -727,21 +732,33 @@ int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, 
 	double d_yv1 = double(v1->y);
 	double d_yv2 = double(v2->y);
 
-	double s_num1 = (d_y1 - d_yv1)*d_dx - (d_x1 - d_xv1) * d_dy;
-	double s_num2 = (d_y1 - d_yv2)*d_dx - (d_x1 - d_xv2) * d_dy;
+	double s_num1 = (d_y1 - d_yv1) * d_dx - (d_x1 - d_xv1) * d_dy;
+	double s_num2 = (d_y1 - d_yv2) * d_dx - (d_x1 - d_xv2) * d_dy;
 
-	if (s_num1 <= -17179869184.0 && s_num2 <= -17179869184.0)
+	if (s_num1 <= -FAR_ENOUGH && s_num2 <= -FAR_ENOUGH)
 	{
 		sidev1 = sidev2 = 1;
 		return 1;
 	}
-	if (s_num1 >= 17179869184.0 && s_num2 >= 17179869184.0)
+	if (s_num1 >= FAR_ENOUGH && s_num2 >= FAR_ENOUGH)
 	{
 		sidev1 = sidev2 = -1;
 		return 0;
 	}
+	if (s_num1 <= -FAR_ENOUGH && s_num2 >= FAR_ENOUGH)
+	{
+		sidev1 = 1;
+		sidev2 = -1;
+		return -1;
+	}
+	if (s_num1 >= FAR_ENOUGH && s_num2 <= -FAR_ENOUGH)
+	{
+		sidev1 = -1;
+		sidev2 = 1;
+		return -1;
+	}
 
-	int near = (fabs(s_num1) < 17179869184.0) | ((fabs(s_num2) < 17179869184.0) << 1);
+	int near = (fabs(s_num1) < FAR_ENOUGH) | ((fabs(s_num2) < FAR_ENOUGH) << 1);
 	if (near)
 	{
 		double l = 1.0 / (d_dx*d_dx + d_dy*d_dy);
@@ -1133,7 +1150,7 @@ int FNodeBuilder::PointOnSide (int x, int y, int x1, int y1, int dx, int dy)
 
 	double s_num = (d_y1-d_y)*d_dx - (d_x1-d_x)*d_dy;
 
-	if (fabs(s_num) < 17179869184.0)	// 4<<32
+	if (fabs(s_num) < 17179869184.f)	// 4<<32
 	{
 		// Either the point is very near the line, or the segment defining
 		// the line is very short: Do a more expensive test to determine
