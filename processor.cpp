@@ -90,6 +90,8 @@ FProcessor::FProcessor (FWadReader &inwad, int lump)
 		{
 			GetPolySpots ();
 		}
+
+		Level.FindMapBounds ();
 	}
 }
 
@@ -196,6 +198,27 @@ void FProcessor::LoadSides ()
 void FProcessor::LoadSectors ()
 {
 	ReadMapLump<MapSector> (Wad, "SECTORS", Lump, Level.Sectors, Level.NumSectors);
+}
+
+void FLevel::FindMapBounds ()
+{
+	fixed_t minx, maxx, miny, maxy;
+
+	minx = maxx = Vertices[0].x;
+	miny = maxy = Vertices[0].y;
+
+	for (int i = 1; i < NumVertices; ++i)
+	{
+			 if (Vertices[i].x < minx) minx = Vertices[i].x;
+		else if (Vertices[i].x > maxx) maxx = Vertices[i].x;
+			 if (Vertices[i].y < miny) miny = Vertices[i].y;
+		else if (Vertices[i].y > maxy) maxy = Vertices[i].y;
+	}
+
+	MinX = minx;
+	MinY = miny;
+	MaxX = maxx;
+	MaxY = maxy;
 }
 
 void FLevel::RemoveExtraLines ()

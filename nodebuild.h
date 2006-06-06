@@ -97,6 +97,37 @@ class FNodeBuilder
 		DWORD Seg;
 		bool Forward;
 	};
+
+	// Like a blockmap, but for vertices instead of lines
+	class FVertexMap
+	{
+	public:
+		FVertexMap (FNodeBuilder &builder, fixed_t minx, fixed_t miny, fixed_t maxx, fixed_t maxy);
+		~FVertexMap ();
+
+		int SelectVertexExact (FPrivVert &vert);
+		int SelectVertexClose (FPrivVert &vert);
+
+	private:
+		FNodeBuilder &MyBuilder;
+		TArray<int> *VertexGrid;
+
+		fixed_t MinX, MinY, MaxX, MaxY;
+		int BlocksWide, BlocksTall;
+
+		enum { BLOCK_SIZE = 256 << FRACBITS };
+		int InsertVertex (FPrivVert &vert);
+		inline int GetBlock (fixed_t x, fixed_t y)
+		{
+			assert (x >= MinX);
+			assert (y >= MinY);
+			assert (x <= MaxX);
+			assert (y <= MaxY);
+			return (x - MinX) / BLOCK_SIZE + ((y - MinY) / BLOCK_SIZE) * BlocksWide;
+		}
+	};
+
+
 public:
 	struct FPolyStart
 	{
@@ -107,6 +138,7 @@ public:
 	FNodeBuilder (FLevel &level,
 		TArray<FPolyStart> &polyspots, TArray<FPolyStart> &anchors,
 		const char *name, bool makeGLnodes);
+	~FNodeBuilder ();
 
 	void GetVertices (WideVertex *&verts, int &count);
 	void GetNodes (MapNodeEx *&nodes, int &nodeCount,
@@ -124,6 +156,8 @@ public:
 	static int PointOnSide (int x, int y, int x1, int y1, int dx, int dy);
 
 private:
+	FVertexMap *VertexMap;
+
 	TArray<node_t> Nodes;
 	TArray<subsector_t> Subsectors;
 	TArray<DWORD> SubsectorSets;
@@ -149,7 +183,6 @@ private:
 	const char *MapName;
 
 	void FindUsedVertices (WideVertex *vertices, int max);
-	int SelectVertexExact (FPrivVert &vertex);
 	void BuildTree ();
 	void MakeSegsFromSides ();
 	int CreateSeg (int linenum, int sidenum);

@@ -33,10 +33,6 @@
 // Units are in fixed_ts.
 const double SIDE_EPSILON = 6.5536;
 
-// Vertices within this distance of each other vertically and horizontally
-// will be considered as the same vertex.
-const fixed_t VERTEX_EPSILON = 6;
-
 #define Printf printf
 #define STACK_ARGS
 
@@ -49,14 +45,23 @@ const fixed_t VERTEX_EPSILON = 6;
 FNodeBuilder::FNodeBuilder (FLevel &level,
 							TArray<FPolyStart> &polyspots, TArray<FPolyStart> &anchors,
 							const char *name, bool makeGLnodes)
-	: Level (level), SegsStuffed (0), MapName (name)
+	: Level(level), SegsStuffed(0), MapName(name)
 {
+	VertexMap = new FVertexMap (*this, Level.MinX, Level.MinY, Level.MaxX, Level.MaxY);
 	GLNodes = makeGLnodes;
 	FindUsedVertices (Level.Vertices, Level.NumVertices);
 	MakeSegsFromSides ();
 	FindPolyContainers (polyspots, anchors);
 	GroupSegPlanes ();
 	BuildTree ();
+}
+
+FNodeBuilder::~FNodeBuilder()
+{
+	if (VertexMap != 0)
+	{
+		delete VertexMap;
+	}
 }
 
 void FNodeBuilder::BuildTree ()
@@ -739,10 +744,10 @@ int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, 
 	int near = (fabs(s_num1) < 17179869184.0) | ((fabs(s_num2) < 17179869184.0) << 1);
 	if (near)
 	{
-		double l = d_dx*d_dx + d_dy*d_dy;
+		double l = 1.0 / (d_dx*d_dx + d_dy*d_dy);
 		if (near & 1)
 		{
-			double dist = s_num1 * s_num1 / l;
+			double dist = s_num1 * s_num1 * l;
 			if (dist < SIDE_EPSILON*SIDE_EPSILON)
 			{
 				sidev1 = 0;
@@ -758,7 +763,7 @@ int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &sidev1, 
 		}
 		if (near & 2)
 		{
-			double dist = s_num2 * s_num2 / l;
+			double dist = s_num2 * s_num2 * l;
 			if (dist < SIDE_EPSILON*SIDE_EPSILON)
 			{
 				sidev2 = 0;
@@ -870,7 +875,6 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			FPrivVert newvert;
 			unsigned int vertnum;
 			int seg2;
-			unsigned int i;
 
 			//Printf ("%u is cut\n", set);
 			if (seg->loopnum)
@@ -887,26 +891,7 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			newvert.y = Vertices[seg->v1].y;
 			newvert.x += fixed_t(frac * double(Vertices[seg->v2].x - newvert.x));
 			newvert.y += fixed_t(frac * double(Vertices[seg->v2].y - newvert.y));
-			for (i = 0; i < Vertices.Size(); ++i)
-			{
-				if (abs(Vertices[i].x - newvert.x) < VERTEX_EPSILON &&
-					abs(Vertices[i].y - newvert.y) < VERTEX_EPSILON)
-//				if (uint32_t(Vertices[i].x - newvert.x + VERTEX_EPSILON) < 2u*VERTEX_EPSILON &&
-//					uint32_t(Vertices[i].y - newvert.y + VERTEX_EPSILON) < 2u*VERTEX_EPSILON)
-				{
-					break;
-				}
-			}
-			if (i < Vertices.Size())
-			{
-				vertnum = i;
-			}
-			else
-			{
-				newvert.segs = DWORD_MAX;
-				newvert.segs2 = DWORD_MAX;
-				vertnum = (int)Vertices.Push (newvert);
-			}
+			vertnum = VertexMap->SelectVertexClose (newvert);
 
 			seg2 = SplitSeg (set, vertnum, sidev1);
 

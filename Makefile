@@ -1,10 +1,10 @@
 CFLAGS = -Wall -fomit-frame-pointer -Izlib -pipe -ffast-math -MMD
 
 # Optimization flags
-CFLAGS += -O3 -fomit-frame-pointer
+CFLAGS += -O3 -fomit-frame-pointer -DNDEBUG
 
 # Unoptimization flags
-#CFLAGS += -g
+#CFLAGS += -g -D_DEBUG
 
 # Processor features flags
 CFLAGS += -mtune=i686

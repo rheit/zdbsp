@@ -164,6 +164,9 @@ struct FLevel
 
 	int NumOrgVerts;
 
+	fixed_t MinX, MinY, MaxX, MaxY;
+
+	void FindMapBounds ();
 	void RemoveExtraLines ();
 	void RemoveExtraSides ();
 	void RemoveExtraSectors ();

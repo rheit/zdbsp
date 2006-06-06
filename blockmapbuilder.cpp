@@ -177,28 +177,16 @@ void FBlockmapBuilder::BuildBlockmap ()
 	WORD adder;
 	int bmapwidth, bmapheight;
 	int minx, maxx, miny, maxy;
-	int i;
 	WORD line;
 
 	if (Level.NumVertices <= 0)
 		return;
 
-	// Find map extents for the blockmap
-	minx = maxx = Level.Vertices[0].x;
-	miny = maxy = Level.Vertices[0].y;
-
-	for (i = 1; i < Level.NumVertices; ++i)
-	{
-			 if (Level.Vertices[i].x < minx) minx = Level.Vertices[i].x;
-		else if (Level.Vertices[i].x > maxx) maxx = Level.Vertices[i].x;
-			 if (Level.Vertices[i].y < miny) miny = Level.Vertices[i].y;
-		else if (Level.Vertices[i].y > maxy) maxy = Level.Vertices[i].y;
-	}
-
-	maxx >>= FRACBITS;
-	minx >>= FRACBITS;
-	maxy >>= FRACBITS;
-	miny >>= FRACBITS;
+	// Get map extents for the blockmap
+	minx = Level.MinX >> FRACBITS;
+	miny = Level.MinY >> FRACBITS;
+	maxx = Level.MaxX >> FRACBITS;
+	maxy = Level.MaxY >> FRACBITS;
 
 /*
 	// DoomBSP did this to give the map a margin when drawing it
