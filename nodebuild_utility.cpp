@@ -458,8 +458,8 @@ FNodeBuilder::FVertexMap::FVertexMap (FNodeBuilder &builder,
 {
 	MinX = minx;
 	MinY = miny;
-	BlocksWide = ((maxx - minx + 1) + (BLOCK_SIZE - 1)) / BLOCK_SIZE;
-	BlocksTall = ((maxy - miny + 1) + (BLOCK_SIZE - 1)) / BLOCK_SIZE;
+	BlocksWide = int(((double(maxx) - minx + 1) + (BLOCK_SIZE - 1)) / BLOCK_SIZE);
+	BlocksTall = int(((double(maxy) - miny + 1) + (BLOCK_SIZE - 1)) / BLOCK_SIZE);
 	MaxX = MinX + BlocksWide * BLOCK_SIZE - 1;
 	MaxY = MinY + BlocksTall * BLOCK_SIZE - 1;
 	VertexGrid = new TArray<int>[BlocksWide * BlocksTall];
@@ -480,7 +480,7 @@ int FNodeBuilder::FVertexMap::SelectVertexExact (FNodeBuilder::FPrivVert &vert)
 	{
 		if (vertices[block[i]].x == vert.x && vertices[block[i]].y == vert.y)
 		{
-			return (int)i;
+			return block[i];
 		}
 	}
 
@@ -499,7 +499,7 @@ int FNodeBuilder::FVertexMap::SelectVertexClose (FNodeBuilder::FPrivVert &vert)
 		if (abs(vertices[block[i]].x - vert.x) < VERTEX_EPSILON &&
 			abs(vertices[block[i]].y - vert.y) < VERTEX_EPSILON)
 		{
-			return (int)i;
+			return block[i];
 		}
 	}
 

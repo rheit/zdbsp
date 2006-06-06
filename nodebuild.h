@@ -115,7 +115,9 @@ class FNodeBuilder
 		fixed_t MinX, MinY, MaxX, MaxY;
 		int BlocksWide, BlocksTall;
 
-		enum { BLOCK_SIZE = 256 << FRACBITS };
+		enum { BLOCK_SHIFT = 8 + FRACBITS };
+		enum { BLOCK_SIZE = 1 << BLOCK_SHIFT };
+
 		int InsertVertex (FPrivVert &vert);
 		inline int GetBlock (fixed_t x, fixed_t y)
 		{
@@ -123,7 +125,7 @@ class FNodeBuilder
 			assert (y >= MinY);
 			assert (x <= MaxX);
 			assert (y <= MaxY);
-			return (x - MinX) / BLOCK_SIZE + ((y - MinY) / BLOCK_SIZE) * BlocksWide;
+			return (unsigned(x - MinX) >> BLOCK_SHIFT) + (unsigned(y - MinY) >> BLOCK_SHIFT) * BlocksWide;
 		}
 	};
 
