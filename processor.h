@@ -54,6 +54,8 @@ private:
 	MapSubsectorEx *SubsectorsToEx (const MapSubsector *ssec, int count);
 	MapSegGLEx *SegGLsToEx (const MapSegGL *segs, int count);
 
+	BYTE *FixReject (const BYTE *oldreject);
+
 	void WriteLines (FWadWriter &out);
 	void WriteVertices (FWadWriter &out, int count);
 	void WriteSectors (FWadWriter &out);

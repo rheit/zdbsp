@@ -27,18 +27,18 @@ else
 endif
 
 # To generate profiling information for gprof, pass gprof=1 to make.
-ifneq ($(gprof),)
+ifeq ($(gprof),1)
   CFLAGS += -g -fno-omit-frame-pointer -pg
   LDFLAGS += -g -pg
 endif
 
 # To strip debugging symbols, pass strip=1 to make.
-ifneq ($(strip),)
+ifeq ($(strip),1)
   LDFLAGS += -s
 endif
 
 # To use SSE2 math for everything, pass sse=1 to make.
-ifneq ($(sse),)
+ifeq ($(sse),1)
   CFLAGS += -msse -msse2 -mfpmath=sse
 endif
 
@@ -52,6 +52,10 @@ OBJS = main.o getopt.o getopt1.o blockmapbuilder.o processor.o view.o wad.o \
 	nodebuild_utility.o nodebuild_classify_sse2.o nodebuild_classify_nosse2.o \
 	zlib/adler32.o zlib/compress.o zlib/crc32.o zlib/deflate.o zlib/trees.o \
 	zlib/zutil.o
+	
+ifeq (Windows_NT,$(OS))
+  OBJS += resource.o
+endif
 
 all: $(EXE)
 
@@ -69,6 +73,9 @@ $(EXE): $(OBJS)
 
 nodebuild_classify_sse2.o: nodebuild_classify_sse2.cpp nodebuild.h
 	$(CXX) $(CXXFLAGS) -msse2 -mfpmath=sse -c -o $@ $<
+
+resource.o: resource.rc
+	windres -o $@ -i $<
 
 .PHONY: clean
 

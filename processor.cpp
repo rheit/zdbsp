@@ -1,6 +1,6 @@
 /*
     Reads wad files, builds nodes, and saves new wad files.
-    Copyright (C) 2002,2003 Randy Heit
+    Copyright (C) 2002-2006 Randy Heit
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ FLevel::~FLevel ()
 	if (GLSegs)			delete[] GLSegs;
 	if (GLNodes)		delete[] GLNodes;
 	if (GLPVS)			delete[] GLPVS;
+	if (OrgSectorMap)	delete[] OrgSectorMap;
 }
 
 FProcessor::FProcessor (FWadReader &inwad, int lump)
@@ -330,6 +331,7 @@ void FLevel::RemoveExtraSectors ()
 	// Extra sectors are those that aren't referenced by any sides.
 	// They just waste space, so get rid of them.
 
+	NumOrgSectors = NumSectors;
 	used = new BYTE[NumSectors];
 	memset (used, 0, NumSectors*sizeof(*used));
 	remap = new WORD[NumSectors];
@@ -368,7 +370,6 @@ void FLevel::RemoveExtraSectors ()
 	{
 		int diff = NumSectors - newNumSectors;
 		printf ("   Removed %d unused sector%s.\n", diff, diff > 1 ? "s" : "");
-		NumSectors = newNumSectors;
 
 		// Renumber sector references in sides
 		for (i = 0; i < NumSides; ++i)
@@ -378,6 +379,14 @@ void FLevel::RemoveExtraSectors ()
 				Sides[i].sector = remap[Sides[i].sector];
 			}
 		}
+		// Make a reverse map for fixing reject lumps
+		OrgSectorMap = new WORD[newNumSectors];
+		for (i = 0; i < NumSectors; ++i)
+		{
+			OrgSectorMap[remap[i]] = i;
+		}
+
+		NumSectors = newNumSectors;
 	}
 
 	delete[] used;
@@ -572,7 +581,7 @@ void FProcessor::Write (FWadWriter &out)
 			if (lump >= 0)
 			{
 				ReadLump<BYTE> (Wad, lump, Level.Reject, Level.RejectSize);
-				if (Level.RejectSize != (Level.NumSectors*Level.NumSectors + 7) / 8)
+				if (Level.RejectSize != (Level.NumOrgSectors*Level.NumOrgSectors + 7) / 8)
 				{
 					// If the reject is the wrong size, don't use it.
 					delete[] Level.Reject;
@@ -582,6 +591,14 @@ void FProcessor::Write (FWadWriter &out)
 						printf ("   REJECT is the wrong size, so it will be removed.\n");
 					}
 					Level.RejectSize = 0;
+				}
+				else if (Level.NumOrgSectors != Level.NumSectors)
+				{
+					// Some sectors have been removed, so fix the reject.
+					BYTE *newreject = FixReject (Level.Reject);
+					delete[] Level.Reject;
+					Level.Reject = newreject;
+					Level.RejectSize = (Level.NumSectors * Level.NumSectors + 7) / 8;
 				}
 			}
 		}
@@ -704,6 +721,33 @@ void FProcessor::Write (FWadWriter &out)
 		WriteGLSSect (out, gl5);
 		WriteGLNodes (out, gl5);
 	}
+}
+
+//
+BYTE *FProcessor::FixReject (const BYTE *oldreject)
+{
+	int x, y, ox, oy, pnum, opnum;
+	int rejectSize = (Level.NumSectors*Level.NumSectors + 7) / 8;
+	BYTE *newreject = new BYTE[rejectSize];
+
+	memset (newreject, 0, rejectSize);
+
+	for (y = 0; y < Level.NumSectors; ++y)
+	{
+		oy = Level.OrgSectorMap[y];
+		for (x = 0; x < Level.NumSectors; ++x)
+		{
+			ox = Level.OrgSectorMap[x];
+			pnum = y*Level.NumSectors + x;
+			opnum = oy*Level.NumSectors + ox;
+
+			if (oldreject[opnum >> 3] & (1 << (opnum & 7)))
+			{
+				newreject[pnum >> 3] |= 1 << (pnum & 7);
+			}
+		}
+	}
+	return newreject;
 }
 
 MapNodeEx *FProcessor::NodesToEx (const MapNode *nodes, int count)

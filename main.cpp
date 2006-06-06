@@ -1,6 +1,6 @@
 /*
     The main glue for ZDBSP.
-    Copyright (C) 2002,2003 Randy Heit
+    Copyright (C) 2002-2006 Randy Heit
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@
 
 #endif
 
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -258,9 +259,24 @@ int main (int argc, char **argv)
 
 		END_COUNTER(t1a, t1b, t1c, "\nTotal time: %g seconds.\n")
 	}
+	catch (std::runtime_error msg)
+	{
+		printf ("%s\n", msg.what());
+		return 20;
+	}
+	catch (std::bad_alloc)
+	{
+		printf ("Out of memory\n");
+		return 20;
+	}
 	catch (std::exception msg)
 	{
 		printf ("%s\n", msg.what());
+		return 20;
+	}
+	catch (...)
+	{
+		printf ("Unhandled exception. ZDBSP cannot continue.\n");
 		return 20;
 	}
 

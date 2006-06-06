@@ -164,6 +164,8 @@ struct FLevel
 
 	int NumOrgVerts;
 
+	WORD *OrgSectorMap;			int NumOrgSectors;
+
 	fixed_t MinX, MinY, MaxX, MaxY;
 
 	void FindMapBounds ();
