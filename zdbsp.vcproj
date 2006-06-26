@@ -249,6 +249,27 @@
 				RelativePath=".\nodebuild_classify_nosse2.cpp">
 			</File>
 			<File
+				RelativePath=".\nodebuild_classify_sse1.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						EnableEnhancedInstructionSet="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						EnableEnhancedInstructionSet="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release (SSE2)|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						EnableEnhancedInstructionSet="1"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\nodebuild_classify_sse2.cpp">
 				<FileConfiguration
 					Name="Release|Win32">

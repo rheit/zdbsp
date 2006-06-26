@@ -16,7 +16,7 @@ typedef __int32 int32_t;
 #include <stdint.h>
 #endif
 
-#define ZDBSP_VERSION	"1.8"
+#define ZDBSP_VERSION	"1.9"
 
 enum EBlockmapMode
 {
@@ -45,7 +45,7 @@ extern int				 AAPreference;
 extern bool				 CheckPolyobjs;
 extern bool				 ShowMap;
 extern bool				 CompressNodes, CompressGLNodes, V5GLNodes;
-extern bool				 HaveSSE2;
+extern bool				 HaveSSE1, HaveSSE2;
 
 
 #define FIXED_MAX		INT_MAX

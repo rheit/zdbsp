@@ -45,7 +45,7 @@ MTL=midl.exe
 # ADD BASE MTL /nologo /tlb".\Release\zdbsp.tlb" /win32
 # ADD MTL /nologo /tlb".\Release\zdbsp.tlb" /win32
 # ADD BASE CPP /nologo /W3 /GX /Zi /Ot /Og /Oi /Oy /Ob2 /Gy /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /GA /GF /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /Ot /Og /Oi /Oy /Ob2 /Gy /I "zlib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D _MSC_VER=1200 /GA /GF /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /Ot /Og /Oi /Oy /Ob2 /Gy /I "zlib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D _MSC_VER=1200 /D "DISABLE_SSE" /GA /GF /c
 # SUBTRACT CPP /YX /Yc /Yu
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
@@ -74,7 +74,7 @@ MTL=midl.exe
 # ADD BASE MTL /nologo /tlb".\Debug\zdbsp.tlb" /win32
 # ADD MTL /nologo /tlb".\Debug\zdbsp.tlb" /win32
 # ADD BASE CPP /nologo /W3 /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /GZ /c
-# ADD CPP /nologo /W3 /GX /ZI /Od /I "zlib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D _MSC_VER=1200 /GZ /c
+# ADD CPP /nologo /W3 /GX /ZI /Od /I "zlib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D _MSC_VER=1200 /D "DISABLE_SSE" /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -187,7 +187,7 @@ DEP_CPP_NODEBU=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\nodebuild_classify_sse2.cpp
+SOURCE=nodebuild_events.cpp
 DEP_CPP_NODEBUI=\
 	".\doomdata.h"\
 	".\nodebuild.h"\
@@ -198,19 +198,8 @@ DEP_CPP_NODEBUI=\
 # End Source File
 # Begin Source File
 
-SOURCE=nodebuild_events.cpp
-DEP_CPP_NODEBUIL=\
-	".\doomdata.h"\
-	".\nodebuild.h"\
-	".\tarray.h"\
-	".\workdata.h"\
-	".\zdbsp.h"\
-	
-# End Source File
-# Begin Source File
-
 SOURCE=nodebuild_extract.cpp
-DEP_CPP_NODEBUILD=\
+DEP_CPP_NODEBUIL=\
 	".\doomdata.h"\
 	".\nodebuild.h"\
 	".\tarray.h"\
@@ -222,7 +211,7 @@ DEP_CPP_NODEBUILD=\
 # Begin Source File
 
 SOURCE=nodebuild_gl.cpp
-DEP_CPP_NODEBUILD_=\
+DEP_CPP_NODEBUILD=\
 	".\doomdata.h"\
 	".\nodebuild.h"\
 	".\tarray.h"\
@@ -233,7 +222,7 @@ DEP_CPP_NODEBUILD_=\
 # Begin Source File
 
 SOURCE=nodebuild_utility.cpp
-DEP_CPP_NODEBUILD_U=\
+DEP_CPP_NODEBUILD_=\
 	".\doomdata.h"\
 	".\nodebuild.h"\
 	".\tarray.h"\

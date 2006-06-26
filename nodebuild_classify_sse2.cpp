@@ -18,6 +18,8 @@
 
 */
 
+#ifndef DISABLE_SSE
+
 #include "zdbsp.h"
 #include "nodebuild.h"
 
@@ -161,3 +163,5 @@ int FNodeBuilder::ClassifyLineSSE2 (node_t &node, const FPrivSeg *seg, int &side
 	}
 	return -1;
 }
+
+#endif

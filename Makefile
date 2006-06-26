@@ -1,4 +1,7 @@
-CFLAGS = -Wall -fomit-frame-pointer -Izlib -pipe -ffast-math -MMD
+CC = gcc
+CXX = g++
+
+CFLAGS = -Wall -Izlib -pipe -ffast-math -MMD
 
 # Optimization flags
 CFLAGS += -O3 -fomit-frame-pointer -DNDEBUG
@@ -37,22 +40,31 @@ ifeq ($(strip),1)
   LDFLAGS += -s
 endif
 
-# To use SSE2 math for everything, pass sse=1 to make.
-ifeq ($(sse),1)
-  CFLAGS += -msse -msse2 -mfpmath=sse
+# To compile without support for backpatching ClassifyLine calls, pass nobackpatch=1 to make.
+ifeq ($(nobackpatch),1)
+  CFLAGS += -DDISABLE_BACKPATCH
 endif
 
-CC = gcc
-CXX = g++
-
-CXXFLAGS = $(CFLAGS)
+# To use SSE2 math for everything, pass sse=1 to make.
+ifeq ($(sse),1)
+  CFLAGS += -msse2 -mfpmath=sse
+endif
 
 OBJS = main.o getopt.o getopt1.o blockmapbuilder.o processor.o view.o wad.o \
 	nodebuild.o nodebuild_events.o nodebuild_extract.o nodebuild_gl.o \
-	nodebuild_utility.o nodebuild_classify_sse2.o nodebuild_classify_nosse2.o \
+	nodebuild_utility.o nodebuild_classify_nosse2.o \
 	zlib/adler32.o zlib/compress.o zlib/crc32.o zlib/deflate.o zlib/trees.o \
 	zlib/zutil.o
-	
+
+# To compile without any SSE support, pass nosse=1 to make.
+ifeq ($(nosse),1)
+  CFLAGS += -DDISABLE_SSE
+else
+  OBJS += nodebuild_classify_sse1.o nodebuild_classify_sse2.o
+endif
+
+CXXFLAGS = $(CFLAGS)
+
 ifeq (Windows_NT,$(OS))
   OBJS += resource.o
 endif
@@ -69,10 +81,13 @@ profile-use:
 	$(MAKE) all CXXFLAGS="$(CXXFLAGS) -fprofile-use"
 
 $(EXE): $(OBJS)
-	$(CCDV) $(CXX) -o $(EXE) $(OBJS) $(LDFLAGS)
+	$(CXX) -o $(EXE) $(OBJS) $(LDFLAGS)
 
 nodebuild_classify_sse2.o: nodebuild_classify_sse2.cpp nodebuild.h
-	$(CXX) $(CXXFLAGS) -msse2 -mfpmath=sse -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -msse -msse2 -march=i686 -mfpmath=sse -c -o $@ $<
+
+nodebuild_classify_sse1.o: nodebuild_classify_sse1.cpp nodebuild.h
+	$(CXX) $(CXXFLAGS) -msse -march=i686 -mfpmath=sse -c -o $@ $<
 
 resource.o: resource.rc
 	windres -o $@ -i $<

@@ -78,7 +78,10 @@ static void ParseArgs (int argc, char **argv);
 static void ShowUsage ();
 static void ShowVersion ();
 static bool CheckInOutNames ();
-static void VerifySSE2 ();
+
+#ifndef DISABLE_SSE
+static void CheckSSE ();
+#endif
 
 // EXTERNAL DATA DECLARATIONS ----------------------------------------------
 
@@ -107,7 +110,7 @@ bool			 CompressNodes = false;
 bool			 CompressGLNodes = false;
 bool			 GLOnly = false;
 bool			 V5GLNodes = false;
-bool			 HaveSSE2 = true;
+bool			 HaveSSE1, HaveSSE2;
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
 
@@ -140,7 +143,7 @@ static option long_opts[] =
 	{"gl-only",			no_argument,		0,	'x'},
 	{"gl-v5",			no_argument,		0,	'5'},
 	{"no-sse",			no_argument,		0,  1002},
-	{"no-sse2",			no_argument,		0,  1002},
+	{"no-sse2",			no_argument,		0,  1003},
 	{0,0,0,0}
 };
 
@@ -152,8 +155,15 @@ int main (int argc, char **argv)
 {
 	bool fixSame = false;
 
+#ifdef DISABLE_SSE
+	HaveSSE1 = HaveSSE2 = false;
+#else
+	HaveSSE1 = HaveSSE2 = true;
+#endif
 	ParseArgs (argc, argv);
-	VerifySSE2 ();
+#ifndef DISABLE_SSE
+	CheckSSE ();
+#endif
 
 	if (InName == NULL)
 	{
@@ -218,7 +228,7 @@ int main (int argc, char **argv)
 					START_COUNTER(t2a, t2b, t2c)
 					FProcessor builder (inwad, lump);
 					builder.Write (outwad);
-					END_COUNTER(t2a, t2b, t2c, "   %g seconds.\n")
+					END_COUNTER(t2a, t2b, t2c, "   %.3f seconds.\n")
 
 					lump = inwad.LumpAfterMap (lump);
 				}
@@ -256,7 +266,7 @@ int main (int argc, char **argv)
 			}
 		}
 
-		END_COUNTER(t1a, t1b, t1c, "\nTotal time: %g seconds.\n")
+		END_COUNTER(t1a, t1b, t1c, "\nTotal time: %.3f seconds.\n")
 	}
 	catch (std::runtime_error msg)
 	{
@@ -273,11 +283,13 @@ int main (int argc, char **argv)
 		printf ("%s\n", msg.what());
 		return 20;
 	}
+#ifndef _DEBUG
 	catch (...)
 	{
 		printf ("Unhandled exception. ZDBSP cannot continue.\n");
 		return 20;
 	}
+#endif
 
 	return 0;
 }
@@ -390,7 +402,11 @@ static void ParseArgs (int argc, char **argv)
 			ShowVersion ();
 			exit (0);
 			break;
-		case 1002:		// Disable SSE2 ClassifyLine routine
+		case 1002:		// Disable SSE/SSE2 ClassifyLine routine
+			HaveSSE1 = false;
+			HaveSSE2 = false;
+			break;
+		case 1003:		// Disable only SSE2 ClassifyLine routine
 			HaveSSE2 = false;
 			break;
 		case 1000:
@@ -524,33 +540,37 @@ static bool CheckInOutNames ()
 
 //==========================================================================
 //
-// VerifySSE2
+// CheckSSE
 //
-// Ensure that if HaveSSE2 is set, that we actually do have SSE2.
+// Checks if the processor supports SSE or SSE2.
 //
 //==========================================================================
 
-static void VerifySSE2 ()
+#ifndef DISABLE_SSE
+static void CheckSSE ()
 {
 #ifdef __SSE2__
 	// If we compiled with SSE2 support enabled for everything, then
 	// obviously it's available, or the program won't get very far.
 	return;
 #endif
-#if defined(_MSC_VER) && defined(_M_X64)
-#endif
 
+	if (!HaveSSE2 && !HaveSSE1)
+	{
+		return;
+	}
+
+	bool forcenosse1 = !HaveSSE1;
+	bool forcenosse2 = !HaveSSE2;
+
+	HaveSSE1 = false;
+	HaveSSE2 = false;
 #if defined(_MSC_VER)
 
 #ifdef _M_X64
 	// Processors implementing AMD64 are required to support SSE2.
 	return;
 #else
-	if (!HaveSSE2)
-	{
-		return;
-	}
-	HaveSSE2 = false;
 	__asm
 	{
 		pushfd				// save EFLAGS
@@ -564,10 +584,12 @@ static void VerifySSE2 ()
 		cmp eax,edx			// see if bit 21 has changed
 		jz noid				// if no change, then no CPUID
 
-		// Check the feature flag for SSE2
+		// Check the feature flag for SSE/SSE2
 		mov eax,1
 		cpuid
-		test edx,(1<<26)
+		test edx,(1<<25)	// Check for SSE
+		setnz HaveSSE1
+		test edx,(1<<26)	// Check for SSE2
 		setnz HaveSSE2
 noid:
 	}
@@ -576,11 +598,6 @@ noid:
 #elif defined(__GNUC__)
 
 	// Same as above, but for GCC
-	if (!HaveSSE2)
-	{
-		return;
-	}
-	HaveSSE2 = false;
 	asm volatile
 		("pushfl\n\t"
 		 "popl %%eax\n\t"
@@ -594,16 +611,25 @@ noid:
 		 "jz noid\n\t"
 		 "mov $1,%%eax\n\t"
 		 "cpuid\n\t"
-		 "test $(1<<26),%%edx\n\t"
+		 "test $(1<<25),%%edx\n\t"
 		 "setneb %0\n"
+		 "test $(1<<26),%%edx\n\t"
+		 "setneb %1\n"
 		 "noid:"
-		 :"=m" (HaveSSE2)::"eax","ebx","ecx","edx");
+		 :"=m" (HaveSSE1),"=m" (HaveSSE2)::"eax","ebx","ecx","edx");
 
-#else
-	// Can't compile a check, so assume SSE2 is not present.
-	HaveSSE2 = false;
 #endif
+
+	if (forcenosse1)
+	{
+		HaveSSE1 = false;
+	}
+	if (forcenosse2)
+	{
+		HaveSSE2 = false;
+	}
 }
+#endif
 
 //==========================================================================
 //

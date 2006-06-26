@@ -40,12 +40,12 @@
 
 FNodeBuilder::FNodeBuilder (FLevel &level,
 							TArray<FPolyStart> &polyspots, TArray<FPolyStart> &anchors,
-							const char *name, bool makeGLnodes, bool enableSSE2)
+							const char *name, bool makeGLnodes, BYTE sselevel)
 	: Level(level), SegsStuffed(0), MapName(name)
 {
 	VertexMap = new FVertexMap (*this, Level.MinX, Level.MinY, Level.MaxX, Level.MaxY);
 	GLNodes = makeGLnodes;
-	EnableSSE2 = enableSSE2;
+	SSELevel = sselevel;
 	FindUsedVertices (Level.Vertices, Level.NumVertices);
 	MakeSegsFromSides ();
 	FindPolyContainers (polyspots, anchors);
@@ -1019,3 +1019,54 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 	}
 	Printf ("*\n");
 }
+
+#if defined(_WIN32) && !defined(__SSE2__) && !defined(DISABLE_SSE) && !defined(DISABLE_BACKPATCH) && !defined(_M_X64) && defined(__GNUC__)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+int FNodeBuilder::ClassifyLineBackpatch (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2)
+{
+	// Select the routine based on SSELevel and patch the caller so that
+	// they call that routine directly next time instead of going through here.
+	int *calleroffset = (int *)__builtin_return_address(0) - 1;
+	int diff;
+	int (*func)(FNodeBuilder *, node_t &, const FNodeBuilder::FPrivSeg *, int &, int &);
+	DWORD oldprotect;
+
+//	printf ("Patching for SSE %d\n", SSELevel);
+
+	// I wasn't sure how to calculate the difference between the function addresses with C++
+	// (or if it's even possible), so here's some asm to do it instead:
+	if (SSELevel == 2)
+	{
+		__asm (
+			"movl $__ZN12FNodeBuilder16ClassifyLineSSE2ER6node_tPKNS_8FPrivSegERiS5_,%1\n\t"
+			"movl $__ZN12FNodeBuilder16ClassifyLineSSE2ER6node_tPKNS_8FPrivSegERiS5_-__ZN12FNodeBuilder21ClassifyLineBackpatchER6node_tPKNS_8FPrivSegERiS5_,%0\n\t"
+			: "=r" (diff), "=r" (func));
+	}
+	else if (SSELevel == 1)
+	{
+		__asm (
+			"movl $__ZN12FNodeBuilder16ClassifyLineSSE1ER6node_tPKNS_8FPrivSegERiS5_,%1\n\t"
+			"movl $__ZN12FNodeBuilder16ClassifyLineSSE1ER6node_tPKNS_8FPrivSegERiS5_-__ZN12FNodeBuilder21ClassifyLineBackpatchER6node_tPKNS_8FPrivSegERiS5_,%0\n\t"
+		   : "=r" (diff), "=r" (func));
+	}
+	else
+	{
+		__asm (
+			"movl $__ZN12FNodeBuilder13ClassifyLine2ER6node_tPKNS_8FPrivSegERiS5_,%1\n\t"
+			"movl $__ZN12FNodeBuilder13ClassifyLine2ER6node_tPKNS_8FPrivSegERiS5_-__ZN12FNodeBuilder21ClassifyLineBackpatchER6node_tPKNS_8FPrivSegERiS5_,%0\n\t"
+			: "=r" (diff), "=r" (func));
+	}
+
+	// Patch the caller.
+	if (VirtualProtect (calleroffset, 4, PAGE_EXECUTE_READWRITE, &oldprotect))
+	{
+		*calleroffset += diff;
+		VirtualProtect (calleroffset, 4, oldprotect, &oldprotect);
+	}
+
+	// And return by calling the real function.
+	return func (this, node, seg, sidev1, sidev2);
+}
+#endif

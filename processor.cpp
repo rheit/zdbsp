@@ -383,7 +383,10 @@ void FLevel::RemoveExtraSectors ()
 		OrgSectorMap = new WORD[newNumSectors];
 		for (i = 0; i < NumSectors; ++i)
 		{
-			OrgSectorMap[remap[i]] = i;
+			if (remap[i] != NO_INDEX)
+			{
+				OrgSectorMap[remap[i]] = i;
+			}
 		}
 
 		NumSectors = newNumSectors;
@@ -493,7 +496,21 @@ void FProcessor::Write (FWadWriter &out)
 		
 		try
 		{
-			builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), BuildGLNodes, HaveSSE2);
+			int ssetype;
+
+			if (HaveSSE2)
+			{
+				ssetype = 2;
+			}
+			else if (HaveSSE1)
+			{
+				ssetype = 1;
+			}
+			else
+			{
+				ssetype = 0;
+			}
+			builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), BuildGLNodes, ssetype);
 			if (builder == NULL)
 			{
 				throw std::runtime_error("   Not enough memory to build nodes!");
@@ -529,7 +546,7 @@ void FProcessor::Write (FWadWriter &out)
 					{
 						// Now repeat the process to obtain regular nodes
 						delete builder;
-						builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), false, HaveSSE2);
+						builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), false, ssetype);
 						if (builder == NULL)
 						{
 							throw std::runtime_error("   Not enough memory to build regular nodes!");

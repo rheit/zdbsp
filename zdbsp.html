@@ -152,9 +152,13 @@
 			<dd>
 				If you don't care how long it takes to build nodes, use this option and ZDBSP 
 				won't tell you.</dd>
-			<dt>--no-sse or --no-sse2</dt>
-			<dd>Disable SSE2 optimizations in the nodebuilder, which can be useful if you just
-				want to measure the kind of speed up SSE2 provides.</dd>
+			<dt>--no-sse</dt>
+			<dd>Disables all SSE optimizations in the nodebuilder, which can be useful if you just
+				want to measure the kind of speed up SSE or SSE2 provides.</dd>
+			<dt>--no-sse2</dt>
+			<dd>Disables all SSE2 optimizations in the nodebuilder. SSE1 will still be used if
+				your processor supports it. Unless you want to compare the speed difference
+				between SSE and SSE2, there is again little reason to use this option.</dd>
 			<dt>--warn or -w</dt>
 			<dd>
 				Displays extra warning messages that ZDBSP might generate while building GL 
