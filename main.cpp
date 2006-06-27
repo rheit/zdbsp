@@ -160,10 +160,8 @@ int main (int argc, char **argv)
 #else
 	HaveSSE1 = HaveSSE2 = true;
 #endif
+
 	ParseArgs (argc, argv);
-#ifndef DISABLE_SSE
-	CheckSSE ();
-#endif
 
 	if (InName == NULL)
 	{
@@ -175,6 +173,10 @@ int main (int argc, char **argv)
 
 		InName = argv[optind];
 	}
+
+#ifndef DISABLE_SSE
+	CheckSSE ();
+#endif
 
 	try
 	{
