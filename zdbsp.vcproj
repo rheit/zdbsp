@@ -476,6 +476,9 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\Makefile">
+		</File>
+		<File
 			RelativePath=".\zdbsp.html">
 		</File>
 	</Files>

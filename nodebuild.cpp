@@ -196,6 +196,10 @@ void FNodeBuilder::CreateSubsectorsForReal ()
 
 		// Convert seg pointers into indices
 		D(printf ("Output subsector %d:\n", Subsectors.Size()));
+		if (SegList[sub.firstline].SegPtr->linedef == -1)
+		{
+			printf ("  Failure: Subsector %d is all minisegs!\n", Subsectors.Size());
+		}
 		for (unsigned int i = sub.firstline; i < SegList.Size(); ++i)
 		{
 			D(printf ("  Seg %5d%c(%5d,%5d)-(%5d,%5d)\n", SegList[i].SegPtr - &Segs[0],
@@ -403,7 +407,7 @@ bool FNodeBuilder::ShoveSegBehind (DWORD set, node_t &node, DWORD seg, DWORD mat
 		node.dx = -node.dx;
 		node.dy = -node.dy;
 	}
-	return Heuristic (node, set, false) != 0;
+	return Heuristic (node, set, false) > 0;
 }
 
 // Splitters are chosen to coincide with segs in the given set. To reduce the
@@ -1009,7 +1013,7 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 	Printf ("set %d:\n", l);
 	for (; set != DWORD_MAX; set = Segs[set].next)
 	{
-		Printf ("\t%u(%d)%c%d(%d,%d)-%d(%d,%d)\n", set,
+		Printf ("\t%5u(%d)%c%d(%d,%d)-%d(%d,%d)\n", set,
 			Segs[set].frontsector,
 			Segs[set].linedef == -1 ? '+' : ':',
 			Segs[set].v1,
@@ -1020,7 +1024,7 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 	Printf ("*\n");
 }
 
-#if defined(_WIN32) && !defined(__SSE2__) && !defined(DISABLE_SSE) && !defined(DISABLE_BACKPATCH) && !defined(_M_X64) && defined(__GNUC__)
+#if defined(_WIN32) && !defined(__SSE2__) && !defined(DISABLE_SSE) && !defined(DISABLE_BACKPATCH) && defined(__i386__) && defined(__GNUC__)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
