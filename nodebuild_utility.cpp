@@ -404,7 +404,7 @@ bool FNodeBuilder::GetPolyExtents (int polynum, fixed_t bbox[4])
 	{
 		vertex_t start;
 		unsigned int vert;
-		unsigned int count = 0;
+		unsigned int count = Segs.Size();	// to prevent endless loops. Stop when this reaches the number of segs.
 
 		vert = Segs[i].v1;
 
@@ -416,8 +416,7 @@ bool FNodeBuilder::GetPolyExtents (int polynum, fixed_t bbox[4])
 			AddSegToBBox (bbox, &Segs[i]);
 			vert = Segs[i].v2;
 			i = Vertices[vert].segs;
-			count++;	// to prevent endless loops. Stop when this reaches the number of segs.
-		} while (i != DWORD_MAX && (Vertices[vert].x != start.x || Vertices[vert].y != start.y) && count < Segs.Size());
+		} while (--count && i != DWORD_MAX && (Vertices[vert].x != start.x || Vertices[vert].y != start.y));
 
 		return true;
 	}
