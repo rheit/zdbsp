@@ -112,7 +112,7 @@ BEGIN
             VALUE "FileDescription", "ZDBSP Node Builder"
             VALUE "FileVersion", "1.10"
             VALUE "InternalName", "zdbsp"
-            VALUE "LegalCopyright", "Copyright (C) 2002-2006 Randy Heit"
+            VALUE "LegalCopyright", "Copyright (C) 2002-2009 Randy Heit"
             VALUE "OriginalFilename", "zdbsp.exe"
             VALUE "ProductName", "ZDBSP"
             VALUE "ProductVersion", "1.10"
