@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="zdbsp_vs2005"
 	ProjectGUID="{E628034A-AE64-43B5-8CF4-668D07041C35}"
 	RootNamespace="zdbsp_vs2005"
@@ -365,6 +365,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\processor_udmf.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\sc_man.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\view.cpp"
 				>
 			</File>
@@ -400,6 +408,10 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sc_man.h"
 				>
 			</File>
 			<File

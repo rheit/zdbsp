@@ -50,7 +50,7 @@ ifeq ($(sse),1)
   CFLAGS += -msse2 -mfpmath=sse
 endif
 
-OBJS = main.o getopt.o getopt1.o blockmapbuilder.o processor.o view.o wad.o \
+OBJS = main.o getopt.o getopt1.o blockmapbuilder.o processor.o processor_udmf.o sc_man.o view.o wad.o \
 	nodebuild.o nodebuild_events.o nodebuild_extract.o nodebuild_gl.o \
 	nodebuild_utility.o nodebuild_classify_nosse2.o \
 	zlib/adler32.o zlib/compress.o zlib/crc32.o zlib/deflate.o zlib/trees.o \

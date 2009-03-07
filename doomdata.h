@@ -5,9 +5,17 @@
 #pragma once
 #endif
 
+#include "tarray.h"
+
 enum
 {
 	BOXTOP, BOXBOTTOM, BOXLEFT, BOXRIGHT
+};
+
+struct UDMFKey
+{
+	int key;
+	int value;
 };
 
 struct MapVertex
@@ -30,6 +38,20 @@ struct MapSideDef
 	WORD	sector;
 };
 
+struct IntSideDef
+{
+	// the first 5 values are only used for binary format maps
+	short	textureoffset;
+	short	rowoffset;
+	char	toptexture[8];
+	char	bottomtexture[8];
+	char	midtexture[8];
+
+	int sector;
+
+	TArray<UDMFKey> props;
+};
+
 struct MapLineDef
 {
 	WORD	v1;
@@ -50,6 +72,18 @@ struct MapLineDef2
 	WORD	sidenum[2];
 };
 
+struct IntLineDef
+{
+	DWORD v1;
+	DWORD v2;
+	int flags;
+	int special;
+	int args[5];
+	DWORD sidenum[2];
+
+	TArray<UDMFKey> props;
+};
+
 struct MapSector
 {
 	short	floorheight;
@@ -59,6 +93,17 @@ struct MapSector
 	short	lightlevel;
 	short	special;
 	short	tag;
+};
+
+struct IntSector
+{
+	// none of the sector properties are used by the node builder
+	// so there's no need to store them in their expanded form for
+	// UDMF. JUst storing the UDMF keys and leaving the binary fields
+	// empty is enough
+	MapSector data;
+
+	TArray<UDMFKey> props;
 };
 
 struct MapSubsector
@@ -140,19 +185,35 @@ struct MapThing2
 	char		args[5];
 };
 
+struct IntThing
+{
+	unsigned short thingid;
+	fixed_t		x;	// full precision coordinates for UDMF support
+	fixed_t		y;
+	// everything else is not needed or has no extended form in UDMF
+	short		z;
+	short		angle;
+	short		type;
+	short		flags;
+	char		special;
+	char		args[5];
+
+	TArray<UDMFKey> props;
+};
+
 struct FLevel
 {
 	FLevel ();
 	~FLevel ();
 
 	WideVertex *Vertices;		int NumVertices;
-	MapSideDef *Sides;			int NumSides;
-	MapLineDef2 *Lines;			int NumLines;
-	MapSector *Sectors;			int NumSectors;
+	TArray<IntSideDef>			Sides;
+	TArray<IntLineDef>			Lines;
+	TArray<IntSector>			Sectors;
+	TArray<IntThing>			Things;
 	MapSubsectorEx *Subsectors;	int NumSubsectors;
 	MapSeg *Segs;				int NumSegs;
 	MapNodeEx *Nodes;			int NumNodes;
-	MapThing2 *Things;			int NumThings;
 	WORD *Blockmap;				int BlockmapSize;
 	BYTE *Reject;				int RejectSize;
 
@@ -164,7 +225,7 @@ struct FLevel
 
 	int NumOrgVerts;
 
-	WORD *OrgSectorMap;			int NumOrgSectors;
+	DWORD *OrgSectorMap;			int NumOrgSectors;
 
 	fixed_t MinX, MinY, MaxX, MaxY;
 
@@ -172,6 +233,11 @@ struct FLevel
 	void RemoveExtraLines ();
 	void RemoveExtraSides ();
 	void RemoveExtraSectors ();
+
+	int NumSides() const { return Sides.Size(); }
+	int NumLines() const { return Lines.Size(); }
+	int NumSectors() const { return Sectors.Size(); }
+	int NumThings() const { return Things.Size(); }
 };
 
 const int BLOCKSIZE = 128;

@@ -32,6 +32,7 @@ public:
 	~FWadReader ();
 
 	bool IsIWAD () const;
+	bool isUDMF(int lump) const;
 	int FindLump (const char *name, int index=0) const;
 	int FindMapLump (const char *name, int map) const;
 	int FindGLLump (const char *name, int glheader) const;

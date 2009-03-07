@@ -3,7 +3,7 @@
 ** Templated, automatically resizing array
 **
 **---------------------------------------------------------------------------
-** Copyright 1998-2006 Randy Heit
+** Copyright 1998-2007 Randy Heit
 ** All rights reserved.
 **
 ** Redistribution and use in source and binary forms, with or without
@@ -37,10 +37,19 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include <malloc.h>
 #include <new>
 
-template <class T>
+#if !defined(_WIN32)
+#include <inttypes.h>		// for intptr_t
+#elif !defined(_MSC_VER)
+#include <stdint.h>			// for mingw
+#endif
+
+// TArray -------------------------------------------------------------------
+
+// T is the type stored in the array.
+// TT is the type returned by operator().
+template <class T, class TT=T>
 class TArray
 {
 public:
@@ -108,7 +117,13 @@ public:
 			Most = 0;
 		}
 	}
+	// Return a reference to an element
 	T &operator[] (unsigned int index) const
+	{
+		return Array[index];
+	}
+	// Returns the value of an element
+	TT operator() (unsigned int index) const
 	{
 		return Array[index];
 	}
@@ -133,10 +148,30 @@ public:
 		if (index < Count)
 		{
 			Array[index].~T();
-			memmove (&Array[index], &Array[index+1], sizeof(T)*(Count - index - 1));
-			Count--;
+			if (index < --Count)
+			{
+				memmove (&Array[index], &Array[index+1], sizeof(T)*(Count - index));
+			}
 		}
 	}
+
+	void Delete (unsigned int index, int deletecount)
+	{
+		if (index + deletecount > Count) deletecount = Count - index;
+		if (deletecount > 0)
+		{
+			for(int i = 0; i < deletecount; i++)
+			{
+				Array[index + i].~T();
+			}
+			Count -= deletecount;
+			if (index < Count)
+			{
+				memmove (&Array[index], &Array[index+deletecount], sizeof(T)*(Count - index));
+			}
+		}
+	}
+
 	// Inserts an item into the array, shifting elements as needed
 	void Insert (unsigned int index, const T &item)
 	{
@@ -217,6 +252,10 @@ public:
 		Grow (amount);
 		unsigned int place = Count;
 		Count += amount;
+		for (unsigned int i = place; i < Count; ++i)
+		{
+			::new((void *)&Array[i]) T;
+		}
 		return place;
 	}
 	unsigned int Size () const
@@ -252,7 +291,7 @@ private:
 			}
 			for (unsigned int i = 0; i < Count; ++i)
 			{
-				Array[i] = other.Array[i];
+				::new(&Array[i]) T(other.Array[i]);
 			}
 		}
 		else
@@ -281,12 +320,29 @@ private:
 	}
 };
 
-// An array with accessors that automatically grow the
-// array as needed. But can still be used as a normal
-// TArray if needed. Used by ACS world and global arrays.
+// TDeletingArray -----------------------------------------------------------
+// An array that deletes its elements when it gets deleted.
+template<class T, class TT=T>
+class TDeletingArray : public TArray<T, TT>
+{
+public:
+	~TDeletingArray<T, TT> ()
+	{
+		for (unsigned int i = 0; i < TArray<T,TT>::Size(); ++i)
+		{
+			if ((*this)[i] != NULL) 
+				delete (*this)[i];
+		}
+	}
+};
 
-template <class T>
-class TAutoGrowArray : public TArray<T>
+// TAutoGrowArray -----------------------------------------------------------
+// An array with accessors that automatically grow the array as needed.
+// It can still be used as a normal TArray if needed. ACS uses this for
+// world and global arrays.
+
+template <class T, class TT=T>
+class TAutoGrowArray : public TArray<T, TT>
 {
 public:
 	T GetVal (unsigned int index)
@@ -299,6 +355,8 @@ public:
 	}
 	void SetVal (unsigned int index, T val)
 	{
+		if ((int)index < 0) return;	// These always result in an out of memory condition.
+
 		if (index >= this->Size())
 		{
 			this->Resize (index + 1);
@@ -306,5 +364,6 @@ public:
 		(*this)[index] = val;
 	}
 };
+
 
 #endif //__TARRAY_H__

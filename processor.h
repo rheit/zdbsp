@@ -43,6 +43,7 @@ public:
 	void Write (FWadWriter &out);
 
 private:
+	void LoadUDMF();
 	void LoadThings ();
 	void LoadLines ();
 	void LoadVertices ();
@@ -92,6 +93,7 @@ private:
 	TArray<FNodeBuilder::FPolyStart> PolyAnchors;
 
 	bool Extended;
+	bool isUDMF;
 
 	FWadReader &Wad;
 	int Lump;

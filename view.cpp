@@ -576,7 +576,7 @@ static int DesiredSector;
 
 static void DrawLevelReject (HDC dc)
 {
-	int seeFromRow = DesiredSector * Level->NumSectors;
+	int seeFromRow = DesiredSector * Level->NumSectors();
 	HPEN oldPen;
 	HPEN cantSee;
 	HPEN canSee;
@@ -589,7 +589,7 @@ static void DrawLevelReject (HDC dc)
 	oldPen = (HPEN)SelectObject (dc, canSee);
 	enum { UNDECIDED, CANT_SEE, CAN_SEE, SEE_FROM } choice, prevchoice = CAN_SEE;
 
-	for (int i = 0; i < Level->NumLines; ++i)
+	for (int i = 0; i < Level->NumLines(); ++i)
 	{
 		choice = UNDECIDED;
 

@@ -320,7 +320,7 @@ DWORD FNodeBuilder::PushGLSeg (TArray<MapSegGLEx> &segs, const FPrivSeg *seg)
 
 	if (newseg.linedef != NO_INDEX)
 	{
-		MapLineDef2 * ld = &Level.Lines[newseg.linedef];
+		IntLineDef * ld = &Level.Lines[newseg.linedef];
 
 		if (ld->sidenum[0]==ld->sidenum[1])
 		{
@@ -478,7 +478,7 @@ int FNodeBuilder::StripMinisegs (TArray<MapSeg> &segs, int subsector, short bbox
 			// Just checking the sidedef to determine the side is insufficient.
 			// When a level is sidedef compressed both sides may well have the same sidedef.
 
-			MapLineDef2 * ld = &Level.Lines[newseg.linedef];
+			IntLineDef * ld = &Level.Lines[newseg.linedef];
 
 			if (ld->sidenum[0]==ld->sidenum[1])
 			{

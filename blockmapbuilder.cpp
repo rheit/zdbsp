@@ -211,7 +211,7 @@ void FBlockmapBuilder::BuildBlockmap ()
 
 	BlockLists = new TArray<WORD>[bmapwidth * bmapheight];
 
-	for (line = 0; line < Level.NumLines; ++line)
+	for (line = 0; line < Level.NumLines(); ++line)
 	{
 		int x1 = Level.Vertices[Level.Lines[line].v1].x >> FRACBITS;
 		int y1 = Level.Vertices[Level.Lines[line].v1].y >> FRACBITS;

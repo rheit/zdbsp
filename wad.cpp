@@ -161,11 +161,27 @@ int FWadReader::FindMapLump (const char *name, int map) const
 	return -1;
 }
 
+bool FWadReader::isUDMF (int index) const
+{
+	index++;
+
+	if (strnicmp(Lumps[index].Name, "TEXTMAP", 8) == NULL)
+	{
+		// UDMF map
+		return true;
+	}
+	return false;
+}
+
+
 bool FWadReader::IsMap (int index) const
 {
 	int i, j;
 
+	if (isUDMF(index)) return true;
+
 	index++;
+
 	for (i = j = 0; i < 12; ++i)
 	{
 		if (strnicmp (Lumps[index+j].Name, MapLumpNames[i], 8) != 0)
@@ -279,7 +295,18 @@ int FWadReader::LumpAfterMap (int i) const
 {
 	int j, k;
 
-	++i;
+	if (isUDMF(i))
+	{
+		// UDMF map
+		i += 2;
+		while (strnicmp(Lumps[i].Name, "ENDMAP", 8) != NULL && i < Header.NumLumps)
+		{
+			i++;
+		}
+		return i;
+	}
+
+	i++;
 	for (j = k = 0; j < 12; ++j)
 	{
 		if (strnicmp (Lumps[i+k].Name, MapLumpNames[j], 8) != 0)

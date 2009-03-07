@@ -43,11 +43,7 @@ FLevel::FLevel ()
 
 FLevel::~FLevel ()
 {
-	if (Things)			delete[] Things;
-	if (Lines)			delete[] Lines;
 	if (Vertices)		delete[] Vertices;
-	if (Sides)			delete[] Sides;
-	if (Sectors)		delete[] Sectors;
 	if (Subsectors)		delete[] Subsectors;
 	if (Segs)			delete[] Segs;
 	if (Nodes)			delete[] Nodes;
@@ -66,14 +62,24 @@ FProcessor::FProcessor (FWadReader &inwad, int lump)
 {
 	printf ("----%s----\n", Wad.LumpName (Lump));
 
-	Extended = Wad.MapHasBehavior (lump);
-	LoadThings ();
-	LoadVertices ();
-	LoadLines ();
-	LoadSides ();
-	LoadSectors ();
+	isUDMF = Wad.isUDMF(lump);
 
-	if (Level.NumLines == 0 || Level.NumVertices == 0 || Level.NumSides == 0 || Level.NumSectors == 0)
+	if (isUDMF)
+	{
+		Extended = false;
+		LoadUDMF();
+	}
+	else
+	{
+		Extended = Wad.MapHasBehavior (lump);
+		LoadThings ();
+		LoadVertices ();
+		LoadLines ();
+		LoadSides ();
+		LoadSectors ();
+	}
+
+	if (Level.NumLines() == 0 || Level.NumVertices == 0 || Level.NumSides() == 0 || Level.NumSectors() == 0)
 	{
 		printf ("   Map is incomplete\n");
 	}
@@ -98,33 +104,52 @@ FProcessor::FProcessor (FWadReader &inwad, int lump)
 
 void FProcessor::LoadThings ()
 {
+	int NumThings;
+
 	if (Extended)
 	{
-		ReadMapLump<MapThing2> (Wad, "THINGS", Lump, Level.Things, Level.NumThings);
+		MapThing2 *Things;
+		ReadMapLump<MapThing2> (Wad, "THINGS", Lump, Things, NumThings);
 
-		for (int i = 0; i < Level.NumThings; ++i)
+		Level.Things.Resize(NumThings);
+		for (int i = 0; i < NumThings; ++i)
 		{
-			Level.Things[i].x = LittleShort(Level.Things[i].x);
-			Level.Things[i].y = LittleShort(Level.Things[i].y);
-			Level.Things[i].angle = LittleShort(Level.Things[i].angle);
-			Level.Things[i].type = LittleShort(Level.Things[i].type);
-			Level.Things[i].flags = LittleShort(Level.Things[i].flags);
+			Level.Things[i].thingid = Things[i].thingid;
+			Level.Things[i].x = LittleShort(Things[i].x) << FRACBITS;
+			Level.Things[i].y = LittleShort(Things[i].y) << FRACBITS;
+			Level.Things[i].z = LittleShort(Things[i].z);
+			Level.Things[i].angle = LittleShort(Things[i].angle);
+			Level.Things[i].type = LittleShort(Things[i].type);
+			Level.Things[i].flags = LittleShort(Things[i].flags);
+			Level.Things[i].special = Things[i].special;
+			Level.Things[i].args[0] = Things[i].args[0];
+			Level.Things[i].args[1] = Things[i].args[1];
+			Level.Things[i].args[2] = Things[i].args[2];
+			Level.Things[i].args[3] = Things[i].args[3];
+			Level.Things[i].args[4] = Things[i].args[4];
 		}
+		delete[] Things;
 	}
 	else
 	{
 		MapThing *mt;
-		ReadMapLump<MapThing> (Wad, "THINGS", Lump, mt, Level.NumThings);
+		ReadMapLump<MapThing> (Wad, "THINGS", Lump, mt, NumThings);
 
-		Level.Things = new MapThing2[Level.NumThings];
-		memset (Level.Things, 0, sizeof(*Level.Things)*Level.NumThings);
-		for (int i = 0; i < Level.NumThings; ++i)
+		Level.Things.Resize(NumThings);
+		for (int i = 0; i < NumThings; ++i)
 		{
-			Level.Things[i].x = LittleShort(mt[i].x);
-			Level.Things[i].y = LittleShort(mt[i].y);
+			Level.Things[i].x = LittleShort(mt[i].x) << FRACBITS;
+			Level.Things[i].y = LittleShort(mt[i].y) << FRACBITS;
 			Level.Things[i].angle = LittleShort(mt[i].angle);
 			Level.Things[i].type = LittleShort(mt[i].type);
 			Level.Things[i].flags = LittleShort(mt[i].flags);
+			Level.Things[i].z = 0;
+			Level.Things[i].special = 0;
+			Level.Things[i].args[0] = 0;
+			Level.Things[i].args[1] = 0;
+			Level.Things[i].args[2] = 0;
+			Level.Things[i].args[3] = 0;
+			Level.Things[i].args[4] = 0;
 		}
 		delete[] mt;
 	}
@@ -132,41 +157,53 @@ void FProcessor::LoadThings ()
 
 void FProcessor::LoadLines ()
 {
+	int NumLines;
+
 	if (Extended)
 	{
-		ReadMapLump<MapLineDef2> (Wad, "LINEDEFS", Lump, Level.Lines, Level.NumLines);
+		MapLineDef2 *Lines;
 
-		for (int i = 0; i < Level.NumLines; ++i)
+		ReadMapLump<MapLineDef2> (Wad, "LINEDEFS", Lump, Lines, NumLines);
+
+		Level.Lines.Resize(NumLines);
+		for (int i = 0; i < NumLines; ++i)
 		{
-			Level.Lines[i].v1 = LittleShort(Level.Lines[i].v1);
-			Level.Lines[i].v2 = LittleShort(Level.Lines[i].v2);
-			Level.Lines[i].flags = LittleShort(Level.Lines[i].flags);
-			Level.Lines[i].sidenum[0] = LittleShort(Level.Lines[i].sidenum[0]);
-			Level.Lines[i].sidenum[1] = LittleShort(Level.Lines[i].sidenum[1]);
+			Level.Lines[i].special = Lines[i].special;
+			Level.Lines[i].args[0] = Lines[i].args[0];
+			Level.Lines[i].args[1] = Lines[i].args[1];
+			Level.Lines[i].args[2] = Lines[i].args[2];
+			Level.Lines[i].args[3] = Lines[i].args[3];
+			Level.Lines[i].args[4] = Lines[i].args[4];
+			Level.Lines[i].v1 = LittleShort(Lines[i].v1);
+			Level.Lines[i].v2 = LittleShort(Lines[i].v2);
+			Level.Lines[i].flags = LittleShort(Lines[i].flags);
+			Level.Lines[i].sidenum[0] = LittleShort(Lines[i].sidenum[0]);
+			Level.Lines[i].sidenum[1] = LittleShort(Lines[i].sidenum[1]);
+			if (Level.Lines[i].sidenum[0] == 0xffff) Level.Lines[i].sidenum[0] = NO_INDEX;
+			if (Level.Lines[i].sidenum[1] == 0xffff) Level.Lines[i].sidenum[1] = NO_INDEX;
 		}
+		delete[] Lines;
 	}
 	else
 	{
 		MapLineDef *ml;
-		ReadMapLump<MapLineDef> (Wad, "LINEDEFS", Lump, ml, Level.NumLines);
+		ReadMapLump<MapLineDef> (Wad, "LINEDEFS", Lump, ml, NumLines);
 
-		Level.Lines = new MapLineDef2[Level.NumLines];
-		memset (Level.Lines, 0, sizeof(*Level.Lines)*Level.NumLines);
-		for (int i = 0; i < Level.NumLines; ++i)
+		Level.Lines.Resize(NumLines);
+		for (int i = 0; i < NumLines; ++i)
 		{
 			Level.Lines[i].v1 = LittleShort(ml[i].v1);
 			Level.Lines[i].v2 = LittleShort(ml[i].v2);
 			Level.Lines[i].flags = LittleShort(ml[i].flags);
 			Level.Lines[i].sidenum[0] = LittleShort(ml[i].sidenum[0]);
 			Level.Lines[i].sidenum[1] = LittleShort(ml[i].sidenum[1]);
+			if (Level.Lines[i].sidenum[0] == 0xffff) Level.Lines[i].sidenum[0] = NO_INDEX;
+			if (Level.Lines[i].sidenum[1] == 0xffff) Level.Lines[i].sidenum[1] = NO_INDEX;
 
 			// Store the special and tag in the args array so we don't lose them
-			short t = LittleShort(ml[i].special);
-			Level.Lines[i].args[2] = t & 255;
-			Level.Lines[i].args[3] = t >> 8;
-			t = LittleShort(ml[i].tag);
-			Level.Lines[i].args[0] = t & 255;
-			Level.Lines[i].args[1] = t >> 8;
+			Level.Lines[i].special = 0;
+			Level.Lines[i].args[0] = LittleShort(ml[i].special);
+			Level.Lines[i].args[1] = LittleShort(ml[i].tag);
 		}
 		delete[] ml;
 	}
@@ -188,17 +225,37 @@ void FProcessor::LoadVertices ()
 
 void FProcessor::LoadSides ()
 {
-	ReadMapLump<MapSideDef> (Wad, "SIDEDEFS", Lump, Level.Sides, Level.NumSides);
+	MapSideDef *Sides;
+	int NumSides;
+	ReadMapLump<MapSideDef> (Wad, "SIDEDEFS", Lump, Sides, NumSides);
 
-	for (int i = 0; i < Level.NumSides; ++i)
+	Level.Sides.Resize(NumSides);
+	for (int i = 0; i < NumSides; ++i)
 	{
-		Level.Sides[i].sector = LittleShort(Level.Sides[i].sector);
+		Level.Sides[i].textureoffset = Sides[i].textureoffset;
+		Level.Sides[i].rowoffset = Sides[i].rowoffset;
+		memcpy(Level.Sides[i].toptexture, Sides[i].toptexture, 8);
+		memcpy(Level.Sides[i].bottomtexture, Sides[i].bottomtexture, 8);
+		memcpy(Level.Sides[i].midtexture, Sides[i].midtexture, 8);
+
+		Level.Sides[i].sector = LittleShort(Sides[i].sector);
+		if (Level.Sides[i].sector == 0xffff) Level.Sides[i].sector = NO_INDEX;
 	}
+	delete [] Sides;
 }
 
 void FProcessor::LoadSectors ()
 {
-	ReadMapLump<MapSector> (Wad, "SECTORS", Lump, Level.Sectors, Level.NumSectors);
+	MapSector *Sectors;
+	int NumSectors;
+
+	ReadMapLump<MapSector> (Wad, "SECTORS", Lump, Sectors, NumSectors);
+	Level.Sectors.Resize(NumSectors);
+
+	for (int i = 0; i < NumSectors; ++i)
+	{
+		Level.Sectors[i].data = Sectors[i];
+	}
 }
 
 void FLevel::FindMapBounds ()
@@ -229,7 +286,7 @@ void FLevel::RemoveExtraLines ()
 	// Extra lines are those with 0 length. Collision detection against
 	// one of those could cause a divide by 0, so it's best to remove them.
 
-	for (i = newNumLines = 0; i < NumLines; ++i)
+	for (i = newNumLines = 0; i < NumLines(); ++i)
 	{
 		if (Vertices[Lines[i].v1].x != Vertices[Lines[i].v2].x ||
 			Vertices[Lines[i].v1].y != Vertices[Lines[i].v2].y)
@@ -241,30 +298,31 @@ void FLevel::RemoveExtraLines ()
 			++newNumLines;
 		}
 	}
-	if (newNumLines < NumLines)
+	if (newNumLines < NumLines())
 	{
-		int diff = NumLines - newNumLines;
+		int diff = NumLines() - newNumLines;
 
 		printf ("   Removed %d line%s with 0 length.\n", diff, diff > 1 ? "s" : "");
 	}
-	NumLines = newNumLines;
+	Lines.Resize(newNumLines);
 }
 
 void FLevel::RemoveExtraSides ()
 {
 	BYTE *used;
-	WORD *remap;
+	int *remap;
 	int i, newNumSides;
 
 	// Extra sides are those that aren't referenced by any lines.
 	// They just waste space, so get rid of them.
+	int NumSides = this->NumSides();
 
 	used = new BYTE[NumSides];
 	memset (used, 0, NumSides*sizeof(*used));
-	remap = new WORD[NumSides];
+	remap = new int[NumSides];
 
 	// Mark all used sides
-	for (i = 0; i < NumLines; ++i)
+	for (i = 0; i < NumLines(); ++i)
 	{
 		if (Lines[i].sidenum[0] != NO_INDEX)
 		{
@@ -302,10 +360,10 @@ void FLevel::RemoveExtraSides ()
 		int diff = NumSides - newNumSides;
 
 		printf ("   Removed %d unused sidedef%s.\n", diff, diff > 1 ? "s" : "");
-		NumSides = newNumSides;
+		Sides.Resize(newNumSides);
 
 		// Renumber side references in lines
-		for (i = 0; i < NumLines; ++i)
+		for (i = 0; i < NumLines(); ++i)
 		{
 			if (Lines[i].sidenum[0] != NO_INDEX)
 			{
@@ -317,7 +375,6 @@ void FLevel::RemoveExtraSides ()
 			}
 		}
 	}
-
 	delete[] used;
 	delete[] remap;
 }
@@ -325,19 +382,19 @@ void FLevel::RemoveExtraSides ()
 void FLevel::RemoveExtraSectors ()
 {
 	BYTE *used;
-	WORD *remap;
+	DWORD *remap;
 	int i, newNumSectors;
 
 	// Extra sectors are those that aren't referenced by any sides.
 	// They just waste space, so get rid of them.
 
-	NumOrgSectors = NumSectors;
-	used = new BYTE[NumSectors];
-	memset (used, 0, NumSectors*sizeof(*used));
-	remap = new WORD[NumSectors];
+	NumOrgSectors = NumSectors();
+	used = new BYTE[NumSectors()];
+	memset (used, 0, NumSectors()*sizeof(*used));
+	remap = new DWORD[NumSectors()];
 
 	// Mark all used sectors
-	for (i = 0; i < NumSides; ++i)
+	for (i = 0; i < NumSides(); ++i)
 	{
 		if (Sides[i].sector != NO_INDEX)
 		{
@@ -350,7 +407,7 @@ void FLevel::RemoveExtraSectors ()
 	}
 
 	// Shift out any unused sides
-	for (i = newNumSectors = 0; i < NumSectors; ++i)
+	for (i = newNumSectors = 0; i < NumSectors(); ++i)
 	{
 		if (used[i])
 		{
@@ -366,13 +423,13 @@ void FLevel::RemoveExtraSectors ()
 		}
 	}
 
-	if (newNumSectors < NumSectors)
+	if (newNumSectors < NumSectors())
 	{
-		int diff = NumSectors - newNumSectors;
+		int diff = NumSectors() - newNumSectors;
 		printf ("   Removed %d unused sector%s.\n", diff, diff > 1 ? "s" : "");
 
 		// Renumber sector references in sides
-		for (i = 0; i < NumSides; ++i)
+		for (i = 0; i < NumSides(); ++i)
 		{
 			if (Sides[i].sector != NO_INDEX)
 			{
@@ -380,8 +437,8 @@ void FLevel::RemoveExtraSectors ()
 			}
 		}
 		// Make a reverse map for fixing reject lumps
-		OrgSectorMap = new WORD[newNumSectors];
-		for (i = 0; i < NumSectors; ++i)
+		OrgSectorMap = new DWORD[newNumSectors];
+		for (i = 0; i < NumSectors(); ++i)
 		{
 			if (remap[i] != NO_INDEX)
 			{
@@ -389,7 +446,7 @@ void FLevel::RemoveExtraSectors ()
 			}
 		}
 
-		NumSectors = newNumSectors;
+		Sectors.Resize(newNumSectors);
 	}
 
 	delete[] used;
@@ -404,7 +461,7 @@ void FProcessor::GetPolySpots ()
 
 		// Determine if this is a Hexen map by looking for things of type 3000
 		// Only Hexen maps use them, and they are the polyobject anchors
-		for (i = 0; i < Level.NumThings; ++i)
+		for (i = 0; i < Level.NumThings(); ++i)
 		{
 			if (Level.Things[i].type == PO_HEX_ANCHOR_TYPE)
 			{
@@ -412,7 +469,7 @@ void FProcessor::GetPolySpots ()
 			}
 		}
 
-		if (i < Level.NumThings)
+		if (i < Level.NumThings())
 		{
 			spot1 = PO_HEX_SPAWN_TYPE;
 			spot2 = PO_HEX_SPAWNCRUSH_TYPE;
@@ -425,15 +482,15 @@ void FProcessor::GetPolySpots ()
 			anchor = PO_ANCHOR_TYPE;
 		}
 
-		for (i = 0; i < Level.NumThings; ++i)
+		for (i = 0; i < Level.NumThings(); ++i)
 		{
 			if (Level.Things[i].type == spot1 ||
 				Level.Things[i].type == spot2 ||
 				Level.Things[i].type == anchor)
 			{
 				FNodeBuilder::FPolyStart newvert;
-				newvert.x = Level.Things[i].x << FRACBITS;
-				newvert.y = Level.Things[i].y << FRACBITS;
+				newvert.x = Level.Things[i].x;
+				newvert.y = Level.Things[i].y;
 				newvert.polynum = Level.Things[i].angle;
 				if (Level.Things[i].type == anchor)
 				{
@@ -450,24 +507,30 @@ void FProcessor::GetPolySpots ()
 
 void FProcessor::Write (FWadWriter &out)
 {
-	if (Level.NumLines == 0 || Level.NumSides == 0 || Level.NumSectors == 0 || Level.NumVertices == 0)
+	if (Level.NumLines() == 0 || Level.NumSides() == 0 || Level.NumSectors() == 0 || Level.NumVertices == 0)
 	{
-		// Map is empty, so just copy it as-is
-		out.CopyLump (Wad, Lump);
-		out.CopyLump (Wad, Wad.FindMapLump ("THINGS", Lump));
-		out.CopyLump (Wad, Wad.FindMapLump ("LINEDEFS", Lump));
-		out.CopyLump (Wad, Wad.FindMapLump ("SIDEDEFS", Lump));
-		out.CopyLump (Wad, Wad.FindMapLump ("VERTEXES", Lump));
-		out.CreateLabel ("SEGS");
-		out.CreateLabel ("SSECTORS");
-		out.CreateLabel ("NODES");
-		out.CopyLump (Wad, Wad.FindMapLump ("SECTORS", Lump));
-		out.CreateLabel ("REJECT");
-		out.CreateLabel ("BLOCKMAP");
-		if (Extended)
+		if (!isUDMF)
 		{
-			out.CopyLump (Wad, Wad.FindMapLump ("BEHAVIOR", Lump));
-			out.CopyLump (Wad, Wad.FindMapLump ("SCRIPTS", Lump));
+			// Map is empty, so just copy it as-is
+			out.CopyLump (Wad, Lump);
+			out.CopyLump (Wad, Wad.FindMapLump ("THINGS", Lump));
+			out.CopyLump (Wad, Wad.FindMapLump ("LINEDEFS", Lump));
+			out.CopyLump (Wad, Wad.FindMapLump ("SIDEDEFS", Lump));
+			out.CopyLump (Wad, Wad.FindMapLump ("VERTEXES", Lump));
+			out.CreateLabel ("SEGS");
+			out.CreateLabel ("SSECTORS");
+			out.CreateLabel ("NODES");
+			out.CopyLump (Wad, Wad.FindMapLump ("SECTORS", Lump));
+			out.CreateLabel ("REJECT");
+			out.CreateLabel ("BLOCKMAP");
+			if (Extended)
+			{
+				out.CopyLump (Wad, Wad.FindMapLump ("BEHAVIOR", Lump));
+				out.CopyLump (Wad, Wad.FindMapLump ("SCRIPTS", Lump));
+			}
+		}
+		else
+		{
 		}
 		return;
 	}
@@ -493,6 +556,9 @@ void FProcessor::Write (FWadWriter &out)
 	if (BuildNodes)
 	{
 		FNodeBuilder *builder = NULL;
+
+		// UDMF spec requires GL nodes.
+		if (isUDMF) BuildGLNodes = true;
 		
 		try
 		{
@@ -580,7 +646,7 @@ void FProcessor::Write (FWadWriter &out)
 	Level.Blockmap = new WORD[Level.BlockmapSize];
 	memcpy (Level.Blockmap, blocks, Level.BlockmapSize*sizeof(WORD));
 
-	Level.RejectSize = (Level.NumSectors*Level.NumSectors + 7) / 8;
+	Level.RejectSize = (Level.NumSectors()*Level.NumSectors() + 7) / 8;
 	Level.Reject = NULL;
 
 	switch (RejectMode)
@@ -609,13 +675,13 @@ void FProcessor::Write (FWadWriter &out)
 					}
 					Level.RejectSize = 0;
 				}
-				else if (Level.NumOrgSectors != Level.NumSectors)
+				else if (Level.NumOrgSectors != Level.NumSectors())
 				{
 					// Some sectors have been removed, so fix the reject.
 					BYTE *newreject = FixReject (Level.Reject);
 					delete[] Level.Reject;
 					Level.Reject = newreject;
-					Level.RejectSize = (Level.NumSectors * Level.NumSectors + 7) / 8;
+					Level.RejectSize = (Level.NumSectors() * Level.NumSectors() + 7) / 8;
 				}
 			}
 		}
@@ -744,19 +810,19 @@ void FProcessor::Write (FWadWriter &out)
 BYTE *FProcessor::FixReject (const BYTE *oldreject)
 {
 	int x, y, ox, oy, pnum, opnum;
-	int rejectSize = (Level.NumSectors*Level.NumSectors + 7) / 8;
+	int rejectSize = (Level.NumSectors()*Level.NumSectors() + 7) / 8;
 	BYTE *newreject = new BYTE[rejectSize];
 
 	memset (newreject, 0, rejectSize);
 
-	for (y = 0; y < Level.NumSectors; ++y)
+	for (y = 0; y < Level.NumSectors(); ++y)
 	{
 		oy = Level.OrgSectorMap[y];
-		for (x = 0; x < Level.NumSectors; ++x)
+		for (x = 0; x < Level.NumSectors(); ++x)
 		{
 			ox = Level.OrgSectorMap[x];
-			pnum = y*Level.NumSectors + x;
-			opnum = oy*Level.NumSectors + ox;
+			pnum = y*Level.NumSectors() + x;
+			opnum = oy*Level.NumSectors() + ox;
 
 			if (oldreject[opnum >> 3] & (1 << (opnum & 7)))
 			{
@@ -870,37 +936,39 @@ void FProcessor::WriteLines (FWadWriter &out)
 
 	if (Extended)
 	{
-		for (i = 0; i < Level.NumLines; ++i)
+		MapLineDef2 *Lines = new MapLineDef2[Level.NumLines()];
+		for (i = 0; i < Level.NumLines(); ++i)
 		{
-			Level.Lines[i].v1 = LittleShort(Level.Lines[i].v1);
-			Level.Lines[i].v2 = LittleShort(Level.Lines[i].v2);
-			Level.Lines[i].flags = LittleShort(Level.Lines[i].flags);
-			Level.Lines[i].sidenum[0] = LittleShort(Level.Lines[i].sidenum[0]);
-			Level.Lines[i].sidenum[1] = LittleShort(Level.Lines[i].sidenum[1]);
+			Lines[i].special = Level.Lines[i].special;
+			Lines[i].args[0] = Level.Lines[i].args[0];
+			Lines[i].args[1] = Level.Lines[i].args[1];
+			Lines[i].args[2] = Level.Lines[i].args[2];
+			Lines[i].args[3] = Level.Lines[i].args[3];
+			Lines[i].args[4] = Level.Lines[i].args[4];
+			Lines[i].v1 = LittleShort(WORD(Level.Lines[i].v1));
+			Lines[i].v2 = LittleShort(WORD(Level.Lines[i].v2));
+			Lines[i].flags = LittleShort(WORD(Level.Lines[i].flags));
+			Lines[i].sidenum[0] = LittleShort(WORD(Level.Lines[i].sidenum[0]));
+			Lines[i].sidenum[1] = LittleShort(WORD(Level.Lines[i].sidenum[1]));
 		}
-		out.WriteLump ("LINEDEFS", Level.Lines, Level.NumLines*sizeof(*Level.Lines));
+		out.WriteLump ("LINEDEFS", Lines, Level.NumLines()*sizeof(*Lines));
+		delete[] Lines;
 	}
 	else
 	{
-		MapLineDef *ld = new MapLineDef[Level.NumLines];
+		MapLineDef *ld = new MapLineDef[Level.NumLines()];
 
-		for (i = 0; i < Level.NumLines; ++i)
+		for (i = 0; i < Level.NumLines(); ++i)
 		{
-			short t;
-
-			ld[i].v1 = LittleShort(Level.Lines[i].v1);
-			ld[i].v2 = LittleShort(Level.Lines[i].v2);
-			ld[i].flags = LittleShort(Level.Lines[i].flags);
-			ld[i].sidenum[0] = LittleShort(Level.Lines[i].sidenum[0]);
-			ld[i].sidenum[1] = LittleShort(Level.Lines[i].sidenum[1]);
-
-			t = Level.Lines[i].args[2] + (Level.Lines[i].args[3]<<8);
-			ld[i].special = LittleShort(t);
-
-			t = Level.Lines[i].args[0] + (Level.Lines[i].args[1]<<8);
-			ld[i].tag = LittleShort(t);
+			ld[i].v1 = LittleShort(WORD(Level.Lines[i].v1));
+			ld[i].v2 = LittleShort(WORD(Level.Lines[i].v2));
+			ld[i].flags = LittleShort(WORD(Level.Lines[i].flags));
+			ld[i].sidenum[0] = LittleShort(WORD(Level.Lines[i].sidenum[0]));
+			ld[i].sidenum[1] = LittleShort(WORD(Level.Lines[i].sidenum[1]));
+			ld[i].special = LittleShort(WORD(Level.Lines[i].args[0]));
+			ld[i].tag = LittleShort(WORD(Level.Lines[i].args[1]));
 		}
-		out.WriteLump ("LINEDEFS", ld, Level.NumLines*sizeof(*ld));
+		out.WriteLump ("LINEDEFS", ld, Level.NumLines()*sizeof(*ld));
 		delete[] ld;
 	}
 }
@@ -908,17 +976,32 @@ void FProcessor::WriteLines (FWadWriter &out)
 void FProcessor::WriteSides (FWadWriter &out)
 {
 	int i;
+	MapSideDef *Sides = new MapSideDef[Level.NumSides()];
 
-	for (i = 0; i < Level.NumSides; ++i)
+	for (i = 0; i < Level.NumSides(); ++i)
 	{
-		Level.Sides[i].sector = LittleShort(Level.Sides[i].sector);
+		Sides[i].textureoffset = Level.Sides[i].textureoffset;
+		Sides[i].rowoffset = Level.Sides[i].rowoffset;
+		memcpy(Sides[i].toptexture, Level.Sides[i].toptexture, 8);
+		memcpy(Sides[i].bottomtexture, Level.Sides[i].bottomtexture, 8);
+		memcpy(Sides[i].midtexture, Level.Sides[i].midtexture, 8);
+		Sides[i].sector = LittleShort(Level.Sides[i].sector);
 	}
-	out.WriteLump ("SIDEDEFS", Level.Sides, Level.NumSides*sizeof(*Level.Sides));
+	out.WriteLump ("SIDEDEFS", Sides, Level.NumSides()*sizeof(*Sides));
+	delete[] Sides;
 }
 
 void FProcessor::WriteSectors (FWadWriter &out)
 {
-	out.WriteLump ("SECTORS", Level.Sectors, Level.NumSectors*sizeof(*Level.Sectors));
+	int i;
+	MapSector *Sectors = new MapSector[Level.NumSectors()];
+
+	for (i = 0; i < Level.NumSectors(); ++i)
+	{
+		Sectors[i] = Level.Sectors[i].data;
+	}
+
+	out.WriteLump ("SECTORS", Sectors, Level.NumSectors()*sizeof(*Sectors));
 }
 
 void FProcessor::WriteSegs (FWadWriter &out)

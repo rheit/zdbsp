@@ -47,13 +47,13 @@ const fixed_t VERTEX_EPSILON = 6;
 
 void FNodeBuilder::FindUsedVertices (WideVertex *oldverts, int max)
 {
-	int *map = (int *)alloca (max*sizeof(int));
+	int *map = new int[max];
 	int i;
 	FPrivVert newvert;
 
 	memset (&map[0], -1, sizeof(int)*max);
 
-	for (i = 0; i < Level.NumLines; ++i)
+	for (i = 0; i < Level.NumLines(); ++i)
 	{
 		int v1 = Level.Lines[i].v1;
 		int v2 = Level.Lines[i].v2;
@@ -71,11 +71,12 @@ void FNodeBuilder::FindUsedVertices (WideVertex *oldverts, int max)
 			map[v2] = VertexMap->SelectVertexExact (newvert);
 		}
 
-		Level.Lines[i].v1 = (WORD)map[v1];
-		Level.Lines[i].v2 = (WORD)map[v2];
+		Level.Lines[i].v1 = map[v1];
+		Level.Lines[i].v2 = map[v2];
 	}
 	InitialVertices = Vertices.Size ();
 	Level.NumOrgVerts = (int)InitialVertices;
+	delete[] map;
 }
 
 // For every sidedef in the map, create a corresponding seg.
@@ -84,7 +85,7 @@ void FNodeBuilder::MakeSegsFromSides ()
 {
 	int i, j;
 
-	for (i = 0; i < Level.NumLines; ++i)
+	for (i = 0; i < Level.NumLines(); ++i)
 	{
 		if (Level.Lines[i].sidenum[0] != NO_INDEX)
 		{
@@ -110,7 +111,7 @@ void FNodeBuilder::MakeSegsFromSides ()
 int FNodeBuilder::CreateSeg (int linenum, int sidenum)
 {
 	FPrivSeg seg;
-	WORD backside;
+	DWORD backside;
 	int segnum;
 
 	seg.next = DWORD_MAX;
