@@ -32,7 +32,7 @@ void SC_RestoreScriptState();
 extern char *sc_String;
 extern int sc_StringLen;
 extern int sc_Number;
-extern float sc_Float;
+extern double sc_Float;
 extern int sc_Line;
 extern bool sc_End;
 extern bool sc_Crossed;

@@ -62,12 +62,14 @@ void FNodeBuilder::FindUsedVertices (WideVertex *oldverts, int max)
 		{
 			newvert.x = oldverts[v1].x;
 			newvert.y = oldverts[v1].y;
+			newvert.index = oldverts[v1].index;
 			map[v1] = VertexMap->SelectVertexExact (newvert);
 		}
 		if (map[v2] == -1)
 		{
 			newvert.x = oldverts[v2].x;
 			newvert.y = oldverts[v2].y;
+			newvert.index = oldverts[v2].index;
 			map[v2] = VertexMap->SelectVertexExact (newvert);
 		}
 

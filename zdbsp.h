@@ -66,8 +66,8 @@ typedef uint32_t angle_t;
 
 angle_t PointToAngle (fixed_t x, fixed_t y);
 
-static const DWORD NO_MAP_INDEX = 0xffffffff;
-static const WORD NO_INDEX = 0xffff;
+static const WORD NO_MAP_INDEX = 0xffff;
+static const DWORD NO_INDEX = 0xffffffff;
 static const angle_t ANGLE_MAX = 0xffffffff;
 static const DWORD DWORD_MAX = 0xffffffff;
 static const angle_t ANGLE_180 = (1u<<31);

@@ -303,7 +303,7 @@ int FWadReader::LumpAfterMap (int i) const
 		{
 			i++;
 		}
-		return i;
+		return i+1;	// one lump after ENDMAP
 	}
 
 	i++;

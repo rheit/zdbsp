@@ -1010,10 +1010,20 @@ void ShowView (FLevel *level)
 	{
 		Level = level;
 
-		MapBounds.left = short(level->Blockmap[0]) - 8;
-		MapBounds.right = short(level->Blockmap[0]) + (level->Blockmap[2] << BLOCKBITS) + 8;
-		MapBounds.top = short(level->Blockmap[1]) - 8;
-		MapBounds.bottom = short(level->Blockmap[1]) + (level->Blockmap[3] << BLOCKBITS) + 8;
+		if (level->Blockmap != NULL)
+		{
+			MapBounds.left = short(level->Blockmap[0]) - 8;
+			MapBounds.right = short(level->Blockmap[0]) + (level->Blockmap[2] << BLOCKBITS) + 8;
+			MapBounds.top = short(level->Blockmap[1]) - 8;
+			MapBounds.bottom = short(level->Blockmap[1]) + (level->Blockmap[3] << BLOCKBITS) + 8;
+		}
+		else
+		{
+			MapBounds.left = level->MinX >> FRACBITS;
+			MapBounds.right = level->MaxX >> FRACBITS;
+			MapBounds.top = level->MinY >> FRACBITS;
+			MapBounds.bottom = level->MaxY >> FRACBITS;
+		}
 		MapSize.x = MapBounds.right - MapBounds.left;
 		MapSize.y = MapBounds.bottom - MapBounds.top;
 		Divisor = 1;

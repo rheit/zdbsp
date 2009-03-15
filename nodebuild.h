@@ -50,7 +50,7 @@ class FNodeBuilder
 	struct FPrivSeg
 	{
 		int v1, v2;
-		int sidedef;
+		DWORD sidedef;
 		int linedef;
 		int frontsector;
 		int backsector;
@@ -72,6 +72,7 @@ class FNodeBuilder
 		fixed_t x, y;
 		DWORD segs;		// segs that use this vertex as v1
 		DWORD segs2;	// segs that use this vertex as v2
+		int index;
 
 		bool operator== (const FPrivVert &other)
 		{

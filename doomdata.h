@@ -14,8 +14,8 @@ enum
 
 struct UDMFKey
 {
-	int key;
-	int value;
+	const char *key;
+	const char *value;
 };
 
 struct MapVertex
@@ -26,6 +26,7 @@ struct MapVertex
 struct WideVertex
 {
 	fixed_t x, y;
+	int index;
 };
 
 struct MapSideDef
@@ -201,12 +202,18 @@ struct IntThing
 	TArray<UDMFKey> props;
 };
 
+struct IntVertex
+{
+	TArray<UDMFKey> props;
+};
+
 struct FLevel
 {
 	FLevel ();
 	~FLevel ();
 
 	WideVertex *Vertices;		int NumVertices;
+	TArray<IntVertex>			VertexProps;
 	TArray<IntSideDef>			Sides;
 	TArray<IntLineDef>			Lines;
 	TArray<IntSector>			Sectors;
@@ -228,6 +235,8 @@ struct FLevel
 	DWORD *OrgSectorMap;			int NumOrgSectors;
 
 	fixed_t MinX, MinY, MaxX, MaxY;
+
+	TArray<UDMFKey> props;
 
 	void FindMapBounds ();
 	void RemoveExtraLines ();

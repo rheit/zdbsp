@@ -179,8 +179,8 @@ void FProcessor::LoadLines ()
 			Level.Lines[i].flags = LittleShort(Lines[i].flags);
 			Level.Lines[i].sidenum[0] = LittleShort(Lines[i].sidenum[0]);
 			Level.Lines[i].sidenum[1] = LittleShort(Lines[i].sidenum[1]);
-			if (Level.Lines[i].sidenum[0] == 0xffff) Level.Lines[i].sidenum[0] = NO_INDEX;
-			if (Level.Lines[i].sidenum[1] == 0xffff) Level.Lines[i].sidenum[1] = NO_INDEX;
+			if (Level.Lines[i].sidenum[0] == NO_MAP_INDEX) Level.Lines[i].sidenum[0] = NO_INDEX;
+			if (Level.Lines[i].sidenum[1] == NO_MAP_INDEX) Level.Lines[i].sidenum[1] = NO_INDEX;
 		}
 		delete[] Lines;
 	}
@@ -197,8 +197,8 @@ void FProcessor::LoadLines ()
 			Level.Lines[i].flags = LittleShort(ml[i].flags);
 			Level.Lines[i].sidenum[0] = LittleShort(ml[i].sidenum[0]);
 			Level.Lines[i].sidenum[1] = LittleShort(ml[i].sidenum[1]);
-			if (Level.Lines[i].sidenum[0] == 0xffff) Level.Lines[i].sidenum[0] = NO_INDEX;
-			if (Level.Lines[i].sidenum[1] == 0xffff) Level.Lines[i].sidenum[1] = NO_INDEX;
+			if (Level.Lines[i].sidenum[0] == NO_MAP_INDEX) Level.Lines[i].sidenum[0] = NO_INDEX;
+			if (Level.Lines[i].sidenum[1] == NO_MAP_INDEX) Level.Lines[i].sidenum[1] = NO_INDEX;
 
 			// Store the special and tag in the args array so we don't lose them
 			Level.Lines[i].special = 0;
@@ -220,6 +220,7 @@ void FProcessor::LoadVertices ()
 	{
 		Level.Vertices[i].x = LittleShort(verts[i].x) << FRACBITS;
 		Level.Vertices[i].y = LittleShort(verts[i].y) << FRACBITS;
+		Level.Vertices[i].index = 0; // we don't need this value for non-UDMF maps
 	}
 }
 
@@ -239,7 +240,7 @@ void FProcessor::LoadSides ()
 		memcpy(Level.Sides[i].midtexture, Sides[i].midtexture, 8);
 
 		Level.Sides[i].sector = LittleShort(Sides[i].sector);
-		if (Level.Sides[i].sector == 0xffff) Level.Sides[i].sector = NO_INDEX;
+		if (Level.Sides[i].sector == NO_MAP_INDEX) Level.Sides[i].sector = NO_INDEX;
 	}
 	delete [] Sides;
 }
@@ -531,6 +532,11 @@ void FProcessor::Write (FWadWriter &out)
 		}
 		else
 		{
+			for(int i=Lump; stricmp(Wad.LumpName(i), "ENDMAP") && i < Wad.NumLumps(); i++)
+			{
+				out.CopyLump(Wad, i);
+			}
+			out.CreateLabel("ENDMAP");
 		}
 		return;
 	}
@@ -557,8 +563,15 @@ void FProcessor::Write (FWadWriter &out)
 	{
 		FNodeBuilder *builder = NULL;
 
-		// UDMF spec requires GL nodes.
-		if (isUDMF) BuildGLNodes = true;
+		// ZDoom's UDMF spec requires compressed GL nodes.
+		// No other UDMF spec has defined anything regarding nodes yet.
+		if (isUDMF) 
+		{
+			BuildGLNodes = true;
+			ConformNodes = false;
+			GLOnly = true;
+			CompressGLNodes = true;
+		}
 		
 		try
 		{
@@ -641,59 +654,62 @@ void FProcessor::Write (FWadWriter &out)
 		}
 	}
 
-	FBlockmapBuilder bbuilder (Level);
-	WORD *blocks = bbuilder.GetBlockmap (Level.BlockmapSize);
-	Level.Blockmap = new WORD[Level.BlockmapSize];
-	memcpy (Level.Blockmap, blocks, Level.BlockmapSize*sizeof(WORD));
-
-	Level.RejectSize = (Level.NumSectors()*Level.NumSectors() + 7) / 8;
-	Level.Reject = NULL;
-
-	switch (RejectMode)
+	if (!isUDMF)
 	{
-	case ERM_Rebuild:
-		//FRejectBuilder reject (Level);
-		//Level.Reject = reject.GetReject ();
-		printf ("   Rebuilding the reject is unsupported.\n");
-		// Intentional fall-through
+		FBlockmapBuilder bbuilder (Level);
+		WORD *blocks = bbuilder.GetBlockmap (Level.BlockmapSize);
+		Level.Blockmap = new WORD[Level.BlockmapSize];
+		memcpy (Level.Blockmap, blocks, Level.BlockmapSize*sizeof(WORD));
 
-	case ERM_DontTouch:
+		Level.RejectSize = (Level.NumSectors()*Level.NumSectors() + 7) / 8;
+		Level.Reject = NULL;
+
+		switch (RejectMode)
 		{
-			int lump = Wad.FindMapLump ("REJECT", Lump);
+		case ERM_Rebuild:
+			//FRejectBuilder reject (Level);
+			//Level.Reject = reject.GetReject ();
+			printf ("   Rebuilding the reject is unsupported.\n");
+			// Intentional fall-through
 
-			if (lump >= 0)
+		case ERM_DontTouch:
 			{
-				ReadLump<BYTE> (Wad, lump, Level.Reject, Level.RejectSize);
-				if (Level.RejectSize != (Level.NumOrgSectors*Level.NumOrgSectors + 7) / 8)
+				int lump = Wad.FindMapLump ("REJECT", Lump);
+
+				if (lump >= 0)
 				{
-					// If the reject is the wrong size, don't use it.
-					delete[] Level.Reject;
-					Level.Reject = NULL;
-					if (Level.RejectSize != 0)
-					{ // Do not warn about 0-length rejects
-						printf ("   REJECT is the wrong size, so it will be removed.\n");
+					ReadLump<BYTE> (Wad, lump, Level.Reject, Level.RejectSize);
+					if (Level.RejectSize != (Level.NumOrgSectors*Level.NumOrgSectors + 7) / 8)
+					{
+						// If the reject is the wrong size, don't use it.
+						delete[] Level.Reject;
+						Level.Reject = NULL;
+						if (Level.RejectSize != 0)
+						{ // Do not warn about 0-length rejects
+							printf ("   REJECT is the wrong size, so it will be removed.\n");
+						}
+						Level.RejectSize = 0;
 					}
-					Level.RejectSize = 0;
-				}
-				else if (Level.NumOrgSectors != Level.NumSectors())
-				{
-					// Some sectors have been removed, so fix the reject.
-					BYTE *newreject = FixReject (Level.Reject);
-					delete[] Level.Reject;
-					Level.Reject = newreject;
-					Level.RejectSize = (Level.NumSectors() * Level.NumSectors() + 7) / 8;
+					else if (Level.NumOrgSectors != Level.NumSectors())
+					{
+						// Some sectors have been removed, so fix the reject.
+						BYTE *newreject = FixReject (Level.Reject);
+						delete[] Level.Reject;
+						Level.Reject = newreject;
+						Level.RejectSize = (Level.NumSectors() * Level.NumSectors() + 7) / 8;
+					}
 				}
 			}
+			break;
+
+		case ERM_Create0:
+			break;
+
+		case ERM_CreateZeroes:
+			Level.Reject = new BYTE[Level.RejectSize];
+			memset (Level.Reject, 0, Level.RejectSize);
+			break;
 		}
-		break;
-
-	case ERM_Create0:
-		break;
-
-	case ERM_CreateZeroes:
-		Level.Reject = new BYTE[Level.RejectSize];
-		memset (Level.Reject, 0, Level.RejectSize);
-		break;
 	}
 
 	if (ShowMap)
@@ -712,97 +728,105 @@ void FProcessor::Write (FWadWriter &out)
 #endif
 	}
 	
-	if (Level.GLNodes != NULL )
+	if (!isUDMF)
 	{
-		gl5 = V5GLNodes ||
-			  (Level.NumGLVertices > 32767) ||
-			  (Level.NumGLSegs > 65534) ||
-			  (Level.NumGLNodes > 32767) ||
-			  (Level.NumGLSubsectors > 32767);
-		compressGL = CompressGLNodes || (Level.NumVertices > 32767);
-	}
-	else
-	{
-		compressGL = false;
-	}
 
-	// If the GL nodes are compressed, then the regular nodes must also be compressed.
-	compress = CompressNodes || compressGL ||
-		(Level.NumVertices > 65535) ||
-		(Level.NumSegs > 65535) ||
-		(Level.NumSubsectors > 32767) ||
-		(Level.NumNodes > 32767);
-
-	out.CopyLump (Wad, Lump);
-	out.CopyLump (Wad, Wad.FindMapLump ("THINGS", Lump));
-	WriteLines (out);
-	WriteSides (out);
-	WriteVertices (out, compress || GLOnly ? Level.NumOrgVerts : Level.NumVertices);
-	if (BuildNodes)
-	{
-		if (!compress)
+		if (Level.GLNodes != NULL )
 		{
-			if (!GLOnly)
+			gl5 = V5GLNodes ||
+				  (Level.NumGLVertices > 32767) ||
+				  (Level.NumGLSegs > 65534) ||
+				  (Level.NumGLNodes > 32767) ||
+				  (Level.NumGLSubsectors > 32767);
+			compressGL = CompressGLNodes || (Level.NumVertices > 32767);
+		}
+		else
+		{
+			compressGL = false;
+		}
+
+		// If the GL nodes are compressed, then the regular nodes must also be compressed.
+		compress = CompressNodes || compressGL ||
+			(Level.NumVertices > 65535) ||
+			(Level.NumSegs > 65535) ||
+			(Level.NumSubsectors > 32767) ||
+			(Level.NumNodes > 32767);
+
+		out.CopyLump (Wad, Lump);
+		out.CopyLump (Wad, Wad.FindMapLump ("THINGS", Lump));
+		WriteLines (out);
+		WriteSides (out);
+		WriteVertices (out, compress || GLOnly ? Level.NumOrgVerts : Level.NumVertices);
+		if (BuildNodes)
+		{
+			if (!compress)
 			{
-				WriteSegs (out);
-				WriteSSectors (out);
-				WriteNodes (out);
+				if (!GLOnly)
+				{
+					WriteSegs (out);
+					WriteSSectors (out);
+					WriteNodes (out);
+				}
+				else
+				{
+					out.CreateLabel ("SEGS");
+					out.CreateLabel ("SSECTORS");
+					out.CreateLabel ("NODES");
+				}
 			}
 			else
 			{
 				out.CreateLabel ("SEGS");
-				out.CreateLabel ("SSECTORS");
-				out.CreateLabel ("NODES");
+				if (compressGL)
+				{
+					WriteGLBSPZ (out, "SSECTORS");
+				}
+				else
+				{
+					out.CreateLabel ("SSECTORS");
+				}
+				if (!GLOnly)
+				{
+					WriteBSPZ (out, "NODES");
+				}
+				else
+				{
+					out.CreateLabel ("NODES");
+				}
 			}
 		}
 		else
 		{
-			out.CreateLabel ("SEGS");
-			if (compressGL)
-			{
-				WriteGLBSPZ (out, "SSECTORS");
-			}
-			else
-			{
-				out.CreateLabel ("SSECTORS");
-			}
-			if (!GLOnly)
-			{
-				WriteBSPZ (out, "NODES");
-			}
-			else
-			{
-				out.CreateLabel ("NODES");
-			}
+			out.CopyLump (Wad, Wad.FindMapLump ("SEGS", Lump));
+			out.CopyLump (Wad, Wad.FindMapLump ("SSECTORS", Lump));
+			out.CopyLump (Wad, Wad.FindMapLump ("NODES", Lump));
+		}
+		WriteSectors (out);
+		WriteReject (out);
+		WriteBlockmap (out);
+		if (Extended)
+		{
+			out.CopyLump (Wad, Wad.FindMapLump ("BEHAVIOR", Lump));
+			out.CopyLump (Wad, Wad.FindMapLump ("SCRIPTS", Lump));
+		}
+		if (Level.GLNodes != NULL && !compressGL)
+		{
+			char glname[9];
+			glname[0] = 'G';
+			glname[1] = 'L';
+			glname[2] = '_';
+			glname[8] = 0;
+			strncpy (glname+3, Wad.LumpName (Lump), 5);
+			out.CreateLabel (glname);
+			WriteGLVertices (out, gl5);
+			WriteGLSegs (out, gl5);
+			WriteGLSSect (out, gl5);
+			WriteGLNodes (out, gl5);
 		}
 	}
 	else
 	{
-		out.CopyLump (Wad, Wad.FindMapLump ("SEGS", Lump));
-		out.CopyLump (Wad, Wad.FindMapLump ("SSECTORS", Lump));
-		out.CopyLump (Wad, Wad.FindMapLump ("NODES", Lump));
-	}
-	WriteSectors (out);
-	WriteReject (out);
-	WriteBlockmap (out);
-	if (Extended)
-	{
-		out.CopyLump (Wad, Wad.FindMapLump ("BEHAVIOR", Lump));
-		out.CopyLump (Wad, Wad.FindMapLump ("SCRIPTS", Lump));
-	}
-	if (Level.GLNodes != NULL && !compressGL)
-	{
-		char glname[9];
-		glname[0] = 'G';
-		glname[1] = 'L';
-		glname[2] = '_';
-		glname[8] = 0;
-		strncpy (glname+3, Wad.LumpName (Lump), 5);
-		out.CreateLabel (glname);
-		WriteGLVertices (out, gl5);
-		WriteGLSegs (out, gl5);
-		WriteGLSSect (out, gl5);
-		WriteGLNodes (out, gl5);
+		WriteUDMF(out);
 	}
 }
 

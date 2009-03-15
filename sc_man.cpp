@@ -60,7 +60,7 @@ static void CheckOpen (void);
 char *sc_String;
 int sc_StringLen;
 int sc_Number;
-float sc_Float;
+double sc_Float;
 int sc_Line;
 bool sc_End;
 bool sc_Crossed;
@@ -87,31 +87,15 @@ static bool CMode;
 //
 // SC_OpenFile
 //
-// Loads a script (from a file). Uses the new/delete memory allocator for
-// memory allocation and de-allocation.
+// Loads a script 
 //
 //==========================================================================
 
-void SC_OpenFile (const char *name)
+void SC_OpenMem (const char *name, char *buffer, int len)
 {
 	SC_Close ();
-	FILE * f = fopen(name, "rb");
-	if (f == NULL)
-	{
-		printf("%s: file not found\n", name);
-		exit(1);
-	}
-	fseek(f, 0, SEEK_END);
-	ScriptSize = ftell(f);
-	fseek(f, 0, SEEK_SET);
-	ScriptBuffer = (char*)malloc(ScriptSize);
-	if (ScriptSize != int(fread(ScriptBuffer, 1, ScriptSize, f)))
-	{
-		fclose(f);
-		printf("%s: unable to read file\n", name);
-		exit(1);
-	}
-	fclose(f);
+	ScriptSize = len;
+	ScriptBuffer = buffer;
 	SC_PrepareScript ();
 }
 
@@ -146,10 +130,6 @@ void SC_Close (void)
 {
 	if (ScriptOpen)
 	{
-		if (ScriptBuffer)
-		{
-			free(ScriptBuffer);
-		}
 		ScriptBuffer = NULL;
 		ScriptOpen = false;
 	}
@@ -456,7 +436,7 @@ bool SC_GetNumber (void)
 				SC_ScriptError ("SC_GetNumber: Bad numeric constant \"%s\".", sc_String);
 			}
 		}
-		sc_Float = (float)sc_Number;
+		sc_Float = sc_Number;
 		return true;
 	}
 	else
@@ -507,7 +487,7 @@ bool SC_CheckNumber (void)
 				return false;
 			}
 		}
-		sc_Float = (float)sc_Number;
+		sc_Float = sc_Number;
 		return true;
 	}
 	else
@@ -530,7 +510,8 @@ bool SC_CheckFloat (void)
 	//CheckOpen ();
 	if (SC_GetString())
 	{
-		sc_Float = (float)strtod (sc_String, &stopper);
+		sc_Float = strtod (sc_String, &stopper);
+		sc_Number = (int)sc_Float;
 		if (*stopper != 0)
 		{
 			SC_UnGet();
@@ -558,7 +539,7 @@ bool SC_GetFloat (void)
 	CheckOpen ();
 	if (SC_GetString())
 	{
-		sc_Float = (float)strtod (sc_String, &stopper);
+		sc_Float = strtod (sc_String, &stopper);
 		if (*stopper != 0)
 		{
 			SC_ScriptError("SC_GetFloat: Bad numeric constant \"%s\".\n",sc_String);

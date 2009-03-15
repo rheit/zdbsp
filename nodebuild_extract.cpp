@@ -358,7 +358,7 @@ void FNodeBuilder::PushConnectingGLSeg (int subsector, TArray<MapSegGLEx> &segs,
 
 	newseg.v1 = v1;
 	newseg.v2 = v2;
-	newseg.linedef = NO_INDEX;
+	newseg.linedef = NO_MAP_INDEX;
 	newseg.side = 0;
 	newseg.partner = DWORD_MAX;
 	segs.Push (newseg);
@@ -373,6 +373,7 @@ void FNodeBuilder::GetVertices (WideVertex *&verts, int &count)
 	{
 		verts[i].x = Vertices[i].x;
 		verts[i].y = Vertices[i].y;
+		verts[i].index = Vertices[i].index;
 	}
 }
 

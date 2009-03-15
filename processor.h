@@ -87,6 +87,26 @@ private:
 	void WriteNodes5 (FWadWriter &out, const char *name, const MapNodeEx *zaNodes, int count) const;
 	void WriteSSectors5 (FWadWriter &out, const char *name, const MapSubsectorEx *zaSubs, int count) const;
 
+	const char *ParseKey(const char *&value);
+	bool CheckKey(const char *&key, const char *&value);
+	void ParseThing(IntThing *th);
+	void ParseLinedef(IntLineDef *ld);
+	void ParseSidedef(IntSideDef *sd);
+	void ParseSector(IntSector *sec);
+	void ParseVertex(WideVertex *vt, IntVertex *vtp);
+	void ParseMapProperties();
+	void ParseTextMap(int lump);
+
+	void WriteProps(FWadWriter &out, TArray<UDMFKey> &props);
+	void WriteIntProp(FWadWriter &out, const char *key, int value);
+	void WriteThingUDMF(FWadWriter &out, IntThing *th);
+	void WriteLinedefUDMF(FWadWriter &out, IntLineDef *ld);
+	void WriteSidedefUDMF(FWadWriter &out, IntSideDef *sd);
+	void WriteSectorUDMF(FWadWriter &out, IntSector *sec);
+	void WriteVertexUDMF(FWadWriter &out, IntVertex *vt);
+	void WriteTextMap(FWadWriter &out);
+	void WriteUDMF(FWadWriter &out);
+
 	FLevel Level;
 
 	TArray<FNodeBuilder::FPolyStart> PolyStarts;
