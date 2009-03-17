@@ -165,7 +165,7 @@ bool FWadReader::isUDMF (int index) const
 {
 	index++;
 
-	if (strnicmp(Lumps[index].Name, "TEXTMAP", 8) == NULL)
+	if (strnicmp(Lumps[index].Name, "TEXTMAP", 8) == 0)
 	{
 		// UDMF map
 		return true;
@@ -299,7 +299,7 @@ int FWadReader::LumpAfterMap (int i) const
 	{
 		// UDMF map
 		i += 2;
-		while (strnicmp(Lumps[i].Name, "ENDMAP", 8) != NULL && i < Header.NumLumps)
+		while (strnicmp(Lumps[i].Name, "ENDMAP", 8) != 0 && i < Header.NumLumps)
 		{
 			i++;
 		}

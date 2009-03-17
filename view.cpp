@@ -808,7 +808,7 @@ void SizeView (HWND wnd, bool firstTime)
 LRESULT CALLBACK MapViewFunc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static bool dragging = false;
-	static POINTS dragpos;
+	static union { POINTS dragpos; LPARAM dragpos_lp; };
 	static int hitx, hity;
 	SCROLLINFO sinfo = { sizeof(SCROLLINFO), };
 	int pos;
@@ -935,7 +935,8 @@ LRESULT CALLBACK MapViewFunc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_RBUTTONDOWN:
 		dragging = true;
-		dragpos = MAKEPOINTS(lParam);
+		dragpos_lp = lParam;	// also sets dragpos; avoids type-punned dereference warning from GCC
+		//dragpos = MAKEPOINTS(lParam);
 		return 0;
 
 	case WM_RBUTTONUP:
@@ -949,9 +950,10 @@ LRESULT CALLBACK MapViewFunc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 		else if (dragging)
 		{
-			POINTS newpos = MAKEPOINTS(lParam);
+			union { POINTS newpos; LPARAM newpos_lp; };
 			int delta;
 
+			newpos_lp = lParam;
 			delta = (newpos.x - dragpos.x) * 8;
 			if (delta)
 			{

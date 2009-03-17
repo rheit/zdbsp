@@ -26,8 +26,8 @@
 
 class StringBuffer
 {
-	const static int BLOCK_SIZE = 100000;
-	const static int BLOCK_ALIGN = sizeof(size_t);
+	const static size_t BLOCK_SIZE = 100000;
+	const static size_t BLOCK_ALIGN = sizeof(size_t);
 
 	TDeletingArray<char *> blocks;
 	size_t currentindex;
@@ -493,7 +493,7 @@ void FProcessor::WriteVertexUDMF(FWadWriter &out, IntVertex *vt)
 
 //===========================================================================
 //
-// writes an UDMF vertex
+// writes an UDMF text map
 //
 //===========================================================================
 
@@ -535,7 +535,7 @@ void FProcessor::WriteTextMap(FWadWriter &out)
 
 //===========================================================================
 //
-// writes an UDMF vertex
+// writes an UDMF map
 //
 //===========================================================================
 

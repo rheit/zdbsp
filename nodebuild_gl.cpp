@@ -233,10 +233,16 @@ DWORD FNodeBuilder::AddMiniseg (int v1, int v2, DWORD partner, DWORD seg1, DWORD
 	FPrivSeg newseg;
 
 	newseg.sidedef = NO_INDEX;
-	newseg.linedef = -1;
+	newseg.linedef = NO_INDEX;
 	newseg.loopnum = 0;
 	newseg.next = DWORD_MAX;
 	newseg.planefront = true;
+	newseg.hashnext = NULL;
+	newseg.storedseg = DWORD_MAX;
+	newseg.frontsector = NULL;
+	newseg.backsector = NULL;
+	newseg.offset = 0;
+	newseg.angle = 0;
 
 	if (splitseg != DWORD_MAX)
 	{

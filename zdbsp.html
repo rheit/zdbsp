@@ -258,7 +258,10 @@
 			more than 65535 segs and vertices by storing them using four bytes instead of 
 			two.</p>
 		<p>The first four bytes of the compressed nodes are a four-character (uncompressed) 
-			signature. This can be either 'ZNOD' for regular nodes or 'ZGLN' for GL nodes. 
+			signature. This can be either 'ZNOD' for regular nodes or 'ZGLN' for GL nodes.
+			If there are more than 65534 lines in the map, the signature 'ZGL2' is used
+			for GL nodes instead. (Note that this can only happen with UDMF maps, because
+			the binary map format does not allow more lines than that.)
 			Following the signature is the zlib data stream. For a description of its 
 			format, see the zlib documentation. When you decompress it, the following 
 			information is obtained in this order:</p>
@@ -405,7 +408,7 @@
 			<tr>
 				<td>WORD</td>
 				<td><i>line</i></td>
-				<td>The linedef this seg came from (0xFFFFFFFF if none)</td>
+				<td>The linedef this seg came from (0xFFFF if none)</td>
 			</tr>
 			<tr>
 				<td>BYTE</td>
@@ -413,7 +416,38 @@
 				<td>The linedef's side this seg came from (0=front, 1=back) (ignored if no line)</td>
 			</tr>
 		</table>
-		<p>Unlike standard GL nodes, each seg's second vertex is not stored. This is 
+        <h3>GL nodes ('ZGL2' signature)</h3>
+        <table>
+            <tr>
+                <td>DWORD</td>
+                <td><i>NumSegs</i></td>
+                <td>Number of segs</td>
+            </tr>
+            <tr>
+                <td bgcolor="#dddddd" colspan="3">Repeat <i>NumSegs</i> times:</td>
+            </tr>
+            <tr>
+                <td>DWORD</td>
+                <td><i>v1</i></td>
+                <td>Seg's first vertex</td>
+            </tr>
+            <tr>
+                <td>DWORD</td>
+                <td><i>partner</i></td>
+                <td>Seg's partner seg (0xFFFFFFFF if none)</td>
+            </tr>
+            <tr>
+                <td>DWORD</td>
+                <td><i>line</i></td>
+                <td>The linedef this seg came from (0xFFFFFFFF if none)</td>
+            </tr>
+            <tr>
+                <td>BYTE</td>
+                <td><i>side</i></td>
+                <td>The linedef's side this seg came from (0=front, 1=back) (ignored if no line)</td>
+            </tr>
+        </table>
+        <p>Unlike standard GL nodes, each seg's second vertex is not stored. This is 
 			because GL subsectors must form a closed area. In other words, one seg's second 
 			vertex is the same as the next seg's first vertex. The subsector information 
 			contains everything you need to know to close each area and start a new one.</p>
@@ -488,5 +522,7 @@
 			find some way to "hijack" this lump in the future, so programs that read 
 			compressed nodes must not assume that if the SEGS lump is non-empty, then 
 			compressed nodes are not used.</p>
+		<p>For UDMF maps, nodes a stored in the map's ZNODES lump. These will only be
+		    'ZGLN' or 'ZGL2' format nodes. Non-GL nodes are not supported for UDMF.</p>
 	</BODY>
 </HTML>

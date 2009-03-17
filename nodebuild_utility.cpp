@@ -120,6 +120,10 @@ int FNodeBuilder::CreateSeg (int linenum, int sidenum)
 	seg.loopnum = 0;
 	seg.offset = 0;
 	seg.partner = DWORD_MAX;
+	seg.hashnext = NULL;
+	seg.planefront = false;
+	seg.planenum = DWORD_MAX;
+	seg.storedseg = DWORD_MAX;
 
 	if (sidenum == 0)
 	{ // front

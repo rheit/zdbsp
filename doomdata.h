@@ -100,7 +100,7 @@ struct IntSector
 {
 	// none of the sector properties are used by the node builder
 	// so there's no need to store them in their expanded form for
-	// UDMF. JUst storing the UDMF keys and leaving the binary fields
+	// UDMF. Just storing the UDMF keys and leaving the binary fields
 	// empty is enough
 	MapSector data;
 
@@ -142,7 +142,7 @@ struct MapSegGLEx
 {
 	DWORD	v1;
 	DWORD	v2;
-	WORD	linedef;
+	DWORD	linedef;
 	WORD	side;
 	DWORD	partner;
 };

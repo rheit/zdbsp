@@ -397,7 +397,7 @@ void FLevel::RemoveExtraSectors ()
 	// Mark all used sectors
 	for (i = 0; i < NumSides(); ++i)
 	{
-		if (Sides[i].sector != NO_INDEX)
+		if ((DWORD)Sides[i].sector != NO_INDEX)
 		{
 			used[Sides[i].sector] = 1;
 		}
@@ -432,7 +432,7 @@ void FLevel::RemoveExtraSectors ()
 		// Renumber sector references in sides
 		for (i = 0; i < NumSides(); ++i)
 		{
-			if (Sides[i].sector != NO_INDEX)
+			if ((DWORD)Sides[i].sector != NO_INDEX)
 			{
 				Sides[i].sector = remap[Sides[i].sector];
 			}
@@ -541,7 +541,7 @@ void FProcessor::Write (FWadWriter &out)
 		return;
 	}
 
-	bool compress, compressGL, gl5;
+	bool compress, compressGL, gl5 = false;
 
 #ifdef BLOCK_TEST
 	int size;
@@ -1273,7 +1273,7 @@ void FProcessor::WriteGLSegs (FWadWriter &out, bool v5)
 		{
 			segdata[i].v2 = LittleShort(0x8000 | (WORD)(Level.GLSegs[i].v2 - Level.NumOrgVerts));
 		}
-		segdata[i].linedef = LittleShort(Level.GLSegs[i].linedef);
+		segdata[i].linedef = LittleShort((WORD)Level.GLSegs[i].linedef);
 		segdata[i].side = LittleShort(Level.GLSegs[i].side);
 		segdata[i].partner = LittleShort((WORD)Level.GLSegs[i].partner);
 	}
@@ -1375,7 +1375,14 @@ void FProcessor::WriteGLBSPZ (FWadWriter &out, const char *label)
 	}
 
 	out.StartWritingLump (label);
-	out.AddToLump ("ZGLN", 4);
+	if (Level.NumLines() < 65535)
+	{
+		out.AddToLump ("ZGLN", 4);
+	}
+	else
+	{
+		out.AddToLump ("ZGL2", 4);
+	}
 	WriteVerticesZ (zout, &Level.GLVertices[Level.NumOrgVerts], Level.NumOrgVerts, Level.NumGLVertices - Level.NumOrgVerts);
 	WriteSubsectorsZ (zout, Level.GLSubsectors, Level.NumGLSubsectors);
 	WriteGLSegsZ (zout, Level.GLSegs, Level.NumGLSegs);
@@ -1419,12 +1426,25 @@ void FProcessor::WriteGLSegsZ (ZLibOut &out, const MapSegGLEx *segs, int numsegs
 {
 	out << (DWORD)numsegs;
 
-	for (int i = 0; i < numsegs; ++i)
+	if (Level.NumLines() < 65535)
 	{
-		out << (DWORD)segs[i].v1
-			<< (DWORD)segs[i].partner
-			<< (WORD)segs[i].linedef
-			<< (BYTE)segs[i].side;
+		for (int i = 0; i < numsegs; ++i)
+		{
+			out << (DWORD)segs[i].v1
+				<< (DWORD)segs[i].partner
+				<< (WORD)segs[i].linedef
+				<< (BYTE)segs[i].side;
+		}
+	}
+	else
+	{
+		for (int i = 0; i < numsegs; ++i)
+		{
+			out << (DWORD)segs[i].v1
+				<< (DWORD)segs[i].partner
+				<< (DWORD)segs[i].linedef
+				<< (BYTE)segs[i].side;
+		}
 	}
 }
 

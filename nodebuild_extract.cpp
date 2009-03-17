@@ -320,29 +320,31 @@ DWORD FNodeBuilder::PushGLSeg (TArray<MapSegGLEx> &segs, const FPrivSeg *seg)
 
 	if (newseg.linedef != NO_INDEX)
 	{
-		IntLineDef * ld = &Level.Lines[newseg.linedef];
+		IntLineDef *ld = &Level.Lines[newseg.linedef];
 
-		if (ld->sidenum[0]==ld->sidenum[1])
+		if (ld->sidenum[0] == ld->sidenum[1])
 		{
 			// When both sidedefs are the same a quick check doesn't work so this
 			// has to be done by comparing the distances of the seg's end point to
 			// the line's start.
-			WideVertex * lv1 = &Level.Vertices[ld->v1];
-			WideVertex * sv1 = &Level.Vertices[seg->v1];
-			WideVertex * sv2 = &Level.Vertices[seg->v2];
+			WideVertex *lv1 = &Level.Vertices[ld->v1];
+			WideVertex *sv1 = &Level.Vertices[seg->v1];
+			WideVertex *sv2 = &Level.Vertices[seg->v2];
 
 			double dist1sq = double(sv1->x-lv1->x)*(sv1->x-lv1->x) + double(sv1->y-lv1->y)*(sv1->y-lv1->y);
 			double dist2sq = double(sv2->x-lv1->x)*(sv2->x-lv1->x) + double(sv2->y-lv1->y)*(sv2->y-lv1->y);
 
-			newseg.side = dist1sq<dist2sq? 0:1;
-
+			newseg.side = dist1sq < dist2sq ? 0 : 1;
 		}
 		else
 		{
 			newseg.side = ld->sidenum[1] == seg->sidedef ? 1 : 0;
 		}
 	}
-	else newseg.side=0;
+	else
+	{
+		newseg.side = 0;
+	}
 
 	newseg.partner = seg->partner;
 	return segs.Push (newseg);

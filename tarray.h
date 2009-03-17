@@ -37,13 +37,8 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <malloc.h>
 #include <new>
-
-#if !defined(_WIN32)
-#include <inttypes.h>		// for intptr_t
-#elif !defined(_MSC_VER)
-#include <stdint.h>			// for mingw
-#endif
 
 // TArray -------------------------------------------------------------------
 
@@ -335,35 +330,5 @@ public:
 		}
 	}
 };
-
-// TAutoGrowArray -----------------------------------------------------------
-// An array with accessors that automatically grow the array as needed.
-// It can still be used as a normal TArray if needed. ACS uses this for
-// world and global arrays.
-
-template <class T, class TT=T>
-class TAutoGrowArray : public TArray<T, TT>
-{
-public:
-	T GetVal (unsigned int index)
-	{
-		if (index >= this->Size())
-		{
-			return 0;
-		}
-		return (*this)[index];
-	}
-	void SetVal (unsigned int index, T val)
-	{
-		if ((int)index < 0) return;	// These always result in an out of memory condition.
-
-		if (index >= this->Size())
-		{
-			this->Resize (index + 1);
-		}
-		(*this)[index] = val;
-	}
-};
-
 
 #endif //__TARRAY_H__

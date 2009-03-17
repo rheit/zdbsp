@@ -200,7 +200,7 @@ void FEventTree::PrintTree (const FEvent *event) const
 		PrintTree (event->Left);
 	}
 	printf (" Distance %g, vertex %d, seg %u\n",
-		sqrt(event->Distance/4294967296.0), event->Info.Vertex, event->Info.FrontSeg);
+		sqrt(event->Distance/4294967296.0), event->Info.Vertex, (unsigned)event->Info.FrontSeg);
 	if (event->Right != &Nil)
 	{
 		PrintTree (event->Right);

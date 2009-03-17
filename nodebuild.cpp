@@ -84,8 +84,8 @@ DWORD FNodeBuilder::CreateNode (DWORD set, fixed_t bbox[4])
 
 	if ((selstat = SelectSplitter (set, node, splitseg, skip, true)) > 0 ||
 		(skip > 0 && (selstat = SelectSplitter (set, node, splitseg, 1, true)) > 0) ||
-		(selstat < 0 && (SelectSplitter (set, node, splitseg, skip, false) > 0) ||
-						(skip > 0 && SelectSplitter (set, node, splitseg, 1, false))) ||
+		(selstat < 0 && (SelectSplitter (set, node, splitseg, skip, false) > 0 ||
+						(skip > 0 && SelectSplitter (set, node, splitseg, 1, false)))) ||
 		CheckSubsector (set, node, splitseg, count))
 	{
 		// Create a normal node
@@ -766,8 +766,8 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			//Printf ("%u is cut\n", set);
 			if (seg->loopnum)
 			{
-				Printf ("   Split seg %u (%d,%d)-(%d,%d) of sector %d on line %d\n",
-					set,
+				Printf ("   Split seg %lu (%d,%d)-(%d,%d) of sector %d on line %d\n",
+					(unsigned long)set,
 					Vertices[seg->v1].x>>16, Vertices[seg->v1].y>>16,
 					Vertices[seg->v2].x>>16, Vertices[seg->v2].y>>16,
 					seg->frontsector, seg->linedef);
@@ -1014,7 +1014,7 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 	Printf ("set %d:\n", l);
 	for (; set != DWORD_MAX; set = Segs[set].next)
 	{
-		Printf ("\t%5u(%d)%c%d(%d,%d)-%d(%d,%d)\n", set,
+		Printf ("\t%5lu(%d)%c%d(%d,%d)-%d(%d,%d)\n", (unsigned long)set,
 			Segs[set].frontsector,
 			Segs[set].linedef == -1 ? '+' : ':',
 			Segs[set].v1,
