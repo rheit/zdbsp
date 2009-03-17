@@ -936,21 +936,21 @@ MapSegGLEx *FProcessor::SegGLsToEx (const MapSegGL *segs, int count)
 void FProcessor::WriteVertices (FWadWriter &out, int count)
 {
 	int i;
-	fixed_t *vertdata = (fixed_t *)Level.Vertices;
+	WideVertex *vertdata = Level.Vertices;
 
-	count *= 2;
-	short *verts = new short[count];
+	short *verts = new short[count * 2];
 
 	for (i = 0; i < count; ++i)
 	{
-		verts[i] = LittleShort(vertdata[i] >> FRACBITS);
+		verts[i*2] = LittleShort(vertdata[i].x >> FRACBITS);
+		verts[i*2+1] = LittleShort(vertdata[i].y >> FRACBITS);
 	}
-	out.WriteLump ("VERTEXES", verts, sizeof(*verts)*count);
+	out.WriteLump ("VERTEXES", verts, sizeof(*verts)*count*2);
 	delete[] verts;
 
-	if (count >= 65536)
+	if (count >= 32768)
 	{
-		printf ("   VERTEXES is past the normal limit. (%d vertices)\n", count/2);
+		printf ("   VERTEXES is past the normal limit. (%d vertices)\n", count);
 	}
 }
 
