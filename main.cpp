@@ -473,7 +473,29 @@ static void ShowUsage ()
 
 static void ShowVersion ()
 {
-	printf ("ZDBSP " ZDBSP_VERSION "\n");
+	printf ("ZDBSP " ZDBSP_VERSION
+#if defined(__GNUC__)
+
+		" (GCC"
+#if defined(__i386__)
+		"-x86"
+#elif defined(__amd64__)
+		"-amd64"
+#endif
+		")"
+
+#elif defined(_MSC_VER)
+
+		" (VC"
+#if defined(_M_X86)
+		"-x86"
+#elif defined(_M_X64)
+		"-x64"
+#endif
+		")"
+
+#endif
+		"\n");
 }
 
 //==========================================================================
