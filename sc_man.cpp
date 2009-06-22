@@ -66,7 +66,7 @@ bool sc_End;
 bool sc_Crossed;
 bool sc_StringQuoted;
 bool sc_FileScripts = false;
-FILE *sc_Out;
+//FILE *sc_Out;
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
 
@@ -247,14 +247,14 @@ bool SC_GetString (bool multiline)
 						sc_Line++;
 						sc_Crossed = true;
 					}
-					fputc(ScriptPtr[0], sc_Out);
+//					fputc(ScriptPtr[0], sc_Out);
 					ScriptPtr++;
 					if (ScriptPtr >= ScriptEndPtr - 1)
 					{
 						sc_End = true;
 						return false;
 					}
-					fputs("*/", sc_Out);
+//					fputs("*/", sc_Out);
 				}
 				ScriptPtr += 2;
 			}
@@ -262,7 +262,7 @@ bool SC_GetString (bool multiline)
 			{	// C++ comment
 				while (*ScriptPtr++ != '\n')
 				{
-					fputc(ScriptPtr[-1], sc_Out);
+//					fputc(ScriptPtr[-1], sc_Out);
 					if (ScriptPtr >= ScriptEndPtr)
 					{
 						sc_End = true;
@@ -271,7 +271,7 @@ bool SC_GetString (bool multiline)
 				}
 				sc_Line++;
 				sc_Crossed = true;
-				fputc('\n', sc_Out);
+//				fputc('\n', sc_Out);
 			}
 		}
 	}

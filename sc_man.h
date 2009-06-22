@@ -39,6 +39,6 @@ extern bool sc_Crossed;
 extern bool sc_FileScripts;
 extern bool sc_StringQuoted;
 extern char *sc_ScriptsDir;
-extern FILE *sc_Out;
+//extern FILE *sc_Out;
 
 #endif //__SC_MAN_H__
