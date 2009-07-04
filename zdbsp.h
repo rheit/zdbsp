@@ -16,7 +16,7 @@ typedef __int32 int32_t;
 #include <stdint.h>
 #endif
 
-#define ZDBSP_VERSION	"1.12"
+#define ZDBSP_VERSION	"1.13"
 
 enum EBlockmapMode
 {
@@ -35,7 +35,7 @@ enum ERejectMode
 extern const char		*Map;
 extern const char		*InName;
 extern const char		*OutName;
-extern bool				 BuildNodes, BuildGLNodes, ConformNodes, GLOnly;
+extern bool				 BuildNodes, BuildGLNodes, ConformNodes, GLOnly, WriteComments;
 extern bool				 NoPrune;
 extern EBlockmapMode	 BlockmapMode;
 extern ERejectMode		 RejectMode;

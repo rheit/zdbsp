@@ -33,7 +33,8 @@ enum
     // Thing numbers used in Doom and Heretic maps
     PO_ANCHOR_TYPE = 9300,
     PO_SPAWN_TYPE,
-    PO_SPAWNCRUSH_TYPE
+    PO_SPAWNCRUSH_TYPE,
+	PO_SPAWNHURT_TYPE
 };
 
 FLevel::FLevel ()
@@ -487,6 +488,7 @@ void FProcessor::GetPolySpots ()
 		{
 			if (Level.Things[i].type == spot1 ||
 				Level.Things[i].type == spot2 ||
+				Level.Things[i].type == PO_SPAWNHURT_TYPE ||
 				Level.Things[i].type == anchor)
 			{
 				FNodeBuilder::FPolyStart newvert;

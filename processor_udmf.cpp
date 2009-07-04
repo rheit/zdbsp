@@ -311,7 +311,7 @@ void FProcessor::ParseMapProperties()
 		if (!stricmp(key, "namespace"))
 		{
 			// all unknown namespaces are assumed to be standard.
-			Extended = !stricmp(value, "ZDoom") || !stricmp(value, "Hexen") || !stricmp(value, "Vavoom");
+			Extended = !stricmp(value, "\"ZDoom\"") || !stricmp(value, "\"Hexen\"") || !stricmp(value, "\"Vavoom\"");
 		}
 
 		// now store the key in its unprocessed form
@@ -423,26 +423,40 @@ void FProcessor::WriteIntProp(FWadWriter &out, const char *key, int value)
 
 //===========================================================================
 //
-// writes an UDMF thing
+// writes a UDMF thing
 //
 //===========================================================================
 
-void FProcessor::WriteThingUDMF(FWadWriter &out, IntThing *th)
+void FProcessor::WriteThingUDMF(FWadWriter &out, IntThing *th, int num)
 {
-	out.AddToLump("thing\n{\n", 8);
+	out.AddToLump("thing", 5);
+	if (WriteComments)
+	{
+		char buffer[32];
+		int len = sprintf(buffer, " // %d", num);
+		out.AddToLump(buffer, len);
+	}
+	out.AddToLump("\n{\n", 3);
 	WriteProps(out, th->props);
 	out.AddToLump("}\n\n", 3);
 }
 
 //===========================================================================
 //
-// writes an UDMF linedef
+// writes a UDMF linedef
 //
 //===========================================================================
 
-void FProcessor::WriteLinedefUDMF(FWadWriter &out, IntLineDef *ld)
+void FProcessor::WriteLinedefUDMF(FWadWriter &out, IntLineDef *ld, int num)
 {
-	out.AddToLump("linedef\n{\n", 10);
+	out.AddToLump("linedef", 7);
+	if (WriteComments)
+	{
+		char buffer[32];
+		int len = sprintf(buffer, " // %d", num);
+		out.AddToLump(buffer, len);
+	}
+	out.AddToLump("\n{\n", 3);
 	WriteIntProp(out, "v1", ld->v1);
 	WriteIntProp(out, "v2", ld->v2);
 	if (ld->sidenum[0] != NO_INDEX) WriteIntProp(out, "sidefront", ld->sidenum[0]);
@@ -453,13 +467,20 @@ void FProcessor::WriteLinedefUDMF(FWadWriter &out, IntLineDef *ld)
 
 //===========================================================================
 //
-// writes an UDMF sidedef
+// writes a UDMF sidedef
 //
 //===========================================================================
 
-void FProcessor::WriteSidedefUDMF(FWadWriter &out, IntSideDef *sd)
+void FProcessor::WriteSidedefUDMF(FWadWriter &out, IntSideDef *sd, int num)
 {
-	out.AddToLump("sidedef\n{\n", 10);
+	out.AddToLump("sidedef", 7);
+	if (WriteComments)
+	{
+		char buffer[32];
+		int len = sprintf(buffer, " // %d", num);
+		out.AddToLump(buffer, len);
+	}
+	out.AddToLump("\n{\n", 3);
 	WriteIntProp(out, "sector", sd->sector);
 	WriteProps(out, sd->props);
 	out.AddToLump("}\n\n", 3);
@@ -467,33 +488,47 @@ void FProcessor::WriteSidedefUDMF(FWadWriter &out, IntSideDef *sd)
 
 //===========================================================================
 //
-// writes an UDMF sector
+// writes a UDMF sector
 //
 //===========================================================================
 
-void FProcessor::WriteSectorUDMF(FWadWriter &out, IntSector *sec)
+void FProcessor::WriteSectorUDMF(FWadWriter &out, IntSector *sec, int num)
 {
-	out.AddToLump("sector\n{\n", 9);
+	out.AddToLump("sector", 6);
+	if (WriteComments)
+	{
+		char buffer[32];
+		int len = sprintf(buffer, " // %d", num);
+		out.AddToLump(buffer, len);
+	}
+	out.AddToLump("\n{\n", 3);
 	WriteProps(out, sec->props);
 	out.AddToLump("}\n\n", 3);
 }
 
 //===========================================================================
 //
-// writes an UDMF vertex
+// writes a UDMF vertex
 //
 //===========================================================================
 
-void FProcessor::WriteVertexUDMF(FWadWriter &out, IntVertex *vt)
+void FProcessor::WriteVertexUDMF(FWadWriter &out, IntVertex *vt, int num)
 {
-	out.AddToLump("vertex\n{\n", 9);
+	out.AddToLump("vertex", 6);
+	if (WriteComments)
+	{
+		char buffer[32];
+		int len = sprintf(buffer, " // %d", num);
+		out.AddToLump(buffer, len);
+	}
+	out.AddToLump("\n{\n", 3);
 	WriteProps(out, vt->props);
 	out.AddToLump("}\n\n", 3);
 }
 
 //===========================================================================
 //
-// writes an UDMF text map
+// writes a UDMF text map
 //
 //===========================================================================
 
@@ -503,7 +538,7 @@ void FProcessor::WriteTextMap(FWadWriter &out)
 	WriteProps(out, Level.props);
 	for(int i = 0; i < Level.NumThings(); i++)
 	{
-		WriteThingUDMF(out, &Level.Things[i]);
+		WriteThingUDMF(out, &Level.Things[i], i);
 	}
 
 	for(int i = 0; i < Level.NumOrgVerts; i++)
@@ -514,22 +549,22 @@ void FProcessor::WriteTextMap(FWadWriter &out)
 			// not valid!
 			throw std::runtime_error("Invalid vertex data.");
 		}
-		WriteVertexUDMF(out, &Level.VertexProps[vt->index-1]);
+		WriteVertexUDMF(out, &Level.VertexProps[vt->index-1], i);
 	}
 
 	for(int i = 0; i < Level.NumLines(); i++)
 	{
-		WriteLinedefUDMF(out, &Level.Lines[i]);
+		WriteLinedefUDMF(out, &Level.Lines[i], i);
 	}
 
 	for(int i = 0; i < Level.NumSides(); i++)
 	{
-		WriteSidedefUDMF(out, &Level.Sides[i]);
+		WriteSidedefUDMF(out, &Level.Sides[i], i);
 	}
 
 	for(int i = 0; i < Level.NumSectors(); i++)
 	{
-		WriteSectorUDMF(out, &Level.Sectors[i]);
+		WriteSectorUDMF(out, &Level.Sectors[i], i);
 	}
 }
 

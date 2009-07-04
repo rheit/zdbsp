@@ -99,6 +99,7 @@ bool			 ConformNodes = false;
 bool			 NoPrune = false;
 EBlockmapMode	 BlockmapMode = EBM_Rebuild;
 ERejectMode		 RejectMode = ERM_DontTouch;
+bool			 WriteComments = false;
 int				 MaxSegs = 64;
 int				 SplitCost = 8;
 int				 AAPreference = 16;
@@ -144,10 +145,11 @@ static option long_opts[] =
 	{"gl-v5",			no_argument,		0,	'5'},
 	{"no-sse",			no_argument,		0,  1002},
 	{"no-sse2",			no_argument,		0,  1003},
+	{"comments",		no_argument,		0,	'c'},
 	{0,0,0,0}
 };
 
-static const char short_opts[] = "wVgGvbNrReEm:o:f:p:s:d:PqtzZx5";
+static const char short_opts[] = "wVgGvbNrReEm:o:f:p:s:d:PqtzZx5c";
 
 // CODE --------------------------------------------------------------------
 
@@ -400,6 +402,9 @@ static void ParseArgs (int argc, char **argv)
 		case 't':
 			NoTiming = true;
 			break;
+		case 'c':
+			WriteComments = true;
+			break;
 		case 'V':
 			ShowVersion ();
 			exit (0);
@@ -473,29 +478,28 @@ static void ShowUsage ()
 
 static void ShowVersion ()
 {
-	printf ("ZDBSP " ZDBSP_VERSION
+	printf ("ZDBSP " ZDBSP_VERSION " ("
 #if defined(__GNUC__)
 
-		" (GCC"
+		"GCC"
 #if defined(__i386__)
-		"-x86"
+		"-x86 : "
 #elif defined(__amd64__)
-		"-amd64"
+		"-amd64 : "
 #endif
-		")"
 
 #elif defined(_MSC_VER)
 
 		" (VC"
 #if defined(_M_X86)
-		"-x86"
+		"-x86 : "
 #elif defined(_M_X64)
-		"-x64"
+		"-x64 : "
 #endif
-		")"
 
 #endif
-		"\n");
+
+		__DATE__ ")\n");
 }
 
 //==========================================================================

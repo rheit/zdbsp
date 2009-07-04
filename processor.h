@@ -99,11 +99,11 @@ private:
 
 	void WriteProps(FWadWriter &out, TArray<UDMFKey> &props);
 	void WriteIntProp(FWadWriter &out, const char *key, int value);
-	void WriteThingUDMF(FWadWriter &out, IntThing *th);
-	void WriteLinedefUDMF(FWadWriter &out, IntLineDef *ld);
-	void WriteSidedefUDMF(FWadWriter &out, IntSideDef *sd);
-	void WriteSectorUDMF(FWadWriter &out, IntSector *sec);
-	void WriteVertexUDMF(FWadWriter &out, IntVertex *vt);
+	void WriteThingUDMF(FWadWriter &out, IntThing *th, int num);
+	void WriteLinedefUDMF(FWadWriter &out, IntLineDef *ld, int num);
+	void WriteSidedefUDMF(FWadWriter &out, IntSideDef *sd, int num);
+	void WriteSectorUDMF(FWadWriter &out, IntSector *sec, int num);
+	void WriteVertexUDMF(FWadWriter &out, IntVertex *vt, int num);
 	void WriteTextMap(FWadWriter &out);
 	void WriteUDMF(FWadWriter &out);
 
