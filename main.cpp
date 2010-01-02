@@ -483,23 +483,26 @@ static void ShowVersion ()
 
 		"GCC"
 #if defined(__i386__)
-		"-x86 : "
+		"-x86"
 #elif defined(__amd64__)
-		"-amd64 : "
+		"-amd64"
 #endif
 
 #elif defined(_MSC_VER)
 
-		" (VC"
-#if defined(_M_X86)
-		"-x86 : "
+		"VC"
+#if defined(_M_IX86)
+		"-x86"
+#if _M_IX86_FP > 1
+		"-SSE2"
+#endif
 #elif defined(_M_X64)
-		"-x64 : "
+		"-x64"
 #endif
 
 #endif
 
-		__DATE__ ")\n");
+		" : " __DATE__ ")\n");
 }
 
 //==========================================================================
