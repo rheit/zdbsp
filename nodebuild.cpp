@@ -32,7 +32,7 @@
 #define Printf printf
 #define STACK_ARGS
 
-#if 0
+#if 1
 #define D(x) x
 #else
 #define D(x) do{}while(0)
@@ -499,7 +499,8 @@ int FNodeBuilder::SelectSplitter (DWORD set, node_t &node, DWORD &splitseg, int 
 
 int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 {
-	int score = 0;
+	// Set the initial score above 0 so that near vertex anti-weighting does not automatically disqualify the vertex.
+	int score = 100000000;
 	int segsInSet = 0;
 	int counts[2] = { 0, 0 };
 	int realSegs[2] = { 0, 0 };
@@ -604,9 +605,17 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 
 			// Splitters that are too close to a vertex are bad.
 			frac = InterceptVector (node, *test);
-			if (frac < 0.001 || frac > 0.999)
+			if (frac < 0.001)
 			{
-				score -= int(1 / frac);
+				int penalty = int(1 / frac);
+				score = MAX(score - penalty, 1);
+				D(Printf ("Penalized splitter by %d for being too close to start vertex of seg %d.\n", penalty, i));
+			}
+			else if (frac > 0.999)
+			{
+				int penalty = int(1 / (1 - frac));
+				score = MAX(score - penalty, 1);
+				D(Printf ("Penalized splitter by %d for being too close to end vertex of seg %d.\n", penalty, i));
 			}
 
 			counts[0]++;
