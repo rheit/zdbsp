@@ -806,23 +806,6 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			if (vertnum == seg->v1 || vertnum == seg->v2)
 			{
 				Printf("SelectVertexClose selected endpoint of seg %u\n", set);
-				// Check if the resulting split vertex matches one of the line's ends.
-				// In this case this seg must not be split
-				if ((vertnum == seg->v1 && sidev2 == -1) || (vertnum == seg->v2 && sidev1 == -1))
-				{
-					side = 0;
-					sidev1 = 0;
-					seg->next = outset0;
-					outset0 = set;
-				}
-				else
-				{
-					side = 1;
-					sidev2 = 0;
-					seg->next = outset1;
-					outset1 = set;
-				}
-				break;
 			}
 
 			seg2 = SplitSeg (set, vertnum, sidev1);
