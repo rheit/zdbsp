@@ -268,7 +268,7 @@ int FWadReader::SkipGLNodes (int index) const
 
 bool FWadReader::MapHasBehavior (int map) const
 {
-	return FindLump ("BEHAVIOR", map) != -1;
+	return FindMapLump ("BEHAVIOR", map) != -1;
 }
 
 int FWadReader::NextMap (int index) const
