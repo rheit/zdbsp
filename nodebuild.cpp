@@ -803,9 +803,9 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			newvert.index = 0;
 			vertnum = VertexMap->SelectVertexClose (newvert);
 
-			if (vertnum == seg->v1 || vertnum == seg->v2)
+			if ((int)vertnum == seg->v1 || (int)vertnum == seg->v2)
 			{
-				Printf("SelectVertexClose selected endpoint of seg %u\n", set);
+				Printf("SelectVertexClose selected endpoint of seg %u\n", (unsigned int)set);
 			}
 
 			seg2 = SplitSeg (set, vertnum, sidev1);
