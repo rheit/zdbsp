@@ -451,35 +451,35 @@ void FWadWriter::SafeWrite (const void *buffer, size_t size)
 
 FWadWriter &FWadWriter::operator << (BYTE val)
 {
-	SafeWrite (&val, 1);
+	AddToLump (&val, 1);
 	return *this;
 }
 
 FWadWriter &FWadWriter::operator << (WORD val)
 {
 	val = LittleShort(val);
-	SafeWrite ((BYTE *)&val, 2);
+	AddToLump ((BYTE *)&val, 2);
 	return *this;
 }
 
 FWadWriter &FWadWriter::operator << (SWORD val)
 {
 	val = LittleShort(val);
-	SafeWrite ((BYTE *)&val, 2);
+	AddToLump ((BYTE *)&val, 2);
 	return *this;
 }
 
 FWadWriter &FWadWriter::operator << (DWORD val)
 {
 	val = LittleLong(val);
-	SafeWrite ((BYTE *)&val, 4);
+	AddToLump ((BYTE *)&val, 4);
 	return *this;
 }
 
 FWadWriter &FWadWriter::operator << (fixed_t val)
 {
 	val = LittleLong(val);
-	SafeWrite ((BYTE *)&val, 4);
+	AddToLump ((BYTE *)&val, 4);
 	return *this;
 }
 
