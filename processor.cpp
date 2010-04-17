@@ -781,7 +781,8 @@ void FProcessor::Write (FWadWriter &out)
 				out.CreateLabel ("SEGS");
 				if (compressGL)
 				{
-					WriteGLBSPZ (out, "SSECTORS");
+					if (ForceCompression) WriteGLBSPZ (out, "SSECTORS");
+					else WriteGLBSPX (out, "SSECTORS");
 				}
 				else
 				{
@@ -789,7 +790,8 @@ void FProcessor::Write (FWadWriter &out)
 				}
 				if (!GLOnly)
 				{
-					WriteBSPZ (out, "NODES");
+					if (ForceCompression) WriteBSPZ (out, "NODES");
+					else WriteBSPX (out, "NODES");
 				}
 				else
 				{
@@ -1451,6 +1453,124 @@ void FProcessor::WriteGLSegsZ (ZLibOut &out, const MapSegGLEx *segs, int numsegs
 }
 
 void FProcessor::WriteNodesZ (ZLibOut &out, const MapNodeEx *nodes, int numnodes)
+{
+	out << (DWORD)numnodes;
+
+	for (int i = 0; i < numnodes; ++i)
+	{
+		out << (SWORD)nodes[i].x
+			<< (SWORD)nodes[i].y
+			<< (SWORD)nodes[i].dx
+			<< (SWORD)nodes[i].dy;
+		for (int j = 0; j < 2; ++j)
+		{
+			for (int k = 0; k < 4; ++k)
+			{
+				out << (SWORD)nodes[i].bbox[j][k];
+			}
+		}
+		out << (DWORD)nodes[i].children[0]
+			<< (DWORD)nodes[i].children[1];
+	}
+}
+
+void FProcessor::WriteBSPX (FWadWriter &out, const char *label)
+{
+	if (!CompressNodes)
+	{
+		printf ("   Nodes are so big that extended format has been forced.\n");
+	}
+
+	out.StartWritingLump (label);
+	out.AddToLump ("XNOD", 4);
+	WriteVerticesX (out, &Level.Vertices[Level.NumOrgVerts], Level.NumOrgVerts, Level.NumVertices - Level.NumOrgVerts);
+	WriteSubsectorsX (out, Level.Subsectors, Level.NumSubsectors);
+	WriteSegsX (out, Level.Segs, Level.NumSegs);
+	WriteNodesX (out, Level.Nodes, Level.NumNodes);
+}
+
+void FProcessor::WriteGLBSPX (FWadWriter &out, const char *label)
+{
+	if (!CompressGLNodes)
+	{
+		printf ("   GL Nodes are so big that extended format has been forced.\n");
+	}
+
+	out.StartWritingLump (label);
+	if (Level.NumLines() < 65535)
+	{
+		out.AddToLump ("XGLN", 4);
+	}
+	else
+	{
+		out.AddToLump ("XGL2", 4);
+	}
+	WriteVerticesX (out, &Level.GLVertices[Level.NumOrgVerts], Level.NumOrgVerts, Level.NumGLVertices - Level.NumOrgVerts);
+	WriteSubsectorsX (out, Level.GLSubsectors, Level.NumGLSubsectors);
+	WriteGLSegsX (out, Level.GLSegs, Level.NumGLSegs);
+	WriteNodesX (out, Level.GLNodes, Level.NumGLNodes);
+}
+
+void FProcessor::WriteVerticesX (FWadWriter &out, const WideVertex *verts, int orgverts, int newverts)
+{
+	out << (DWORD)orgverts << (DWORD)newverts;
+
+	for (int i = 0; i < newverts; ++i)
+	{
+		out << verts[i].x << verts[i].y;
+	}
+}
+
+void FProcessor::WriteSubsectorsX (FWadWriter &out, const MapSubsectorEx *subs, int numsubs)
+{
+	out << (DWORD)numsubs;
+
+	for (int i = 0; i < numsubs; ++i)
+	{
+		out << (DWORD)subs[i].numlines;
+	}
+}
+
+void FProcessor::WriteSegsX (FWadWriter &out, const MapSeg *segs, int numsegs)
+{
+	out << (DWORD)numsegs;
+
+	for (int i = 0; i < numsegs; ++i)
+	{
+		out << (DWORD)segs[i].v1
+			<< (DWORD)segs[i].v2
+			<< (WORD)segs[i].linedef
+			<< (BYTE)segs[i].side;
+	}
+}
+
+void FProcessor::WriteGLSegsX (FWadWriter &out, const MapSegGLEx *segs, int numsegs)
+{
+	out << (DWORD)numsegs;
+
+	if (Level.NumLines() < 65535)
+	{
+		for (int i = 0; i < numsegs; ++i)
+		{
+			out << (DWORD)segs[i].v1
+				<< (DWORD)segs[i].partner
+				<< (WORD)segs[i].linedef
+				<< (BYTE)segs[i].side;
+		}
+	}
+	else
+	{
+		for (int i = 0; i < numsegs; ++i)
+		{
+			out << (DWORD)segs[i].v1
+				<< (DWORD)segs[i].partner
+				<< (DWORD)segs[i].linedef
+				<< (BYTE)segs[i].side;
+		}
+	}
+}
+
+void FProcessor::WriteNodesX (FWadWriter &out, const MapNodeEx *nodes, int numnodes)
 {
 	out << (DWORD)numnodes;
 

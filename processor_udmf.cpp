@@ -578,7 +578,9 @@ void FProcessor::WriteUDMF(FWadWriter &out)
 {
 	out.CopyLump (Wad, Lump);
 	WriteTextMap(out);
-	WriteGLBSPZ (out, "ZNODES");
+	if (ForceCompression) WriteGLBSPZ (out, "ZNODES");
+	else WriteGLBSPX (out, "ZNODES");
+
 	// copy everything except existing nodes, blockmap and reject
 	for(int i=Lump+2; stricmp(Wad.LumpName(i), "ENDMAP") && i < Wad.NumLumps(); i++)
 	{

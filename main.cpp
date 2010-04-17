@@ -109,6 +109,7 @@ bool			 ShowWarnings = false;
 bool			 NoTiming = false;
 bool			 CompressNodes = false;
 bool			 CompressGLNodes = false;
+bool			 ForceCompression = false;
 bool			 GLOnly = false;
 bool			 V5GLNodes = false;
 bool			 HaveSSE1, HaveSSE2;
@@ -141,6 +142,7 @@ static option long_opts[] =
 	{"no-timing",		no_argument,		0,	't'},
 	{"compress",		no_argument,		0,	'z'},
 	{"compress-normal",	no_argument,		0,	'Z'},
+	{"extended",		no_argument,		0,	'X'},
 	{"gl-only",			no_argument,		0,	'x'},
 	{"gl-v5",			no_argument,		0,	'5'},
 	{"no-sse",			no_argument,		0,  1002},
@@ -149,7 +151,7 @@ static option long_opts[] =
 	{0,0,0,0}
 };
 
-static const char short_opts[] = "wVgGvbNrReEm:o:f:p:s:d:PqtzZx5c";
+static const char short_opts[] = "wVgGvbNrReEm:o:f:p:s:d:PqtzZXx5c";
 
 // CODE --------------------------------------------------------------------
 
@@ -380,13 +382,20 @@ static void ParseArgs (int argc, char **argv)
 			BuildGLNodes = true;
 			ConformNodes = true;
 			break;
+		case 'X':
+			CompressNodes = true;
+			CompressGLNodes = true;
+			ForceCompression = false;
+			break;
 		case 'z':
 			CompressNodes = true;
 			CompressGLNodes = true;
+			ForceCompression = true;
 			break;
 		case 'Z':
 			CompressNodes = true;
 			CompressGLNodes = false;
+			ForceCompression = true;
 			break;
 		case 'x':
 			GLOnly = true;
@@ -443,7 +452,7 @@ static void ShowUsage ()
 "  -g, --gl                 Build GL-friendly nodes\n"
 "  -G, --gl-matching        Build GL-friendly nodes that match normal nodes\n"
 "  -x, --gl-only            Only build GL-friendly nodes\n"
-"  -5, --gl-v5              Create v5 GL-friedly nodes (ignored if -z is used)\n"
+"  -5, --gl-v5              Create v5 GL-friedly nodes (ignored if -z or -X is used)\n"
 "  -b, --empty-blockmap     Create an empty blockmap\n"
 "  -r, --empty-reject       Create an empty reject table\n"
 "  -R, --zero-reject        Create a reject table of all zeroes\n"
@@ -453,6 +462,7 @@ static void ShowUsage ()
 "  -s, --split-cost=NNN     Adjusts the cost for splitting segs\n"// (default 8)\n"
 "  -d, --diagonal-cost=NNN  Adjusts the cost for avoiding diagonal splitters\n"// (default 16)\n"
 "  -P, --no-polyobjs        Do not check for polyobject subsector splits\n"
+"  -X, --extended           Create extended node format (including GL nodes, if created)\n"
 "  -z, --compress           Compress the nodes (including GL nodes, if created)\n"
 "  -Z, --compress-normal    Compress normal nodes but not GL nodes\n"
 #ifdef _WIN32

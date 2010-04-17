@@ -82,6 +82,15 @@ private:
 	void WriteGLSegsZ (ZLibOut &out, const MapSegGLEx *segs, int numsegs);
 	void WriteNodesZ (ZLibOut &out, const MapNodeEx *nodes, int numnodes);
 
+	void WriteBSPX (FWadWriter &out, const char *label);
+	void WriteGLBSPX (FWadWriter &out, const char *label);
+
+	void WriteVerticesX (FWadWriter &out, const WideVertex *verts, int orgverts, int newverts);
+	void WriteSubsectorsX (FWadWriter &out, const MapSubsectorEx *subs, int numsubs);
+	void WriteSegsX (FWadWriter &out, const MapSeg *segs, int numsegs);
+	void WriteGLSegsX (FWadWriter &out, const MapSegGLEx *segs, int numsegs);
+	void WriteNodesX (FWadWriter &out, const MapNodeEx *nodes, int numnodes);
+
 	void WriteNodes2 (FWadWriter &out, const char *name, const MapNodeEx *zaNodes, int count) const;
 	void WriteSSectors2 (FWadWriter &out, const char *name, const MapSubsectorEx *zaSubs, int count) const;
 	void WriteNodes5 (FWadWriter &out, const char *name, const MapNodeEx *zaNodes, int count) const;

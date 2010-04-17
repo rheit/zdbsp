@@ -98,6 +98,12 @@ public:
 	void StartWritingLump (const char *name);
 	void AddToLump (const void *data, int len);
 
+	FWadWriter &operator << (BYTE);
+	FWadWriter &operator << (WORD);
+	FWadWriter &operator << (SWORD);
+	FWadWriter &operator << (DWORD);
+	FWadWriter &operator << (fixed_t);
+
 private:
 	TArray<WadLump> Lumps;
 	FILE *File;
