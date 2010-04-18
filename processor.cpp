@@ -1223,10 +1223,10 @@ void FProcessor::WriteReject (FWadWriter &out)
 
 void FProcessor::WriteGLVertices (FWadWriter &out, bool v5)
 {
-	int i, count = (Level.NumGLVertices - Level.NumOrgVerts) * 2;
-	fixed_t *vertdata = (fixed_t *)Level.GLVertices + Level.NumOrgVerts * 2;
+	int i, count = (Level.NumGLVertices - Level.NumOrgVerts);
+	WideVertex *vertdata = Level.Vertices + Level.NumOrgVerts;
 
-	fixed_t *verts = new fixed_t[count+1];
+	fixed_t *verts = new fixed_t[count*2+1];
 	char *magic = (char *)verts;
 	magic[0] = 'g';
 	magic[1] = 'N';
@@ -1235,9 +1235,10 @@ void FProcessor::WriteGLVertices (FWadWriter &out, bool v5)
 
 	for (i = 0; i < count; ++i)
 	{
-		verts[i+1] = LittleLong(vertdata[i]);
+		verts[i*2+1] = LittleShort(vertdata[i].x);
+		verts[i*2+2] = LittleShort(vertdata[i].y);
 	}
-	out.WriteLump ("GL_VERT", verts, sizeof(*verts)*(count+1));
+	out.WriteLump ("GL_VERT", verts, sizeof(*verts)*(count*2+1));
 	delete[] verts;
 
 	if (count > 65536)
