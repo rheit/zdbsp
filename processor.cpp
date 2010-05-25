@@ -1224,7 +1224,7 @@ void FProcessor::WriteReject (FWadWriter &out)
 void FProcessor::WriteGLVertices (FWadWriter &out, bool v5)
 {
 	int i, count = (Level.NumGLVertices - Level.NumOrgVerts);
-	WideVertex *vertdata = Level.Vertices + Level.NumOrgVerts;
+	WideVertex *vertdata = Level.GLVertices + Level.NumOrgVerts;
 
 	fixed_t *verts = new fixed_t[count*2+1];
 	char *magic = (char *)verts;
