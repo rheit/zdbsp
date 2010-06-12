@@ -452,19 +452,19 @@ static void ShowUsage ()
 "  -g, --gl                 Build GL-friendly nodes\n"
 "  -G, --gl-matching        Build GL-friendly nodes that match normal nodes\n"
 "  -x, --gl-only            Only build GL-friendly nodes\n"
-"  -5, --gl-v5              Create v5 GL-friedly nodes (ignored if -z or -X is used)\n"
+"  -5, --gl-v5              Create v5 GL-friendly nodes (overriden by -z and -X)\n"
+"  -X, --extended           Create extended nodes (including GL nodes, if built)\n"
+"  -z, --compress           Compress the nodes (including GL nodes, if built)\n"
+"  -Z, --compress-normal    Compress normal nodes but not GL nodes\n"
 "  -b, --empty-blockmap     Create an empty blockmap\n"
 "  -r, --empty-reject       Create an empty reject table\n"
 "  -R, --zero-reject        Create a reject table of all zeroes\n"
 //"  -e, --full-reject        Rebuild reject table (unsupported)\n"
 "  -E, --no-reject          Leave reject table untouched\n"
-"  -p, --partition=NNN      Maximum number of segs to consider at each node\n"// (default 64)\n"
-"  -s, --split-cost=NNN     Adjusts the cost for splitting segs\n"// (default 8)\n"
-"  -d, --diagonal-cost=NNN  Adjusts the cost for avoiding diagonal splitters\n"// (default 16)\n"
+"  -p, --partition=NNN      Maximum segs to consider at each node (default %d)\n"
+"  -s, --split-cost=NNN     Cost for splitting segs (default %d)\n"
+"  -d, --diagonal-cost=NNN  Cost for avoiding diagonal splitters (default %d)\n"
 "  -P, --no-polyobjs        Do not check for polyobject subsector splits\n"
-"  -X, --extended           Create extended node format (including GL nodes, if created)\n"
-"  -z, --compress           Compress the nodes (including GL nodes, if created)\n"
-"  -Z, --compress-normal    Compress normal nodes but not GL nodes\n"
 #ifdef _WIN32
 "  -v, --view               View the nodes\n"
 #endif
@@ -477,6 +477,9 @@ static void ShowUsage ()
 #ifndef _WIN32
 "\n"
 #endif
+	, MaxSegs /* Partition size */
+	, SplitCost
+	, AAPreference
 	);
 }
 
