@@ -13,13 +13,13 @@ CFLAGS += -O3 -fomit-frame-pointer -DNDEBUG
 CFLAGS += -mtune=i686
 #CFLAGS += -march=k8
 
-LDFLAGS = -static-libstdc++ -static-libgcc
+LDFLAGS =
 RM = rm -f FILE
 ZLIBDIR = zlib/
 
 ifeq (Windows_NT,$(OS))
   EXE = zdbsp.exe
-  LDFLAGS += -luser32 -lgdi32
+  LDFLAGS += -luser32 -lgdi32 -static-libstdc++ -static-libgcc
   ifneq (msys,$(OSTYPE))
     RM = del /q /f FILE 2>nul
     ZLIBDIR = "zlib\"
@@ -72,7 +72,7 @@ endif
 all: $(EXE)
 
 profile:
-	$(MAKE) clean
+	$(MAKE) cleanall
 	$(MAKE) all CFLAGS="$(CFLAGS) -fprofile-generate" LDFLAGS="$(LDFLAGS) -lgcov"
 	@echo "Process a few maps, then rebuild with make profile-use"
 
