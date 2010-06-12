@@ -114,10 +114,14 @@
 			</dd>
 			<dt>--compress or -z</dt>
 			<dd>Compresses the node information. Compressed nodes take up less space than
-			uncompressed nodes, and they are also the only way to save nodes with more than 65535 segs.
-			If GL nodes are built, they will be compressed as well.</dd>
+			uncompressed nodes, they are the only way to save nodes with more than 65535 segs, and
+			they also have higher vertex precision than normal nodes, reducing the possibility
+			of slime trails. If GL nodes are built, they will be compressed as well.</dd>
 			<dt>--compress-normal or -Z</dt>
 			<dd>This is exactly like the previous option, except GL nodes will not be compressed.</dd>
+			<dt>--extended or -X</dt>
+			<dd>Creates extended nodes. This is exactly like --compress, except the resultant nodes
+			are uncompressed.</dd>
 			<dt>--empty-blockmap or -b</dt>
 			<dd>
 				This option writes a zero-length BLOCKMAP to the wad. As of this writing, ZDoom 
