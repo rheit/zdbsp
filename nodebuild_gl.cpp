@@ -239,8 +239,8 @@ DWORD FNodeBuilder::AddMiniseg (int v1, int v2, DWORD partner, DWORD seg1, DWORD
 	newseg.planefront = true;
 	newseg.hashnext = NULL;
 	newseg.storedseg = DWORD_MAX;
-	newseg.frontsector = NULL;
-	newseg.backsector = NULL;
+	newseg.frontsector = -1;
+	newseg.backsector = -1;
 	newseg.offset = 0;
 	newseg.angle = 0;
 

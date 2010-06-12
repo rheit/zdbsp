@@ -13,7 +13,7 @@ CFLAGS += -O3 -fomit-frame-pointer -DNDEBUG
 CFLAGS += -mtune=i686
 #CFLAGS += -march=k8
 
-LDFLAGS =
+LDFLAGS = -static-libstdc++ -static-libgcc
 RM = rm -f FILE
 ZLIBDIR = zlib/
 
