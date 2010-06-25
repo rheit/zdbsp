@@ -120,6 +120,39 @@ inline fixed_t DMulScale32 (fixed_t a, fixed_t b, fixed_t c, fixed_t d)
 
 #elif defined(__GNUC__)
 
+#ifdef __clang__
+inline fixed_t Scale (fixed_t a, fixed_t b, fixed_t c)
+{
+	fixed_t result, dummy;
+
+	asm volatile
+		("imull %3\n\t"
+		 "idivl %4"
+		 : "=a" (result),
+		   "=&d" (dummy)
+		 :   "a" (a),
+		     "r" (b),
+		     "r" (c)
+		 : "%cc"
+			);
+
+	return result;
+}
+
+inline fixed_t DivScale30 (fixed_t a, fixed_t b)
+{
+	fixed_t result, dummy;
+	asm volatile
+		("idivl %4"
+		: "=a" (result),
+		  "=d" (dummy)
+		: "a" (a<<30),
+		  "d" (a>>2),
+		  "r" (b) \
+		: "%cc");
+	return result;
+}
+#else
 inline fixed_t Scale (fixed_t a, fixed_t b, fixed_t c)
 {
 	fixed_t result, dummy;
@@ -151,6 +184,7 @@ inline fixed_t DivScale30 (fixed_t a, fixed_t b)
 		: "%cc");
 	return result;
 }
+#endif
 
 inline fixed_t MulScale30 (fixed_t a, fixed_t b)
 {
