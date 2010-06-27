@@ -433,6 +433,8 @@ int FNodeBuilder::SelectSplitter (DWORD set, node_t &node, DWORD &splitseg, int 
 
 	memset (&PlaneChecked[0], 0, PlaneChecked.Size());
 
+	D(printf("Processing set %d\n", set));
+
 	while (seg != DWORD_MAX)
 	{
 		FPrivSeg *pseg = &Segs[seg];
@@ -454,8 +456,8 @@ int FNodeBuilder::SelectSplitter (DWORD set, node_t &node, DWORD &splitseg, int 
 
 				int value = Heuristic (node, set, nosplit);
 
-				D(Printf ("Seg %5d%c(%5d,%5d)-(%5d,%5d) scores %d\n", seg,
-					Segs[seg].linedef == -1 ? '+' : ' ',
+				D(Printf ("Seg %5d, ld %d (%5d,%5d)-(%5d,%5d) scores %d\n", seg,
+					Segs[seg].linedef,
 					node.x>>16, node.y>>16,
 					(node.x+node.dx)>>16, (node.y+node.dy)>>16, value));
 

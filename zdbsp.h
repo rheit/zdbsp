@@ -16,7 +16,7 @@ typedef __int32 int32_t;
 #include <stdint.h>
 #endif
 
-#define ZDBSP_VERSION	"1.15"
+#define ZDBSP_VERSION	"1.16"
 
 enum EBlockmapMode
 {

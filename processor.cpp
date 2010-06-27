@@ -1034,26 +1034,31 @@ void FProcessor::WriteSectors (FWadWriter &out)
 
 void FProcessor::WriteSegs (FWadWriter &out)
 {
-	int i, count;
-	short *segdata;
+	int i;
+	MapSeg *segdata;
 
-	segdata = (short *)Level.Segs;
-	count = Level.NumSegs*sizeof(MapSeg)/sizeof(*segdata);
+	assert(Level.NumVertices < 65536);
 
-	for (i = 0; i < count; ++i)
+	segdata = new MapSeg[Level.NumSegs];
+
+	for (i = 0; i < Level.NumSegs; ++i)
 	{
-		segdata[i] = LittleShort(segdata[i]);
+		segdata[i].v1 = LittleShort(segdata[i].v1);
+		segdata[i].v2 = LittleShort(segdata[i].v2);
+		segdata[i].angle = LittleShort(segdata[i].angle);
+		segdata[i].linedef = LittleShort(segdata[i].linedef);
+		segdata[i].side = LittleShort(segdata[i].side);
+		segdata[i].offset = LittleShort(segdata[i].offset);
 	}
-	out.WriteLump ("SEGS", segdata, sizeof(*segdata)*count);
+	out.WriteLump ("SEGS", segdata, sizeof(*segdata)*Level.NumSegs);
 
-	count /= sizeof(MapSeg)/sizeof(*segdata);
-	if (count >= 65536)
+	if (Level.NumSegs >= 65536)
 	{
-		printf ("   SEGS is too big for any port. (%d segs)\n", count);
+		printf ("   SEGS is too big for any port. (%d segs)\n", Level.NumSegs);
 	}
-	else if (count >= 32768)
+	else if (Level.NumSegs >= 32768)
 	{
-		printf ("   SEGS is too big for vanilla Doom and most ports. (%d segs)\n", count);
+		printf ("   SEGS is too big for vanilla Doom and some ports. (%d segs)\n", Level.NumSegs);
 	}
 }
 
@@ -1414,7 +1419,7 @@ void FProcessor::WriteSubsectorsZ (ZLibOut &out, const MapSubsectorEx *subs, int
 	}
 }
 
-void FProcessor::WriteSegsZ (ZLibOut &out, const MapSeg *segs, int numsegs)
+void FProcessor::WriteSegsZ (ZLibOut &out, const MapSegEx *segs, int numsegs)
 {
 	out << (DWORD)numsegs;
 
@@ -1532,7 +1537,7 @@ void FProcessor::WriteSubsectorsX (FWadWriter &out, const MapSubsectorEx *subs, 
 	}
 }
 
-void FProcessor::WriteSegsX (FWadWriter &out, const MapSeg *segs, int numsegs)
+void FProcessor::WriteSegsX (FWadWriter &out, const MapSegEx *segs, int numsegs)
 {
 	out << (DWORD)numsegs;
 

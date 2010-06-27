@@ -143,7 +143,7 @@ public:
 
 	void GetVertices (WideVertex *&verts, int &count);
 	void GetNodes (MapNodeEx *&nodes, int &nodeCount,
-		MapSeg *&segs, int &segCount,
+		MapSegEx *&segs, int &segCount,
 		MapSubsectorEx *&ssecs, int &subCount);
 
 	void GetGLNodes (MapNodeEx *&nodes, int &nodeCount,
@@ -231,8 +231,8 @@ private:
 	DWORD AddMiniseg (int v1, int v2, DWORD partner, DWORD seg1, DWORD splitseg);
 	void SetNodeFromSeg (node_t &node, const FPrivSeg *pseg) const;
 
-	int RemoveMinisegs (MapNodeEx *nodes, TArray<MapSeg> &segs, MapSubsectorEx *subs, int node, short bbox[4]);
-	int StripMinisegs (TArray<MapSeg> &segs, int subsector, short bbox[4]);
+	int RemoveMinisegs (MapNodeEx *nodes, TArray<MapSegEx> &segs, MapSubsectorEx *subs, int node, short bbox[4]);
+	int StripMinisegs (TArray<MapSegEx> &segs, int subsector, short bbox[4]);
 	void AddSegToShortBBox (short bbox[4], const FPrivSeg *seg);
 	int CloseSubsector (TArray<MapSegGLEx> &segs, int subsector);
 	DWORD PushGLSeg (TArray<MapSegGLEx> &segs, const FPrivSeg *seg);

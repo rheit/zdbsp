@@ -129,6 +129,16 @@ struct MapSeg
 	short	offset;
 };
 
+struct MapSegEx
+{
+	DWORD	v1;
+	DWORD	v2;
+	WORD	angle;
+	WORD	linedef;
+	short	side;
+	short	offset;
+};
+
 struct MapSegGL
 {
 	WORD	v1;
@@ -219,7 +229,7 @@ struct FLevel
 	TArray<IntSector>			Sectors;
 	TArray<IntThing>			Things;
 	MapSubsectorEx *Subsectors;	int NumSubsectors;
-	MapSeg *Segs;				int NumSegs;
+	MapSegEx *Segs;				int NumSegs;
 	MapNodeEx *Nodes;			int NumNodes;
 	WORD *Blockmap;				int BlockmapSize;
 	BYTE *Reject;				int RejectSize;

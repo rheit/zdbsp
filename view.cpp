@@ -723,7 +723,7 @@ static void DrawLevelPVS (HDC dc)
 static void SetDesiredSector (int x, int y)
 {
 	int node = Level->NumNodes - 1;
-	const MapSeg *seg;
+	const MapSegEx *seg;
 
 	while (!(node & NFX_SUBSECTOR))
 	{

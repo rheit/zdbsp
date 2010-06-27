@@ -27,8 +27,10 @@
 
 #if 0
 #define D(x) x
+#define DD 1
 #else
 #define D(x) do{}while(0)
+#undef DD
 #endif
 
 void FNodeBuilder::GetGLNodes (MapNodeEx *&outNodes, int &nodeCount,
@@ -126,7 +128,7 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 	prev = seg;
 	firstVert = seg->v1;
 
-#if 0
+#ifdef DD
 	printf("--%d--\n", subsector);
 	for (j = first; j < max; ++j)
 	{
@@ -180,7 +182,7 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 				PushConnectingGLSeg (subsector, segs, prev->v2, seg->v1);
 				count++;
 			}
-#if 0
+#ifdef DD
 			printf ("+%d\n", bestj);
 #endif
 			prevAngle -= bestdiff;
@@ -193,7 +195,7 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 				break;
 			}
 		}
-#if 0
+#ifdef DD
 		printf ("\n");
 #endif
 	}
@@ -224,7 +226,7 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 		PushConnectingGLSeg (subsector, segs, prev->v2, firstVert);
 		count++;
 	}
-#if 0
+#ifdef DD
 	printf ("Output GL subsector %d:\n", subsector);
 	for (i = segs.Size() - count; i < (int)segs.Size(); ++i)
 	{
@@ -380,11 +382,11 @@ void FNodeBuilder::GetVertices (WideVertex *&verts, int &count)
 }
 
 void FNodeBuilder::GetNodes (MapNodeEx *&outNodes, int &nodeCount,
-	MapSeg *&outSegs, int &segCount,
+	MapSegEx *&outSegs, int &segCount,
 	MapSubsectorEx *&outSubs, int &subCount)
 {
 	short bbox[4];
-	TArray<MapSeg> segs (Segs.Size());
+	TArray<MapSegEx> segs (Segs.Size());
 
 	// Walk the BSP and create a new BSP with only the information
 	// suitable for a standard tree. At a minimum, this means removing
@@ -401,12 +403,36 @@ void FNodeBuilder::GetNodes (MapNodeEx *&outNodes, int &nodeCount,
 	RemoveMinisegs (outNodes, segs, outSubs, Nodes.Size() - 1, bbox);
 
 	segCount = segs.Size ();
-	outSegs = new MapSeg[segCount];
-	memcpy (outSegs, &segs[0], segCount*sizeof(MapSeg));
+	outSegs = new MapSegEx[segCount];
+	memcpy (outSegs, &segs[0], segCount*sizeof(MapSegEx));
+
+#ifdef DD
+	int i, j;
+
+	for (i = 0; i < nodeCount; ++i)
+	{
+		printf("Node %d:\n", i);
+		for (j = 1; j >= 0; --j)
+		{
+			if (outNodes[i].children[j] & NFX_SUBSECTOR)
+			{
+				printf("  subsector %d\n", outNodes[i].children[j] & ~NFX_SUBSECTOR);
+			}
+			else
+			{
+				printf("  node %d\n", outNodes[i].children[j]);
+			}
+		}
+	}
+	for (i = 0; i < segCount; ++i)
+	{
+		printf("Seg %d: v1(%d) -> v2(%d)\n", i, outSegs[i].v1, outSegs[i].v2);
+	}
+#endif
 }
 
 int FNodeBuilder::RemoveMinisegs (MapNodeEx *nodes,
-	TArray<MapSeg> &segs, MapSubsectorEx *subs, int node, short bbox[4])
+	TArray<MapSegEx> &segs, MapSubsectorEx *subs, int node, short bbox[4])
 {
 	if (node & NFX_SUBSECTOR)
 	{
@@ -441,7 +467,7 @@ int FNodeBuilder::RemoveMinisegs (MapNodeEx *nodes,
 	}
 }
 
-int FNodeBuilder::StripMinisegs (TArray<MapSeg> &segs, int subsector, short bbox[4])
+int FNodeBuilder::StripMinisegs (TArray<MapSegEx> &segs, int subsector, short bbox[4])
 {
 	int count, i, max;
 
@@ -468,7 +494,7 @@ int FNodeBuilder::StripMinisegs (TArray<MapSeg> &segs, int subsector, short bbox
 		}
 		else
 		{
-			MapSeg newseg;
+			MapSegEx newseg;
 
 			AddSegToShortBBox (bbox, org);
 
