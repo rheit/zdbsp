@@ -1,4 +1,5 @@
 #include <math.h>
+#include <xmmintrin.h>
 #include "doomdata.h"
 #include "workdata.h"
 #include "tarray.h"
@@ -69,7 +70,11 @@ class FNodeBuilder
 	};
 	struct FPrivVert
 	{
-		fixed_t x, y;
+		union
+		{
+			struct { fixed_t x, y; };
+			__m64 p64;
+		};
 		DWORD segs;		// segs that use this vertex as v1
 		DWORD segs2;	// segs that use this vertex as v2
 		int index;
@@ -297,7 +302,8 @@ inline int FNodeBuilder::ClassifyLine (node_t &node, const FPrivSeg *seg, int &s
 	return ClassifyLineBackpatch (node, seg, sidev1, sidev2);
 #else
 	if (SSELevel == 2)
-		return ClassifyLineSSE2 (node, seg, sidev1, sidev2);
+	{ int foo = ClassifyLineSSE2 (node, seg, sidev1, sidev2); assert(foo == ClassifyLine2(node,seg,sidev1,sidev2));
+	return foo; }
 	else if (SSELevel == 1)
 		return ClassifyLineSSE1 (node, seg, sidev1, sidev2);
 	else

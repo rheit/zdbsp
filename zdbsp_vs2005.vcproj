@@ -617,50 +617,54 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						EnableEnhancedInstructionSet="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						EnableEnhancedInstructionSet="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						EnableEnhancedInstructionSet="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						EnableEnhancedInstructionSet="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release, SSE2|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						EnableEnhancedInstructionSet="2"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\nodebuild_classify_sse2_vect.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release, SSE2|x64"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						EnableEnhancedInstructionSet="2"
 					/>
 				</FileConfiguration>
 			</File>
