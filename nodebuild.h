@@ -1,5 +1,4 @@
 #include <math.h>
-#include <xmmintrin.h>
 #include "doomdata.h"
 #include "workdata.h"
 #include "tarray.h"
@@ -70,14 +69,11 @@ class FNodeBuilder
 	};
 	struct FPrivVert
 	{
-		union
-		{
-			struct { fixed_t x, y; };
-			__m64 p64;
-		};
+		fixed_t x, y;
 		DWORD segs;		// segs that use this vertex as v1
 		DWORD segs2;	// segs that use this vertex as v2
 		int index;
+		int pad;		// This structure must be 8-byte aligned.
 
 		bool operator== (const FPrivVert &other)
 		{

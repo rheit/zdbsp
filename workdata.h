@@ -6,7 +6,6 @@
 #endif
 
 #include "zdbsp.h"
-#include <xmmintrin.h>
 
 struct vertex_t
 {
@@ -15,16 +14,7 @@ struct vertex_t
 
 struct node_t
 {
-	union
-	{
-		struct { fixed_t x, y; };
-		__m64 p64;
-	};
-	union
-	{
-		struct { fixed_t dx, dy; };
-		__m64 d64;
-	};
+	fixed_t x, y, dx, dy;
 	fixed_t bbox[2][4];
 	unsigned int intchildren[2];
 };
