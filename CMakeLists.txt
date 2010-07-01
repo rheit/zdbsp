@@ -118,7 +118,6 @@ set( SOURCES
 	processor.cpp
 	processor_udmf.cpp
 	sc_man.cpp
-	view.cpp
 	wad.cpp
 	nodebuild.cpp
 	nodebuild_events.cpp
@@ -127,6 +126,11 @@ set( SOURCES
 	nodebuild_utility.cpp
 	nodebuild_classify_nosse2.cpp
 )
+if( WIN32 )
+	set( SOURCES "${SOURCES} view.cpp" )
+else( WIN32 )
+	add_definitions( -DNO_MAP_VIEWER )
+endif( WIN32 )
 
 if( SSE_MATTERS )
 	if( FULL_SSE2 )
