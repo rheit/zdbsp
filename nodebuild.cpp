@@ -40,12 +40,11 @@
 
 FNodeBuilder::FNodeBuilder (FLevel &level,
 							TArray<FPolyStart> &polyspots, TArray<FPolyStart> &anchors,
-							const char *name, bool makeGLnodes, BYTE sselevel)
+							const char *name, bool makeGLnodes)
 	: Level(level), SegsStuffed(0), MapName(name)
 {
 	VertexMap = new FVertexMap (*this, Level.MinX, Level.MinY, Level.MaxX, Level.MaxY);
 	GLNodes = makeGLnodes;
-	SSELevel = sselevel;
 	FindUsedVertices (Level.Vertices, Level.NumVertices);
 	MakeSegsFromSides ();
 	FindPolyContainers (polyspots, anchors);
@@ -508,7 +507,7 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 	int realSegs[2] = { 0, 0 };
 	int specialSegs[2] = { 0, 0 };
 	DWORD i = set;
-	int sidev1, sidev2;
+	int sidev[2];
 	int side;
 	bool splitter = false;
 	unsigned int max, m2, p, q;
@@ -527,7 +526,7 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 		}
 		else
 		{
-			side = ClassifyLine (node, test, sidev1, sidev2);
+			side = ClassifyLine (node, &Vertices[test->v1], &Vertices[test->v2], sidev);
 		}
 
 		switch (side)
@@ -538,9 +537,9 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 			// The "right" thing to do in this case is to only reject it if there is
 			// another nosplit seg from the same sector at this vertex. Note that a line
 			// that lies exactly on top of the splitter is okay.
-			if (test->loopnum && honorNoSplit && (sidev1 == 0 || sidev2 == 0))
+			if (test->loopnum && honorNoSplit && (sidev[0] == 0 || sidev[1] == 0))
 			{
-				if ((sidev1 | sidev2) != 0)
+				if ((sidev[0] | sidev[1]) != 0)
 				{
 					max = Touched.Size();
 					for (p = 0; p < max; ++p)
@@ -752,18 +751,18 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 		FPrivSeg *seg = &Segs[set];
 		int next = seg->next;
 
-		int sidev1, sidev2, side;
+		int sidev[2], side;
 
 		if (HackSeg == set)
 		{
 			HackSeg = DWORD_MAX;
 			side = 1;
-			sidev1 = sidev2 = 0;
+			sidev[0] = sidev[1] = 0;
 			hack = true;
 		}
 		else
 		{
-			side = ClassifyLine (node, seg, sidev1, sidev2);
+			side = ClassifyLine (node, &Vertices[seg->v1], &Vertices[seg->v2], sidev);
 			hack = false;
 		}
 
@@ -810,7 +809,7 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 				Printf("SelectVertexClose selected endpoint of seg %u\n", (unsigned int)set);
 			}
 
-			seg2 = SplitSeg (set, vertnum, sidev1);
+			seg2 = SplitSeg (set, vertnum, sidev[0]);
 
 			Segs[seg2].next = outset0;
 			outset0 = seg2;
@@ -821,7 +820,7 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			if (Segs[set].partner != DWORD_MAX)
 			{
 				int partner1 = Segs[set].partner;
-				int partner2 = SplitSeg (partner1, vertnum, sidev2);
+				int partner2 = SplitSeg (partner1, vertnum, sidev[1]);
 				// The newly created seg stays in the same set as the
 				// back seg because it has not been considered for splitting
 				// yet. If it had been, then the front seg would have already
@@ -847,17 +846,17 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 		}
 		if (side >= 0 && GLNodes)
 		{
-			if (sidev1 == 0)
+			if (sidev[0] == 0)
 			{
 				double dist1 = AddIntersection (node, seg->v1);
-				if (sidev2 == 0)
+				if (sidev[1] == 0)
 				{
 					double dist2 = AddIntersection (node, seg->v2);
 					FSplitSharer share = { dist1, set, dist2 > dist1 };
 					SplitSharers.Push (share);
 				}
 			}
-			else if (sidev2 == 0)
+			else if (sidev[1] == 0)
 			{
 				AddIntersection (node, seg->v2);
 			}
@@ -1058,39 +1057,31 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-int FNodeBuilder::ClassifyLineBackpatch (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2)
+extern "C" int ClassifyLineBackpatch (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2])
 {
 	// Select the routine based on SSELevel and patch the caller so that
 	// they call that routine directly next time instead of going through here.
 	int *calleroffset = (int *)__builtin_return_address(0) - 1;
 	int diff;
-	int (*func)(FNodeBuilder *, node_t &, const FNodeBuilder::FPrivSeg *, int &, int &);
+	int (*func)(node_t &, const FSimpleVert *, const FSimpleVert *, int[2]);
 	DWORD oldprotect;
 
 //	printf ("Patching for SSE %d\n", SSELevel);
 
-	// I wasn't sure how to calculate the difference between the function addresses with C++
-	// (or if it's even possible), so here's some asm to do it instead:
 	if (SSELevel == 2)
 	{
-		__asm (
-			"movl $__ZN12FNodeBuilder16ClassifyLineSSE2ER6node_tPKNS_8FPrivSegERiS5_,%1\n\t"
-			"movl $__ZN12FNodeBuilder16ClassifyLineSSE2ER6node_tPKNS_8FPrivSegERiS5_-__ZN12FNodeBuilder21ClassifyLineBackpatchER6node_tPKNS_8FPrivSegERiS5_,%0\n\t"
-			: "=r" (diff), "=r" (func));
+		func = ClassifyLineSSE2;
+		diff = (char *)ClassifyLineSSE2 - (char *)ClassifyLineBackpatch;
 	}
 	else if (SSELevel == 1)
 	{
-		__asm (
-			"movl $__ZN12FNodeBuilder16ClassifyLineSSE1ER6node_tPKNS_8FPrivSegERiS5_,%1\n\t"
-			"movl $__ZN12FNodeBuilder16ClassifyLineSSE1ER6node_tPKNS_8FPrivSegERiS5_-__ZN12FNodeBuilder21ClassifyLineBackpatchER6node_tPKNS_8FPrivSegERiS5_,%0\n\t"
-		   : "=r" (diff), "=r" (func));
+		func = ClassifyLineSSE1;
+		diff = (char *)ClassifyLineSSE1 - (char *)ClassifyLineBackpatch;
 	}
 	else
 	{
-		__asm (
-			"movl $__ZN12FNodeBuilder13ClassifyLine2ER6node_tPKNS_8FPrivSegERiS5_,%1\n\t"
-			"movl $__ZN12FNodeBuilder13ClassifyLine2ER6node_tPKNS_8FPrivSegERiS5_-__ZN12FNodeBuilder21ClassifyLineBackpatchER6node_tPKNS_8FPrivSegERiS5_,%0\n\t"
-			: "=r" (diff), "=r" (func));
+		func = ClassifyLine2;
+		diff = (char *)ClassifyLine2 - (char *)ClassifyLineBackpatch;
 	}
 
 	// Patch the caller.
@@ -1101,6 +1092,6 @@ int FNodeBuilder::ClassifyLineBackpatch (node_t &node, const FPrivSeg *seg, int 
 	}
 
 	// And return by calling the real function.
-	return func (this, node, seg, sidev1, sidev2);
+	return func (node, v1, v2, sidev);
 }
 #endif

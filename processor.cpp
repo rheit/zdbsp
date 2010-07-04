@@ -577,21 +577,19 @@ void FProcessor::Write (FWadWriter &out)
 		
 		try
 		{
-			int ssetype;
-
 			if (HaveSSE2)
 			{
-				ssetype = 2;
+				SSELevel = 2;
 			}
 			else if (HaveSSE1)
 			{
-				ssetype = 1;
+				SSELevel = 1;
 			}
 			else
 			{
-				ssetype = 0;
+				SSELevel = 0;
 			}
-			builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), BuildGLNodes, ssetype);
+			builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), BuildGLNodes);
 			if (builder == NULL)
 			{
 				throw std::runtime_error("   Not enough memory to build nodes!");
@@ -627,7 +625,7 @@ void FProcessor::Write (FWadWriter &out)
 					{
 						// Now repeat the process to obtain regular nodes
 						delete builder;
-						builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), false, ssetype);
+						builder = new FNodeBuilder (Level, PolyStarts, PolyAnchors, Wad.LumpName (Lump), false);
 						if (builder == NULL)
 						{
 							throw std::runtime_error("   Not enough memory to build regular nodes!");

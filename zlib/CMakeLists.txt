@@ -10,5 +10,11 @@ add_library( z
     crc32.c
     deflate.c
     trees.c
-    zutil.c )
+    zutil.c
+    crc32.h
+    deflate.h
+    trees.h
+    zconf.h
+    zlib.h
+    zutil.h )
 target_link_libraries( z )

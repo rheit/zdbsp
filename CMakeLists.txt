@@ -127,10 +127,24 @@ set( SOURCES
 	nodebuild_classify_nosse2.cpp
 )
 if( WIN32 )
-	set( SOURCES "${SOURCES} view.cpp" )
+	set( SOURCES "${SOURCES}" view.cpp )
 else( WIN32 )
 	add_definitions( -DNO_MAP_VIEWER )
 endif( WIN32 )
+
+set( HEADERS
+	blockmapbuilder.h
+	doomdata.h
+	getopt.h
+	nodebuild.h
+	processor.h
+	resource.h
+	sc_man.h
+	tarray.h
+	templates.h
+	wad.h
+	workdata.h
+	zdbsp.h )
 
 if( SSE_MATTERS )
 	if( FULL_SSE2 )
@@ -184,6 +198,6 @@ set( CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} ${REL_C_FLAGS}" )
 set( CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${REL_C_FLAGS}" )
 set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${DEB_C_FLAGS} -D_DEBUG" )
 
-add_executable( zdbsp ${SOURCES} )
+add_executable( zdbsp ${SOURCES} ${HEADERS} )
 target_link_libraries( zdbsp ${ZDBSP_LIBS} ${PROF_LIB} )
 include_directories( "${ZLIB_INCLUDE_DIR}" )

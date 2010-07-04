@@ -113,6 +113,7 @@ bool			 ForceCompression = false;
 bool			 GLOnly = false;
 bool			 V5GLNodes = false;
 bool			 HaveSSE1, HaveSSE2;
+int				 SSELevel;
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
 

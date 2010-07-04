@@ -30,20 +30,17 @@
 // The reason it is SSE2 is because this file is explicitly compiled
 // with SSE2 math enabled, but the other files are not.
 
-int FNodeBuilder::ClassifyLineSSE2 (node_t &node, const FPrivSeg *seg, int &sidev1, int &sidev2)
+extern "C" int ClassifyLineSSE2 (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2])
 {
-	const FPrivVert *v1 = &Vertices[seg->v1];
-	const FPrivVert *v2 = &Vertices[seg->v2];
-
 	__m128d xy, dxy, xyv1, xyv2;
 
 	// Why does this intrinsic go through an MMX register, when it can just go through memory?
-	// That would let it work with x64, too.
-	xy = _mm_cvtpi32_pd(node.p64);		// d_y1  d_x1
-	dxy = _mm_cvtpi32_pd(node.d64);		// d_dy  d_dx
-	xyv1 = _mm_cvtpi32_pd(v1->p64);		// d_yv1 d_xv1
-	xyv2 = _mm_cvtpi32_pd(v2->p64);		// d_yv2 d_xv2
-	_mm_empty();
+	// That would let it work with x64, too. (This only applies to VC++. GCC
+	// is smarter and can load directly from memory without touching the MMX registers.)
+	xy = _mm_cvtpi32_pd(*(__m64*)&node.x);		// d_y1  d_x1
+	dxy = _mm_cvtpi32_pd(*(__m64*)&node.dx);	// d_dy  d_dx
+	xyv1 = _mm_cvtpi32_pd(*(__m64*)&v1->x);		// d_yv1 d_xv1
+	xyv2 = _mm_cvtpi32_pd(*(__m64*)&v2->x);		// d_yv2 d_xv2
 
 	__m128d num1, num2, dyx;
 
@@ -76,54 +73,56 @@ int FNodeBuilder::ClassifyLineSSE2 (node_t &node, const FPrivSeg *seg, int &side
 		};
 		struct
 		{
-			__int64 ni[2], pi[2];
+			int ni[4], pi[4];
 		};
-	};
+	} _;
 
-	_mm_storeu_pd(n, neg_check);
-	_mm_storeu_pd(p, pos_check);
+	_mm_storeu_pd(_.n, neg_check);
+	_mm_storeu_pd(_.p, pos_check);
 
 	int nears = 0;
 
-	if (ni[0])
+	if (_.ni[0])
 	{
-		if (ni[1])
+		if (_.ni[2])
 		{
-			sidev1 = sidev2 = 1;
+			sidev[0] = sidev[1] = 1;
 			return 1;
 		}
-		if (pi[1])
+		if (_.pi[2])
 		{
-			sidev1 = 1;
-			sidev2 = -1;
+			sidev[0] = 1;
+			sidev[1] = -1;
 			return -1;
 		}
 		nears = 1;
 	}
-	else if (pi[0])
+	else if (_.pi[0])
 	{
-		if (pi[1])
+		if (_.pi[2])
 		{
-			sidev1 = sidev2 = -1;
+			sidev[0] = sidev[1] = -1;
 			return 0;
 		}
-		if (ni[1])
+		if (_.ni[2])
 		{
-			sidev1 = -1;
-			sidev2 = 1;
+			sidev[0] = -1;
+			sidev[1] = 1;
 			return -1;
 		}
 		nears = 1;
 	}
 	else
 	{
-		nears = 2 | ((ni[1] | pi[1]) ? 0 : 1);
+		nears = 2 | ((_.ni[2] | _.pi[2]) ? 0 : 1);
 	}
 
 	__m128d zero = _mm_setzero_pd();
 	__m128d posi = _mm_cmpgt_pd(num, zero);
-	_mm_storeu_pd(p, posi);
+	_mm_storeu_pd(_.p, posi);
 
+	int sv1 = _.pi[0] ? _.pi[0] : 1;
+	int sv2 = _.pi[2] ? _.pi[2] : 1;
 	if (nears)
 	{
 		__m128d sqnum = _mm_mul_pd(num, num);
@@ -133,45 +132,20 @@ int FNodeBuilder::ClassifyLineSSE2 (node_t &node, const FPrivSeg *seg, int &side
 		__m128d dist = _mm_div_pd(sqnum, l);
 		__m128d epsilon = _mm_set1_pd(SIDE_EPSILON);
 		__m128d close = _mm_cmplt_pd(dist, epsilon);
-		_mm_storeu_pd(n, close);
-		if (nears & 2)
+		_mm_storeu_pd(_.n, close);
+		if ((nears & 2) && _.ni[0])
 		{
-			if (ni[0])
-			{
-				sidev1 = 0;
-			}
-			else
-			{
-				sidev1 = pi[0] ? -1 : 1;
-			}
+			sv1 = 0;
 		}
-		else
+		if ((nears & 1) && _.ni[2])
 		{
-			sidev1 = pi[0] ? -1 : 1;
-		}
-		if (nears & 1)
-		{
-			if (ni[1])
-			{
-				sidev2 = 0;
-			}
-			else
-			{
-				sidev2 = pi[1] ? -1 : 1;
-			}
-		}
-		else
-		{
-			sidev2 = pi[1] ? -1 : 1;
+			sv2 = 0;
 		}
 	}
-	else
-	{
-		sidev1 = pi[0] ? -1 : 1;
-		sidev2 = pi[1] ? -1 : 1;
-	}
+	sidev[0] = sv1;
+	sidev[1] = sv2;
 
-	if ((sidev1 | sidev2) == 0)
+	if ((sv1 | sv2) == 0)
 	{ // seg is coplanar with the splitter, so use its orientation to determine
 	  // which child it ends up in. If it faces the same direction as the splitter,
 	  // it goes in front. Otherwise, it goes in back.
@@ -199,11 +173,11 @@ int FNodeBuilder::ClassifyLineSSE2 (node_t &node, const FPrivSeg *seg, int &side
 			}
 		}
 	}
-	else if (sidev1 <= 0 && sidev2 <= 0)
+	else if (sv1 <= 0 && sv2 <= 0)
 	{
 		return 0;
 	}
-	else if (sidev1 >= 0 && sidev2 >= 0)
+	else if (sv1 >= 0 && sv2 >= 0)
 	{
 		return 1;
 	}
