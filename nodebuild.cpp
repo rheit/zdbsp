@@ -1053,19 +1053,29 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 	Printf ("*\n");
 }
 
-#if defined(_WIN32) && !defined(__SSE2__) && !defined(DISABLE_SSE) && !defined(DISABLE_BACKPATCH) && defined(__i386__) && defined(__GNUC__)
+#ifdef BACKPATCH
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#ifdef __GNUC__
 extern "C" int ClassifyLineBackpatch (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2])
+#else
+static int *CallerOffset;
+int ClassifyLineBackpatchC (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2])
+#endif
 {
 	// Select the routine based on SSELevel and patch the caller so that
 	// they call that routine directly next time instead of going through here.
-	int *calleroffset = (int *)__builtin_return_address(0) - 1;
+	int *calleroffset;
 	int diff;
 	int (*func)(node_t &, const FSimpleVert *, const FSimpleVert *, int[2]);
 	DWORD oldprotect;
 
+#ifdef __GNUC__
+	calleroffset = (int *)__builtin_return_address(0) - 1;
+#else
+	calleroffset = CallerOffset;
+#endif
 //	printf ("Patching for SSE %d\n", SSELevel);
 
 	if (SSELevel == 2)
@@ -1094,4 +1104,23 @@ extern "C" int ClassifyLineBackpatch (node_t &node, const FSimpleVert *v1, const
 	// And return by calling the real function.
 	return func (node, v1, v2, sidev);
 }
+
+#ifndef __GNUC__
+// The ClassifyLineBackpatch() function here is a stub that uses inline assembly and nakedness
+// to retrieve the return address of the stack before sending control to the real
+// ClassifyLineBackpatchC() function. Since BACKPATCH shouldn't be defined on 64-bit builds,
+// we're okay that VC++ can't do inline assembly on that target.
+
+extern "C" __declspec(noinline) __declspec(naked) int ClassifyLineBackpatch (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2])
+{
+	// We store the return address in a global, so as not to need to mess with the parameter list.
+	__asm
+	{
+		mov eax, [esp]
+		sub eax, 4
+		mov CallerOffset, eax
+		jmp ClassifyLineBackpatchC
+	}
+}
+#endif
 #endif

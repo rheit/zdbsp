@@ -56,8 +56,12 @@ extern "C"
 #ifndef DISABLE_SSE
 	int ClassifyLineSSE1 (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2]);
 	int ClassifyLineSSE2 (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2]);
-#if defined(_WIN32) && defined(__GNUC__) && !defined(DISABLE_BACKPATCH)
+#ifdef BACKPATCH
+#ifdef __GNUC__
 	int ClassifyLineBackpatch (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2]) __attribute__((noinline));
+#else
+	int __declspec(noinline) ClassifyLineBackpatch (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2]);
+#endif
 #endif
 #endif
 }
@@ -300,7 +304,7 @@ inline int FNodeBuilder::ClassifyLine (node_t &node, const FPrivVert *v1, const 
 	return ClassifyLine2 (node, v1, v2, sidev);
 #else
 	// Select the routine based on our flag.
-#if defined(_WIN32) && defined(__GNUC__) && !defined(DISABLE_BACKPATCH)
+#ifdef BACKPATCH
 	return ClassifyLineBackpatch (node, v1, v2, sidev);
 #else
 	if (SSELevel == 2)
