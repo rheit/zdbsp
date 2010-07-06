@@ -1054,8 +1054,13 @@ void FNodeBuilder::PrintSet (int l, DWORD set)
 }
 
 #ifdef BACKPATCH
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+#include <sys/mman.h>
+#include <limits.h>
+#endif
 
 #ifdef __GNUC__
 extern "C" int ClassifyLineBackpatch (node_t &node, const FSimpleVert *v1, const FSimpleVert *v2, int sidev[2])
@@ -1076,7 +1081,7 @@ int ClassifyLineBackpatchC (node_t &node, const FSimpleVert *v1, const FSimpleVe
 #else
 	calleroffset = CallerOffset;
 #endif
-//	printf ("Patching for SSE %d\n", SSELevel);
+//	printf ("Patching for SSE %d @ %p %d\n", SSELevel, calleroffset, *calleroffset);
 
 	if (SSELevel == 2)
 	{
@@ -1095,10 +1100,23 @@ int ClassifyLineBackpatchC (node_t &node, const FSimpleVert *v1, const FSimpleVe
 	}
 
 	// Patch the caller.
+#ifdef _WIN32
 	if (VirtualProtect (calleroffset, 4, PAGE_EXECUTE_READWRITE, &oldprotect))
+#else
+	// must make this page-aligned for mprotect
+	long pagesize = sysconf(_SC_PAGESIZE);
+	char *callerpage = (char *)((intptr_t)calleroffset & ~(pagesize - 1));
+	size_t protectlen = (intptr_t)calleroffset + 4 - (intptr_t)callerpage;
+	int ptect;
+	if (!(ptect = mprotect(callerpage, protectlen, PROT_READ|PROT_WRITE|PROT_EXEC)))
+#endif
 	{
 		*calleroffset += diff;
+#ifdef _WIN32
 		VirtualProtect (calleroffset, 4, oldprotect, &oldprotect);
+#else
+		mprotect(callerpage, protectlen, PROT_READ|PROT_EXEC);
+#endif
 	}
 
 	// And return by calling the real function.
