@@ -67,35 +67,38 @@ void FNodeBuilder::BuildTree ()
 	fprintf (stderr, "   BSP:   0.0%%\r");
 	HackSeg = DWORD_MAX;
 	HackMate = DWORD_MAX;
-	CreateNode (0, bbox);
+	CreateNode (0, Segs.Size(), bbox);
 	CreateSubsectorsForReal ();
 	fprintf (stderr, "   BSP: 100.0%%\n");
 }
 
-DWORD FNodeBuilder::CreateNode (DWORD set, fixed_t bbox[4])
+DWORD FNodeBuilder::CreateNode (DWORD set, unsigned int count, fixed_t bbox[4])
 {
 	node_t node;
-	int skip, count, selstat;
+	int skip, selstat;
 	DWORD splitseg;
 
-	count = CountSegs (set);
-	skip = count / MaxSegs;
+	// When building GL nodes, count may not be an exact count of the number of segs
+	// in this set. That's okay, because we just use it to get a skip count, so an
+	// estimate is fine.
+	skip = int(count / MaxSegs);
 
 	if ((selstat = SelectSplitter (set, node, splitseg, skip, true)) > 0 ||
 		(skip > 0 && (selstat = SelectSplitter (set, node, splitseg, 1, true)) > 0) ||
 		(selstat < 0 && (SelectSplitter (set, node, splitseg, skip, false) > 0 ||
 						(skip > 0 && SelectSplitter (set, node, splitseg, 1, false)))) ||
-		CheckSubsector (set, node, splitseg, count))
+		CheckSubsector (set, node, splitseg))
 	{
 		// Create a normal node
 		DWORD set1, set2;
+		unsigned int count1, count2;
 
-		SplitSegs (set, node, splitseg, set1, set2);
+		SplitSegs (set, node, splitseg, set1, set2, count1, count2);
 		D(PrintSet (1, set1));
 		D(Printf ("(%d,%d) delta (%d,%d) from seg %d\n", node.x>>16, node.y>>16, node.dx>>16, node.dy>>16, splitseg));
 		D(PrintSet (2, set2));
-		node.intchildren[0] = CreateNode (set1, node.bbox[0]);
-		node.intchildren[1] = CreateNode (set2, node.bbox[1]);
+		node.intchildren[0] = CreateNode (set1, count1, node.bbox[0]);
+		node.intchildren[1] = CreateNode (set2, count2, node.bbox[1]);
 		bbox[BOXTOP] = MAX (node.bbox[0][BOXTOP], node.bbox[1][BOXTOP]);
 		bbox[BOXBOTTOM] = MIN (node.bbox[0][BOXBOTTOM], node.bbox[1][BOXBOTTOM]);
 		bbox[BOXLEFT] = MIN (node.bbox[0][BOXLEFT], node.bbox[1][BOXLEFT]);
@@ -273,24 +276,12 @@ int STACK_ARGS FNodeBuilder::SortSegs (const void *a, const void *b)
 	}
 }
 
-int FNodeBuilder::CountSegs (DWORD set) const
-{
-	int count = 0;
-
-	while (set != DWORD_MAX)
-	{
-		count++;
-		set = Segs[set].next;
-	}
-	return count;
-}
-
 // Given a set of segs, checks to make sure they all belong to a single
 // sector. If so, false is returned, and they become a subsector. If not,
 // a splitter is synthesized, and true is returned to continue processing
 // down this branch of the tree.
 
-bool FNodeBuilder::CheckSubsector (DWORD set, node_t &node, DWORD &splitseg, int setsize)
+bool FNodeBuilder::CheckSubsector (DWORD set, node_t &node, DWORD &splitseg)
 {
 	int sec;
 	DWORD seg;
@@ -737,8 +728,10 @@ int FNodeBuilder::Heuristic (node_t &node, DWORD set, bool honorNoSplit)
 	return score;
 }
 
-void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &outset0, DWORD &outset1)
+void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &outset0, DWORD &outset1, unsigned int &count0, unsigned int &count1)
 {
+	unsigned int _count0 = 0;
+	unsigned int _count1 = 0;
 	outset0 = DWORD_MAX;
 	outset1 = DWORD_MAX;
 
@@ -772,12 +765,14 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			seg->next = outset0;
 			//Printf ("%u in front\n", set);
 			outset0 = set;
+			_count0++;
 			break;
 
 		case 1: // seg is entirely in back
 			seg->next = outset1;
 			//Printf ("%u in back\n", set);
 			outset1 = set;
+			_count1++;
 			break;
 
 		default: // seg needs to be split
@@ -815,6 +810,8 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 			outset0 = seg2;
 			Segs[set].next = outset1;
 			outset1 = set;
+			_count0++;
+			_count1++;
 
 			// Also split the seg on the back side
 			if (Segs[set].partner != DWORD_MAX)
@@ -892,6 +889,8 @@ void FNodeBuilder::SplitSegs (DWORD set, node_t &node, DWORD splitseg, DWORD &ou
 	{
 		AddMinisegs (node, splitseg, outset0, outset1);
 	}
+	count0 = _count0;
+	count1 = _count1;
 }
 
 void FNodeBuilder::SetNodeFromSeg (node_t &node, const FPrivSeg *pseg) const
@@ -1077,7 +1076,7 @@ int ClassifyLineBackpatchC (node_t &node, const FSimpleVert *v1, const FSimpleVe
 	DWORD oldprotect;
 
 #ifdef __GNUC__
-	calleroffset = (int *)__builtin_return_address(0) - 1;
+	calleroffset = (int *)__builtin_return_address(0);
 #else
 	calleroffset = CallerOffset;
 #endif
@@ -1086,34 +1085,35 @@ int ClassifyLineBackpatchC (node_t &node, const FSimpleVert *v1, const FSimpleVe
 	if (SSELevel == 2)
 	{
 		func = ClassifyLineSSE2;
-		diff = (char *)ClassifyLineSSE2 - (char *)ClassifyLineBackpatch;
+		diff = (char *)ClassifyLineSSE2 - (char *)calleroffset;
 	}
 	else if (SSELevel == 1)
 	{
 		func = ClassifyLineSSE1;
-		diff = (char *)ClassifyLineSSE1 - (char *)ClassifyLineBackpatch;
+		diff = (char *)ClassifyLineSSE1 - (char *)calleroffset;
 	}
 	else
 	{
 		func = ClassifyLine2;
-		diff = (char *)ClassifyLine2 - (char *)ClassifyLineBackpatch;
+		diff = (char *)ClassifyLine2 - (char *)calleroffset;
 	}
 
 	// Patch the caller.
+	calleroffset--;
 #ifdef _WIN32
-	if (VirtualProtect (calleroffset, 4, PAGE_EXECUTE_READWRITE, &oldprotect))
+	if (VirtualProtect (calleroffset, sizeof(void*), PAGE_EXECUTE_READWRITE, &oldprotect))
 #else
 	// must make this page-aligned for mprotect
 	long pagesize = sysconf(_SC_PAGESIZE);
 	char *callerpage = (char *)((intptr_t)calleroffset & ~(pagesize - 1));
-	size_t protectlen = (intptr_t)calleroffset + 4 - (intptr_t)callerpage;
+	size_t protectlen = (intptr_t)calleroffset + sizeof(void*) - (intptr_t)callerpage;
 	int ptect;
 	if (!(ptect = mprotect(callerpage, protectlen, PROT_READ|PROT_WRITE|PROT_EXEC)))
 #endif
 	{
-		*calleroffset += diff;
+		*calleroffset = diff;
 #ifdef _WIN32
-		VirtualProtect (calleroffset, 4, oldprotect, &oldprotect);
+		VirtualProtect (calleroffset, sizeof(void*), oldprotect, &oldprotect);
 #else
 		mprotect(callerpage, protectlen, PROT_READ|PROT_EXEC);
 #endif
@@ -1135,7 +1135,6 @@ extern "C" __declspec(noinline) __declspec(naked) int ClassifyLineBackpatch (nod
 	__asm
 	{
 		mov eax, [esp]
-		sub eax, 4
 		mov CallerOffset, eax
 		jmp ClassifyLineBackpatchC
 	}
