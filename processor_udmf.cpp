@@ -119,7 +119,12 @@ double CheckFloat(const char *key)
 
 fixed_t CheckFixed(const char *key)
 {
-	return (fixed_t)(CheckFloat(key)*65536.);
+	double val = CheckFloat(key) * 65536;
+	if (val < double(INT_MIN) || val > double(INT_MAX))
+	{
+		SC_ScriptError("Fixed point value is out of range for key '%s'\n\t%.2f should be within [-32768,32767]", key, val);
+	}
+	return fixed_t(val);
 }
 
 //===========================================================================
