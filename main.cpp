@@ -500,6 +500,8 @@ static void ShowVersion ()
 		"-x86"
 #elif defined(__amd64__)
 		"-amd64"
+#elif defined(__ppc__)
+		"-ppc"
 #endif
 
 #elif defined(_MSC_VER)

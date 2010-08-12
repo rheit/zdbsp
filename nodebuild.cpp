@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include <malloc.h>
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
