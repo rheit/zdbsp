@@ -90,8 +90,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,13,0,0
- PRODUCTVERSION 1,13,0,0
+ FILEVERSION 1,17,0,0
+ PRODUCTVERSION 1,17,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -107,12 +107,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "FileDescription", "ZDBSP Node Builder"
-            VALUE "FileVersion", "1.13"
+            VALUE "FileVersion", "1.17"
             VALUE "InternalName", "zdbsp"
-            VALUE "LegalCopyright", "Copyright (C) 2002-2009 Randy Heit, 2009 Christoph Oelckers"
+            VALUE "LegalCopyright", "Copyright (C) 2002-2010 Randy Heit, 2009 Christoph Oelckers"
             VALUE "OriginalFilename", "zdbsp.exe"
             VALUE "ProductName", "ZDBSP"
-            VALUE "ProductVersion", "1.13"
+            VALUE "ProductVersion", "1.17"
         END
     END
     BLOCK "VarFileInfo"
