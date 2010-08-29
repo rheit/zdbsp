@@ -1041,12 +1041,12 @@ void FProcessor::WriteSegs (FWadWriter &out)
 
 	for (i = 0; i < Level.NumSegs; ++i)
 	{
-		segdata[i].v1 = LittleShort(segdata[i].v1);
-		segdata[i].v2 = LittleShort(segdata[i].v2);
-		segdata[i].angle = LittleShort(segdata[i].angle);
-		segdata[i].linedef = LittleShort(segdata[i].linedef);
-		segdata[i].side = LittleShort(segdata[i].side);
-		segdata[i].offset = LittleShort(segdata[i].offset);
+		segdata[i].v1 = LittleShort(WORD(Level.Segs[i].v1));
+		segdata[i].v2 = LittleShort(WORD(Level.Segs[i].v2));
+		segdata[i].angle = LittleShort(Level.Segs[i].angle);
+		segdata[i].linedef = LittleShort(Level.Segs[i].linedef);
+		segdata[i].side = LittleShort(Level.Segs[i].side);
+		segdata[i].offset = LittleShort(Level.Segs[i].offset);
 	}
 	out.WriteLump ("SEGS", segdata, sizeof(*segdata)*Level.NumSegs);
 

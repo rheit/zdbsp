@@ -114,7 +114,7 @@ extern "C" int ClassifyLineSSE2 (node_t &node, const FSimpleVert *v1, const FSim
 	}
 	else
 	{
-		nears = 2 | ((_.ni[2] | _.pi[2]) ? 0 : 1);
+		nears = 2 | (((_.ni[2] | _.pi[2]) & 1) ^ 1);
 	}
 
 	__m128d zero = _mm_setzero_pd();
@@ -133,11 +133,11 @@ extern "C" int ClassifyLineSSE2 (node_t &node, const FSimpleVert *v1, const FSim
 		__m128d epsilon = _mm_set1_pd(SIDE_EPSILON);
 		__m128d close = _mm_cmplt_pd(dist, epsilon);
 		_mm_storeu_pd(_.n, close);
-		if ((nears & 2) && _.ni[0])
+		if (nears & _.ni[0] & 2)
 		{
 			sv1 = 0;
 		}
-		if ((nears & 1) && _.ni[2])
+		if (nears & _.ni[2] & 1)
 		{
 			sv2 = 0;
 		}
