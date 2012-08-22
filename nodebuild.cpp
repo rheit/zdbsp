@@ -23,6 +23,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #include "zdbsp.h"
 #include "nodebuild.h"
