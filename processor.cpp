@@ -1147,16 +1147,20 @@ void FProcessor::WriteNodes2 (FWadWriter &out, const char *name, const MapNodeEx
 void FProcessor::WriteNodes5 (FWadWriter &out, const char *name, const MapNodeEx *zaNodes, int count) const
 {
 	int i, j;
-	MapNodeEx *const nodes = new MapNodeEx[count * sizeof(MapNodeEx)];
+	MapNodeExO *const nodes = new MapNodeExO[count * sizeof(MapNodeEx)];
 
 	for (i = 0; i < count; ++i)
 	{
-		const short *inodes = &zaNodes[i].x;
-		short *coord = &nodes[i].x;
-		for (j = 0; j < 4+2*4; ++j)
+		const short *inodes = &zaNodes[i].bbox[0][0];
+		short *coord = &nodes[i].bbox[0][0];
+		for (j = 0; j < 2*4; ++j)
 		{
 			coord[j] = LittleShort(inodes[j]);
 		}
+		nodes[i].x = LittleShort(zaNodes[i].x >> 16);
+		nodes[i].y = LittleShort(zaNodes[i].y >> 16);
+		nodes[i].dx = LittleShort(zaNodes[i].dx >> 16);
+		nodes[i].dy = LittleShort(zaNodes[i].dy >> 16);
 		for (j = 0; j < 2; ++j)
 		{
 			nodes[i].children[j] = LittleLong(zaNodes[i].children[j]);
@@ -1370,12 +1374,14 @@ void FProcessor::WriteBSPZ (FWadWriter &out, const char *label)
 	WriteVerticesZ (zout, &Level.Vertices[Level.NumOrgVerts], Level.NumOrgVerts, Level.NumVertices - Level.NumOrgVerts);
 	WriteSubsectorsZ (zout, Level.Subsectors, Level.NumSubsectors);
 	WriteSegsZ (zout, Level.Segs, Level.NumSegs);
-	WriteNodesZ (zout, Level.Nodes, Level.NumNodes);
+	WriteNodesZ (zout, Level.Nodes, Level.NumNodes, 1);
 }
 
 void FProcessor::WriteGLBSPZ (FWadWriter &out, const char *label)
 {
 	ZLibOut zout (out);
+	bool fracsplitters = CheckForFracSplitters(Level.GLNodes, Level.NumGLNodes);
+	int nodever;
 
 	if (!CompressGLNodes)
 	{
@@ -1383,18 +1389,25 @@ void FProcessor::WriteGLBSPZ (FWadWriter &out, const char *label)
 	}
 
 	out.StartWritingLump (label);
-	if (Level.NumLines() < 65535)
+	if (fracsplitters)
+	{
+		out.AddToLump ("ZGL3", 4);
+		nodever = 3;
+	}
+	else if (Level.NumLines() < 65535)
 	{
 		out.AddToLump ("ZGLN", 4);
+		nodever = 1;
 	}
 	else
 	{
 		out.AddToLump ("ZGL2", 4);
+		nodever = 2;
 	}
 	WriteVerticesZ (zout, &Level.GLVertices[Level.NumOrgVerts], Level.NumOrgVerts, Level.NumGLVertices - Level.NumOrgVerts);
 	WriteSubsectorsZ (zout, Level.GLSubsectors, Level.NumGLSubsectors);
-	WriteGLSegsZ (zout, Level.GLSegs, Level.NumGLSegs);
-	WriteNodesZ (zout, Level.GLNodes, Level.NumGLNodes);
+	WriteGLSegsZ (zout, Level.GLSegs, Level.NumGLSegs, nodever);
+	WriteNodesZ (zout, Level.GLNodes, Level.NumGLNodes, nodever);
 }
 
 void FProcessor::WriteVerticesZ (ZLibOut &out, const WideVertex *verts, int orgverts, int newverts)
@@ -1430,11 +1443,11 @@ void FProcessor::WriteSegsZ (ZLibOut &out, const MapSegEx *segs, int numsegs)
 	}
 }
 
-void FProcessor::WriteGLSegsZ (ZLibOut &out, const MapSegGLEx *segs, int numsegs)
+void FProcessor::WriteGLSegsZ (ZLibOut &out, const MapSegGLEx *segs, int numsegs, int nodever)
 {
 	out << (DWORD)numsegs;
 
-	if (Level.NumLines() < 65535)
+	if (nodever < 2)
 	{
 		for (int i = 0; i < numsegs; ++i)
 		{
@@ -1456,16 +1469,26 @@ void FProcessor::WriteGLSegsZ (ZLibOut &out, const MapSegGLEx *segs, int numsegs
 	}
 }
 
-void FProcessor::WriteNodesZ (ZLibOut &out, const MapNodeEx *nodes, int numnodes)
+void FProcessor::WriteNodesZ (ZLibOut &out, const MapNodeEx *nodes, int numnodes, int nodever)
 {
 	out << (DWORD)numnodes;
 
 	for (int i = 0; i < numnodes; ++i)
 	{
-		out << (SWORD)nodes[i].x
-			<< (SWORD)nodes[i].y
-			<< (SWORD)nodes[i].dx
-			<< (SWORD)nodes[i].dy;
+		if (nodever < 3)
+		{
+			out << (SWORD)(nodes[i].x >> 16)
+				<< (SWORD)(nodes[i].y >> 16)
+				<< (SWORD)(nodes[i].dx >> 16)
+				<< (SWORD)(nodes[i].dy >> 16);
+		}
+		else
+		{
+			out << (DWORD)nodes[i].x
+				<< (DWORD)nodes[i].y
+				<< (DWORD)nodes[i].dx
+				<< (DWORD)nodes[i].dy;
+		}
 		for (int j = 0; j < 2; ++j)
 		{
 			for (int k = 0; k < 4; ++k)
@@ -1490,29 +1513,39 @@ void FProcessor::WriteBSPX (FWadWriter &out, const char *label)
 	WriteVerticesX (out, &Level.Vertices[Level.NumOrgVerts], Level.NumOrgVerts, Level.NumVertices - Level.NumOrgVerts);
 	WriteSubsectorsX (out, Level.Subsectors, Level.NumSubsectors);
 	WriteSegsX (out, Level.Segs, Level.NumSegs);
-	WriteNodesX (out, Level.Nodes, Level.NumNodes);
+	WriteNodesX (out, Level.Nodes, Level.NumNodes, 1);
 }
 
 void FProcessor::WriteGLBSPX (FWadWriter &out, const char *label)
 {
+	bool fracsplitters = CheckForFracSplitters(Level.GLNodes, Level.NumGLNodes);
+	int nodever;
+
 	if (!CompressGLNodes)
 	{
 		printf ("   GL Nodes are so big that extended format has been forced.\n");
 	}
 
 	out.StartWritingLump (label);
-	if (Level.NumLines() < 65535)
+	if (fracsplitters)
+	{
+		out.AddToLump ("XGL3", 4);
+		nodever = 3;
+	}
+	else if (Level.NumLines() < 65535)
 	{
 		out.AddToLump ("XGLN", 4);
+		nodever = 1;
 	}
 	else
 	{
 		out.AddToLump ("XGL2", 4);
+		nodever = 2;
 	}
 	WriteVerticesX (out, &Level.GLVertices[Level.NumOrgVerts], Level.NumOrgVerts, Level.NumGLVertices - Level.NumOrgVerts);
 	WriteSubsectorsX (out, Level.GLSubsectors, Level.NumGLSubsectors);
-	WriteGLSegsX (out, Level.GLSegs, Level.NumGLSegs);
-	WriteNodesX (out, Level.GLNodes, Level.NumGLNodes);
+	WriteGLSegsX (out, Level.GLSegs, Level.NumGLSegs, nodever);
+	WriteNodesX (out, Level.GLNodes, Level.NumGLNodes, nodever);
 }
 
 void FProcessor::WriteVerticesX (FWadWriter &out, const WideVertex *verts, int orgverts, int newverts)
@@ -1548,11 +1581,11 @@ void FProcessor::WriteSegsX (FWadWriter &out, const MapSegEx *segs, int numsegs)
 	}
 }
 
-void FProcessor::WriteGLSegsX (FWadWriter &out, const MapSegGLEx *segs, int numsegs)
+void FProcessor::WriteGLSegsX (FWadWriter &out, const MapSegGLEx *segs, int numsegs, int nodever)
 {
 	out << (DWORD)numsegs;
 
-	if (Level.NumLines() < 65535)
+	if (nodever < 2)
 	{
 		for (int i = 0; i < numsegs; ++i)
 		{
@@ -1574,16 +1607,26 @@ void FProcessor::WriteGLSegsX (FWadWriter &out, const MapSegGLEx *segs, int nums
 	}
 }
 
-void FProcessor::WriteNodesX (FWadWriter &out, const MapNodeEx *nodes, int numnodes)
+void FProcessor::WriteNodesX (FWadWriter &out, const MapNodeEx *nodes, int numnodes, int nodever)
 {
 	out << (DWORD)numnodes;
 
 	for (int i = 0; i < numnodes; ++i)
 	{
-		out << (SWORD)nodes[i].x
-			<< (SWORD)nodes[i].y
-			<< (SWORD)nodes[i].dx
-			<< (SWORD)nodes[i].dy;
+		if (nodever < 3)
+		{
+			out << (SWORD)(nodes[i].x >> 16)
+				<< (SWORD)(nodes[i].y >> 16)
+				<< (SWORD)(nodes[i].dx >> 16)
+				<< (SWORD)(nodes[i].dy >> 16);
+		}
+		else
+		{
+			out << (DWORD)nodes[i].x
+				<< (DWORD)nodes[i].y
+				<< (DWORD)nodes[i].dx
+				<< (DWORD)nodes[i].dy;
+		}
 		for (int j = 0; j < 2; ++j)
 		{
 			for (int k = 0; k < 4; ++k)
@@ -1594,6 +1637,18 @@ void FProcessor::WriteNodesX (FWadWriter &out, const MapNodeEx *nodes, int numno
 		out << (DWORD)nodes[i].children[0]
 			<< (DWORD)nodes[i].children[1];
 	}
+}
+
+bool FProcessor::CheckForFracSplitters(const MapNodeEx *nodes, int numnodes)
+{
+	for (int i = 0; i < numnodes; ++i)
+	{
+		if (0 != ((nodes[i].x | nodes[i].y | nodes[i].dx | nodes[i].dy) & 0x0000FFFF))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 // zlib lump writer ---------------------------------------------------------

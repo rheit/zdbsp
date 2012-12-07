@@ -392,6 +392,20 @@ static void DrawOutsideNode (HDC dc, int node)
 	}
 }
 
+static void DrawSplitter (HDC dc, MapNodeEx *node)
+{
+	int dx = node->dx, dy = node->dy;
+	// If the splitter is particularly short, make it longer to stand out
+	while (abs(dx) < (20 << 16) && abs(dy) < (20 << 16))
+	{
+		dx <<= 1;
+		dy <<= 1;
+	}
+	SelectObject (dc, Splitter);
+	MoveToEx (dc, (node->x - dx) >> 16, (node->y - dy) >> 16, NULL);
+	LineTo (dc, (node->x + 2*dx) >> 16, (node->y + 2*dy) >> 16);
+}
+
 static void DrawLevelNodes (HDC dc)
 {
 	HPEN oldPen;
@@ -412,17 +426,13 @@ static void DrawLevelNodes (HDC dc)
 	{
 		DrawOutsideNode (dc, Level->NumNodes - 1);
 		DrawNode (dc, Level->NumNodes - 1);
-		SelectObject (dc, Splitter);
-		MoveToEx (dc, Level->Nodes[DesiredNode].x - Level->Nodes[DesiredNode].dx, Level->Nodes[DesiredNode].y - Level->Nodes[DesiredNode].dy, NULL);
-		LineTo (dc, Level->Nodes[DesiredNode].x + 2*Level->Nodes[DesiredNode].dx, Level->Nodes[DesiredNode].y + 2*Level->Nodes[DesiredNode].dy);
+		DrawSplitter (dc, &Level->Nodes[DesiredNode]);
 	}
 	else
 	{
 		DrawOutsideNode (dc, Level->NumGLNodes - 1);
 		DrawNode (dc, Level->NumGLNodes - 1);
-		SelectObject (dc, Splitter);
-		MoveToEx (dc, Level->GLNodes[DesiredNode].x - Level->GLNodes[DesiredNode].dx, Level->GLNodes[DesiredNode].y - Level->GLNodes[DesiredNode].dy, NULL);
-		LineTo (dc, Level->GLNodes[DesiredNode].x + 2*Level->GLNodes[DesiredNode].dx, Level->GLNodes[DesiredNode].y + 2*Level->GLNodes[DesiredNode].dy);
+		DrawSplitter (dc, &Level->GLNodes[DesiredNode]);
 	}
 
 
@@ -496,7 +506,7 @@ static void DrawLevelSubsectors (HDC dc)
 
 static inline int PointOnSide (int x, int y, const MapNodeEx &nd)
 {
-	int foo = DMulScale32 (y-nd.y, nd.dx, nd.x-x, nd.dy);
+	int foo = DMulScale32 ((y<<16)-nd.y, nd.dx, nd.x-(x<<16), nd.dy);
 	return foo >= 0;
 }
 

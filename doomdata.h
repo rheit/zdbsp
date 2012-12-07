@@ -167,9 +167,16 @@ struct MapNode
 	WORD	children[2];
 };
 
-struct MapNodeEx
+struct MapNodeExO
 {
 	short	x,y,dx,dy;
+	short	bbox[2][4];
+	DWORD	children[2];
+};
+
+struct MapNodeEx
+{
+	int		x,y,dx,dy;
 	short	bbox[2][4];
 	DWORD	children[2];
 };

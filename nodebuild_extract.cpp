@@ -47,10 +47,10 @@ void FNodeBuilder::GetGLNodes (MapNodeEx *&outNodes, int &nodeCount,
 		const node_t *orgnode = &Nodes[i];
 		MapNodeEx *newnode = &outNodes[i];
 
-		newnode->x = short(orgnode->x >> FRACBITS);
-		newnode->y = short(orgnode->y >> FRACBITS);
-		newnode->dx = short(orgnode->dx >> FRACBITS);
-		newnode->dy = short(orgnode->dy >> FRACBITS);
+		newnode->x = orgnode->x;
+		newnode->y = orgnode->y;
+		newnode->dx = orgnode->dx;
+		newnode->dy = orgnode->dy;
 
 		for (j = 0; j < 2; ++j)
 		{
@@ -82,6 +82,8 @@ void FNodeBuilder::GetGLNodes (MapNodeEx *&outNodes, int &nodeCount,
 			outSegs[i].partner = Segs[outSegs[i].partner].storedseg;
 		}
 	}
+
+	D(DumpNodes(outNodes, nodeCount));
 }
 
 int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
@@ -134,12 +136,14 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 	{
 		seg = &Segs[SegList[j].SegNum];
 		angle_t ang = PointToAngle (Vertices[seg->v1].x - midx, Vertices[seg->v1].y - midy);
-		printf ("%d%c %5d(%5d,%5d)->%5d(%5d,%5d) - %3.3f  %d,%d\n", j,
+		printf ("%d%c %5d(%5d,%5d)->%5d(%5d,%5d) - %3.5f  %d,%d  [%08x,%08x]-[%08x,%08x]\n", j,
 			seg->linedef == -1 ? '+' : ':',
 			seg->v1, Vertices[seg->v1].x>>16, Vertices[seg->v1].y>>16,
 			seg->v2, Vertices[seg->v2].x>>16, Vertices[seg->v2].y>>16,
 			double(ang/2)*180/(1<<30),
-			seg->planenum, seg->planefront);
+			seg->planenum, seg->planefront,
+			Vertices[seg->v1].x, Vertices[seg->v1].y,
+			Vertices[seg->v2].x, Vertices[seg->v2].y);
 	}
 #endif
 
@@ -230,12 +234,16 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 	printf ("Output GL subsector %d:\n", subsector);
 	for (i = segs.Size() - count; i < (int)segs.Size(); ++i)
 	{
-		printf ("  Seg %5d%c(%5d,%5d)-(%5d,%5d)\n", i,
+		printf ("  Seg %5d%c(%5d,%5d)-(%5d,%5d)  [%08x,%08x]-[%08x,%08x]\n", i,
 			segs[i].linedef == NO_INDEX ? '+' : ' ',
 			Vertices[segs[i].v1].x>>16,
 			Vertices[segs[i].v1].y>>16,
 			Vertices[segs[i].v2].x>>16,
-			Vertices[segs[i].v2].y>>16);
+			Vertices[segs[i].v2].y>>16,
+			Vertices[segs[i].v1].x,
+			Vertices[segs[i].v1].y,
+			Vertices[segs[i].v2].x,
+			Vertices[segs[i].v2].y);
 	}
 #endif
 
@@ -406,25 +414,9 @@ void FNodeBuilder::GetNodes (MapNodeEx *&outNodes, int &nodeCount,
 	outSegs = new MapSegEx[segCount];
 	memcpy (outSegs, &segs[0], segCount*sizeof(MapSegEx));
 
+	D(DumpNodes(outNodes, nodeCount));
 #ifdef DD
-	int i, j;
-
-	for (i = 0; i < nodeCount; ++i)
-	{
-		printf("Node %d:\n", i);
-		for (j = 1; j >= 0; --j)
-		{
-			if (outNodes[i].children[j] & NFX_SUBSECTOR)
-			{
-				printf("  subsector %d\n", outNodes[i].children[j] & ~NFX_SUBSECTOR);
-			}
-			else
-			{
-				printf("  node %d\n", outNodes[i].children[j]);
-			}
-		}
-	}
-	for (i = 0; i < segCount; ++i)
+	for (int i = 0; i < segCount; ++i)
 	{
 		printf("Seg %d: v1(%d) -> v2(%d)\n", i, outSegs[i].v1, outSegs[i].v2);
 	}
@@ -451,10 +443,10 @@ int FNodeBuilder::RemoveMinisegs (MapNodeEx *nodes,
 		int child1 = RemoveMinisegs (nodes, segs, subs, orgnode->intchildren[1], newnode->bbox[1]);
 
 
-		newnode->x = orgnode->x >> FRACBITS;
-		newnode->y = orgnode->y >> FRACBITS;
-		newnode->dx = orgnode->dx >> FRACBITS;
-		newnode->dy = orgnode->dy >> FRACBITS;
+		newnode->x = orgnode->x;
+		newnode->y = orgnode->y;
+		newnode->dx = orgnode->dx;
+		newnode->dy = orgnode->dy;
 		newnode->children[0] = child0;
 		newnode->children[1] = child1;
 
@@ -557,4 +549,24 @@ void FNodeBuilder::AddSegToShortBBox (short bbox[4], const FPrivSeg *seg)
 	if (v2x > bbox[BOXRIGHT])	bbox[BOXRIGHT] = v2x;
 	if (v2y < bbox[BOXBOTTOM])	bbox[BOXBOTTOM] = v2y;
 	if (v2y > bbox[BOXTOP])		bbox[BOXTOP] = v2y;
+}
+
+void FNodeBuilder::DumpNodes(MapNodeEx *outNodes, int nodeCount)
+{
+	for (unsigned int i = 0; i < Nodes.Size(); ++i)
+	{
+		printf("Node %d:  Splitter[%08x,%08x] [%08x,%08x]\n", i,
+			outNodes[i].x, outNodes[i].y, outNodes[i].dx, outNodes[i].dy);
+		for (int j = 1; j >= 0; --j)
+		{
+			if (outNodes[i].children[j] & NFX_SUBSECTOR)
+			{
+				printf("  subsector %d\n", outNodes[i].children[j] & ~NFX_SUBSECTOR);
+			}
+			else
+			{
+				printf("  node %d\n", outNodes[i].children[j]);
+			}
+		}
+	}
 }

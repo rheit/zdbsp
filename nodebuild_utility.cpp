@@ -143,8 +143,9 @@ int FNodeBuilder::CreateSeg (int linenum, int sidenum)
 	segnum = (int)Segs.Push (seg);
 	Vertices[seg.v1].segs = segnum;
 	Vertices[seg.v2].segs2 = segnum;
-	D(printf("Seg %4d: From line %d, side %s (%5d,%5d)-(%5d,%5d)\n", segnum, linenum, sidenum ? "back " : "front",
-		Vertices[seg.v1].x>>16, Vertices[seg.v1].y>>16, Vertices[seg.v2].x>>16, Vertices[seg.v2].y>>16));
+	D(printf("Seg %4d: From line %d, side %s (%5d,%5d)-(%5d,%5d)  [%08x,%08x]-[%08x,%08x]\n", segnum, linenum, sidenum ? "back " : "front",
+		Vertices[seg.v1].x>>16, Vertices[seg.v1].y>>16, Vertices[seg.v2].x>>16, Vertices[seg.v2].y>>16,
+		Vertices[seg.v1].x, Vertices[seg.v1].y, Vertices[seg.v2].x, Vertices[seg.v2].y));
 
 	return segnum;
 }

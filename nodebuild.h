@@ -254,6 +254,7 @@ private:
 	double InterceptVector (const node_t &splitter, const FPrivSeg &seg);
 
 	void PrintSet (int l, DWORD set);
+	void DumpNodes(MapNodeEx *outNodes, int nodeCount);
 };
 
 // Points within this distance of a line will be considered on the line.

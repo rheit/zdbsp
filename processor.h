@@ -56,6 +56,7 @@ private:
 	MapSegGLEx *SegGLsToEx (const MapSegGL *segs, int count);
 
 	BYTE *FixReject (const BYTE *oldreject);
+	bool CheckForFracSplitters(const MapNodeEx *nodes, int count);
 
 	void WriteLines (FWadWriter &out);
 	void WriteVertices (FWadWriter &out, int count);
@@ -79,8 +80,8 @@ private:
 	void WriteVerticesZ (ZLibOut &out, const WideVertex *verts, int orgverts, int newverts);
 	void WriteSubsectorsZ (ZLibOut &out, const MapSubsectorEx *subs, int numsubs);
 	void WriteSegsZ (ZLibOut &out, const MapSegEx *segs, int numsegs);
-	void WriteGLSegsZ (ZLibOut &out, const MapSegGLEx *segs, int numsegs);
-	void WriteNodesZ (ZLibOut &out, const MapNodeEx *nodes, int numnodes);
+	void WriteGLSegsZ (ZLibOut &out, const MapSegGLEx *segs, int numsegs, int nodever);
+	void WriteNodesZ (ZLibOut &out, const MapNodeEx *nodes, int numnodes, int nodever);
 
 	void WriteBSPX (FWadWriter &out, const char *label);
 	void WriteGLBSPX (FWadWriter &out, const char *label);
@@ -88,8 +89,8 @@ private:
 	void WriteVerticesX (FWadWriter &out, const WideVertex *verts, int orgverts, int newverts);
 	void WriteSubsectorsX (FWadWriter &out, const MapSubsectorEx *subs, int numsubs);
 	void WriteSegsX (FWadWriter &out, const MapSegEx *segs, int numsegs);
-	void WriteGLSegsX (FWadWriter &out, const MapSegGLEx *segs, int numsegs);
-	void WriteNodesX (FWadWriter &out, const MapNodeEx *nodes, int numnodes);
+	void WriteGLSegsX (FWadWriter &out, const MapSegGLEx *segs, int numsegs, int nodever);
+	void WriteNodesX (FWadWriter &out, const MapNodeEx *nodes, int numnodes, int nodever);
 
 	void WriteNodes2 (FWadWriter &out, const char *name, const MapNodeEx *zaNodes, int count) const;
 	void WriteSSectors2 (FWadWriter &out, const char *name, const MapSubsectorEx *zaSubs, int count) const;

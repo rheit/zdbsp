@@ -265,7 +265,9 @@
 			signature. This can be either 'ZNOD' for regular nodes or 'ZGLN' for GL nodes.
 			If there are more than 65534 lines in the map, the signature 'ZGL2' is used
 			for GL nodes instead. (Note that this can only happen with UDMF maps, because
-			the binary map format does not allow more lines than that.)
+			the binary map format does not allow more lines than that.) There is also a third
+			variant of 'ZGLN': 'ZGL3' is identical to 'ZGL2' but expands the node's splitter
+			field to fixed point coordinates.
 			Following the signature is the zlib data stream. For a description of its 
 			format, see the zlib documentation. When you decompress it, the following 
 			information is obtained in this order:</p>
@@ -420,7 +422,7 @@
 				<td>The linedef's side this seg came from (0=front, 1=back) (ignored if no line)</td>
 			</tr>
 		</table>
-        <h3>GL nodes ('ZGL2' signature)</h3>
+        <h3>GL nodes ('ZGL2' and 'ZGL3' signature)</h3>
         <table>
             <tr>
                 <td>DWORD</td>
@@ -482,7 +484,8 @@
 			the next seg's first vertex. The last seg's second vertex will be the same as 
 			the first seg's first vertex.</p>
 		<h2>Node information</h2>
-		<p>This is really no different from standard nodes.</p>
+		<p>Only 'ZGL3' nodes structure this differently from standard nodes.</p>
+		<h3>All nodes formats except 'ZGL3'</h3>
 		<table>
 			<tr>
 				<td>DWORD</td>
@@ -494,6 +497,37 @@
 			</tr>
 			<tr>
 				<td>4 SWORDs</td>
+				<td><i>X</i>, <i>Y</i>, <i>dX</i>, <i>dY</i></td>
+				<td>Splitter for this node</td>
+			</tr>
+			<tr>
+				<td>4 SWORDs</td>
+				<td><i>Top</i>, <i>Bottom</i>, <i>Left</i>, <i>Right</i></td>
+				<td>Bounding box for <i>Child0</i></td>
+			</tr>
+			<tr>
+				<td>4 SWORDs</td>
+				<td><i>Top</i>, <i>Bottom</i>, <i>Left</i>, <i>Right</i></td>
+				<td>Bounding box for <i>Child1</i></td>
+			</tr>
+			<tr>
+				<td>2 DWORDs</td>
+				<td><i>Child0</i>, <i>Child1</i></td>
+				<td>References to child nodes or subsectors</td>
+			</tr>
+		</table>
+		<h3>Nodes with 'ZGL3' signature</h3>
+		<table>
+			<tr>
+				<td>DWORD</td>
+				<td><i>NumNodes</i></td>
+				<td>Number of nodes</td>
+			</tr>
+			<tr>
+				<td colspan="3" bgcolor="#dddddd">Repeat <i>NumNodes</i> times:</td>
+			</tr>
+			<tr>
+				<td>4 FIXEDs</td>
 				<td><i>X</i>, <i>Y</i>, <i>dX</i>, <i>dY</i></td>
 				<td>Splitter for this node</td>
 			</tr>
@@ -528,5 +562,15 @@
 			compressed nodes are not used.</p>
 		<p>For UDMF maps, nodes a stored in the map's ZNODES lump. These will only be
 		    'ZGLN' or 'ZGL2' format nodes. Non-GL nodes are not supported for UDMF.</p>
+		<h2>Extended nodes</h2>
+		<p>For the benefit of ports not wishing to support zlib decompression of nodes,
+		   there are variants of the compressed node formats without compression. These
+		   are referred to extended nodes, and differ only from their compressed counterparts
+		   in that their contents are not compressed. They use a different signature to
+		   distinguish them from compressed nodes:</p>
+		<ul><li>ZNOD -> XNOD</li>
+		<li>ZGLN -> XGLN</li>
+		<li>ZGL2 -> XGL2</li>
+		<li>ZGL3 -> XGL3</li></ul>
 	</BODY>
 </HTML>
