@@ -23,6 +23,11 @@
 #include "processor.h"
 #include "sc_man.h"
 
+typedef double real64;
+typedef unsigned int uint32;
+typedef signed int int32;
+#include "xs_Float.h"
+
 
 class StringBuffer
 {
@@ -119,12 +124,12 @@ double CheckFloat(const char *key)
 
 fixed_t CheckFixed(const char *key)
 {
-	double val = CheckFloat(key) * 65536;
-	if (val < double(INT_MIN) || val > double(INT_MAX))
+	double val = CheckFloat(key);
+	if (val < -32768 || val > 32767)
 	{
 		SC_ScriptError("Fixed point value is out of range for key '%s'\n\t%.2f should be within [-32768,32767]", key, val / 65536);
 	}
-	return fixed_t(val);
+	return xs_Fix<16>::ToFix(val);
 }
 
 //===========================================================================

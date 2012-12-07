@@ -3,9 +3,10 @@ if( COMMAND cmake_policy )
 	cmake_policy( SET CMP0003 NEW )
 endif( COMMAND cmake_policy )
 
-
 include( CheckFunctionExists )
 include( CheckCXXCompilerFlag )
+
+project( ZDBSP )
 
 IF( NOT CMAKE_BUILD_TYPE )
 	SET( CMAKE_BUILD_TYPE Debug CACHE STRING
@@ -157,7 +158,8 @@ set( HEADERS
 	templates.h
 	wad.h
 	workdata.h
-	zdbsp.h )
+	zdbsp.h
+	xs_Float.h )
 
 if( SSE_MATTERS )
 	if( FULL_SSE2 )
