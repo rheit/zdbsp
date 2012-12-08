@@ -22,7 +22,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif

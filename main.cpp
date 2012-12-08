@@ -52,7 +52,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <stdarg.h>
 
 #include "zdbsp.h"
@@ -612,7 +611,7 @@ static void CheckSSE ()
 
 	HaveSSE1 = false;
 	HaveSSE2 = false;
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 
 #ifdef _M_X64
 	// Processors implementing AMD64 are required to support SSE2.
@@ -642,7 +641,7 @@ noid:
 	}
 #endif
 
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 
 	// Same as above, but for GCC
 	asm volatile

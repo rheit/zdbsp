@@ -45,6 +45,8 @@ USA.  */
 #include <stdio.h>
 #ifdef __APPLE__
 #include <strings.h>
+#else
+#include <string.h>
 #endif
 
 /* Comment out all this code if we are using the GNU C Library, and are not

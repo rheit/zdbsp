@@ -76,7 +76,7 @@ static const angle_t ANGLE_EPSILON = 5000;
 
 void Warn (const char *format, ...);
 
-#if defined(_MSC_VER) && defined(_M_IX86)
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_IX86)
 
 #pragma warning (disable: 4035)
 

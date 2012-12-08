@@ -18,7 +18,6 @@
 
 */
 #include <assert.h>
-#include <math.h>
 #include "zdbsp.h"
 #include "nodebuild.h"
 

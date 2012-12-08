@@ -99,6 +99,10 @@ if( CMAKE_COMPILER_IS_GNUCXX )
 	endif( PROFILE EQUAL 1 )
 endif( CMAKE_COMPILER_IS_GNUCXX )
 
+if( WIN32 AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+	set( ALL_C_FLAGS "${ALL_C_FLAGS} -Wno-deprecated-declarations -Wno-format" )
+endif( WIN32 AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+
 if( ZLIB_FOUND )
 	message( STATUS "Using system zlib" )
 else( ZLIB_FOUND )
