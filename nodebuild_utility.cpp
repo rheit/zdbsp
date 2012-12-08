@@ -322,7 +322,7 @@ void FNodeBuilder::FindPolyContainers (TArray<FPolyStart> &spots, TArray<FPolySt
 						}
 					}
 				}
-				if (closestseg >= 0)
+				if (closestdist != FIXED_MAX)
 				{
 					loop = MarkLoop (closestseg, loop);
 					P(Printf ("Found polyobj in sector %d (loop %d)\n", Segs[closestseg].frontsector,
