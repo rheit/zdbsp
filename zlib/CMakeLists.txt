@@ -13,6 +13,7 @@ add_library( z
     zutil.c
     crc32.h
     deflate.h
+    gzguts.h
     trees.h
     zconf.h
     zlib.h
