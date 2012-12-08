@@ -1116,8 +1116,13 @@ void FProcessor::WriteNodes2 (FWadWriter &out, const char *name, const MapNodeEx
 
 	for (i = 0; i < count; ++i)
 	{
-		short *inodes = (short *)&zaNodes[i];
-		for (j = 0; j < 4+2*4; ++j)
+		nodes[0] = LittleShort(zaNodes[i].x >> 16);
+		nodes[1] = LittleShort(zaNodes[i].y >> 16);
+		nodes[2] = LittleShort(zaNodes[i].dx >> 16);
+		nodes[3] = LittleShort(zaNodes[i].dy >> 16);
+		nodes += 4;
+		const short *inodes = (short *)&zaNodes[i].bbox[0][0];
+		for (j = 0; j < 2*4; ++j)
 		{
 			nodes[j] = LittleShort(inodes[j]);
 		}
