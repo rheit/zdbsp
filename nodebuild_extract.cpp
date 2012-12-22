@@ -370,7 +370,7 @@ void FNodeBuilder::PushConnectingGLSeg (int subsector, TArray<MapSegGLEx> &segs,
 
 	newseg.v1 = v1;
 	newseg.v2 = v2;
-	newseg.linedef = NO_MAP_INDEX;
+	newseg.linedef = NO_INDEX;
 	newseg.side = 0;
 	newseg.partner = DWORD_MAX;
 	segs.Push (newseg);
