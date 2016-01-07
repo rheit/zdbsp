@@ -286,6 +286,17 @@ bool SC_GetString ()
 			{
 				ScriptPtr++;
 			}
+			else if (*ScriptPtr == '\\')
+			{
+				// Add the backslash character and the following chararcter to the text.
+				// We do not translate the escape sequence in any way, since the only
+				// thing that will happen to this string is that it will be written back
+				// out to disk. Basically, we just need this special case here so that
+				// string reading won't terminate prematurely when a \" sequence is
+				// used to embed a quote mark in the string.
+				*text++ = *ScriptPtr++;
+				*text++ = *ScriptPtr++;
+			}
 			else
 			{
 				*text++ = *ScriptPtr++;
