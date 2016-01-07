@@ -196,7 +196,7 @@ void SC_SetCMode (bool cmode)
 //
 //==========================================================================
 
-bool SC_GetString (bool multiline)
+bool SC_GetString ()
 {
 	char *text;
 	bool foundToken;
@@ -282,18 +282,7 @@ bool SC_GetString (bool multiline)
 		sc_StringQuoted = true;
 		while (*ScriptPtr != ASCII_QUOTE)
 		{
-			if (multiline && *ScriptPtr == '\n')
-			{
-				*text++ = '"';
-				*text++ = ',';
-				*text++ = '\n';
-				*text++ = '\t';
-				*text++ = '\t';
-				*text++ = '"';
-				ScriptPtr++;
-				continue;
-			}
-			else if (*ScriptPtr < ' ')
+			if (*ScriptPtr < ' ')
 			{
 				ScriptPtr++;
 			}

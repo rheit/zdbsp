@@ -10,7 +10,7 @@ void SC_SetCMode (bool cmode);
 void SC_SetEscape (bool esc);
 void SC_SavePos (void);
 void SC_RestorePos (void);
-bool SC_GetString (bool multiline = false);
+bool SC_GetString (void);
 void SC_MustGetString (void);
 void SC_MustGetStringName (const char *name);
 bool SC_CheckString (const char *name);
