@@ -50,6 +50,7 @@ endif( SSE_MATTERS )
 
 if( CMAKE_COMPILER_IS_GNUCXX )
 	set( GPROF 0 CACHE BOOL "Enable profiling with gprof for Debug and RelWithDebInfo build types." )
+	set( PROFILE 0 CACHE INT "1=Generate profile coverage info, 2=Use it" )
 endif( CMAKE_COMPILER_IS_GNUCXX )
 
 find_package( ZLIB )
