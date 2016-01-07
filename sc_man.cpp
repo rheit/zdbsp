@@ -282,7 +282,7 @@ bool SC_GetString ()
 		sc_StringQuoted = true;
 		while (*ScriptPtr != ASCII_QUOTE)
 		{
-			if (*ScriptPtr < ' ')
+			if (*ScriptPtr >= 0 && *ScriptPtr < ' ')
 			{
 				ScriptPtr++;
 			}
