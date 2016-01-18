@@ -688,7 +688,8 @@ angle_t PointToAngle (fixed_t x, fixed_t y)
 	double ang = atan2 (double(y), double(x));
 	const double rad2bam = double(1<<30) / M_PI;
 	double dbam = ang * rad2bam;
-	return angle_t(dbam) << 1;
+	// Convert to signed first since negative double to unsigned is undefined.
+	return angle_t(int(dbam)) << 1;
 }
 
 //==========================================================================
