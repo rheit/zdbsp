@@ -237,15 +237,12 @@ inline fixed_t DMulScale32 (fixed_t a, fixed_t b, fixed_t c, fixed_t d)
 #define LittleShort(x)		CFSwapInt16LittleToHost(x)
 #define LittleLong(x)		CFSwapInt32LittleToHost(x)
 #else
-#ifdef __BIG_ENDIAN__
+#if defined(__BIG_ENDIAN__) || \
+    (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && \
+     (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
 
 // Swap 16bit, that is, MSB and LSB byte.
 // No masking with 0xFF should be necessary. 
-inline short LittleShort (short x)
-{
-	return (short)((((unsigned short)x)>>8) | (((unsigned short)x)<<8));
-}
-
 inline unsigned short LittleShort (unsigned short x)
 {
 	return (unsigned short)((x>>8) | (x<<8));
@@ -259,15 +256,6 @@ inline unsigned int LittleLong (unsigned int x)
 						  | ((x>>8) & 0xff00)
 						  | ((x<<8) & 0xff0000)
 						  | (x<<24));
-}
-
-inline int LittleLong (int x)
-{
-	return (int)(
-				 (((unsigned int)x)>>24)
-				 | ((((unsigned int)x)>>8) & 0xff00)
-				 | ((((unsigned int)x)<<8) & 0xff0000)
-				 | (((unsigned int)x)<<24));
 }
 
 #else
