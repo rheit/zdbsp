@@ -221,3 +221,5 @@ set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${DEB_C_FLAGS} -D_DEBUG" )
 add_executable( zdbsp ${SOURCES} ${HEADERS} )
 target_link_libraries( zdbsp ${ZDBSP_LIBS} ${PROF_LIB} )
 include_directories( "${ZLIB_INCLUDE_DIR}" )
+
+install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/zdbsp" DESTINATION bin)
