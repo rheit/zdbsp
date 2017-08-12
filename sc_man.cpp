@@ -34,7 +34,7 @@
 
 // MACROS ------------------------------------------------------------------
 
-#define MAX_STRING_SIZE 4096
+#define MAX_STRING_SIZE 40960
 #define ASCII_COMMENT (';')
 #define CPP_COMMENT ('/')
 #define C_COMMENT ('*')
