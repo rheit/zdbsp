@@ -189,16 +189,7 @@ endif( SSE_MATTERS )
 
 if( WIN32 )
 	set( ZDBSP_LIBS ${ZDBSP_LIBS} user32 gdi32 )
-
-	if( CMAKE_COMPILER_IS_GNUCXX )
-		# CMake is not set up to compile and link rc files with GCC. :(
-		add_custom_command( OUTPUT zdbsp-rc.o
-			COMMAND windres -o zdbsp-rc.o -i ${CMAKE_CURRENT_SOURCE_DIR}/resource.rc
-			DEPENDS resource.rc )
-		set( SOURCES ${SOURCES} zdbsp-rc.o )
-	else( CMAKE_COMPILER_IS_GNUCXX )
-		set( SOURCES ${SOURCES} resource.rc )
-	endif( CMAKE_COMPILER_IS_GNUCXX )
+	set( SOURCES ${SOURCES} resource.rc )
 endif( WIN32 )
 
 
