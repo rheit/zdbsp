@@ -1,6 +1,6 @@
 /*
     Most of the logic for the node builder.
-    Copyright (C) 2002-2006 Randy Heit
+    Copyright (C) 2002-2006 Marisa Heit
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
