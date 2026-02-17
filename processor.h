@@ -17,7 +17,6 @@ class ZLibOut
 {
 public:
 	ZLibOut (FWadWriter &out);
-	~ZLibOut ();
 
 	ZLibOut &operator << (BYTE);
 	ZLibOut &operator << (WORD);
@@ -25,6 +24,7 @@ public:
 	ZLibOut &operator << (DWORD);
 	ZLibOut &operator << (fixed_t);
 	void Write (BYTE *data, int len);
+	void Finish ();
 
 private:
 	enum { BUFFER_SIZE = 8192 };

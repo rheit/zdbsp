@@ -1380,6 +1380,7 @@ void FProcessor::WriteBSPZ (FWadWriter &out, const char *label)
 	WriteSubsectorsZ (zout, Level.Subsectors, Level.NumSubsectors);
 	WriteSegsZ (zout, Level.Segs, Level.NumSegs);
 	WriteNodesZ (zout, Level.Nodes, Level.NumNodes, 1);
+	zout.Finish();
 }
 
 void FProcessor::WriteGLBSPZ (FWadWriter &out, const char *label)
@@ -1413,6 +1414,7 @@ void FProcessor::WriteGLBSPZ (FWadWriter &out, const char *label)
 	WriteSubsectorsZ (zout, Level.GLSubsectors, Level.NumGLSubsectors);
 	WriteGLSegsZ (zout, Level.GLSegs, Level.NumGLSegs, nodever);
 	WriteNodesZ (zout, Level.GLNodes, Level.NumGLNodes, nodever);
+	zout.Finish();
 }
 
 void FProcessor::WriteVerticesZ (ZLibOut &out, const WideVertex *verts, int orgverts, int newverts)
@@ -1678,7 +1680,7 @@ ZLibOut::ZLibOut (FWadWriter &out)
 	Stream.avail_out = BUFFER_SIZE;
 }
 
-ZLibOut::~ZLibOut ()
+void ZLibOut::Finish ()
 {
 	int err;
 
