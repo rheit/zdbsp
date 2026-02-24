@@ -108,17 +108,17 @@ void FNodeBuilder::MakeSegsFromSides ()
 int FNodeBuilder::CreateSeg (int linenum, int sidenum)
 {
 	FPrivSeg seg;
-	DWORD backside;
+	uint32_t backside;
 	int segnum;
 
-	seg.next = DWORD_MAX;
+	seg.next = UINT32_MAX;
 	seg.loopnum = 0;
 	seg.offset = 0;
-	seg.partner = DWORD_MAX;
+	seg.partner = UINT32_MAX;
 	seg.hashnext = NULL;
 	seg.planefront = false;
-	seg.planenum = DWORD_MAX;
-	seg.storedseg = DWORD_MAX;
+	seg.planenum = UINT32_MAX;
+	seg.storedseg = UINT32_MAX;
 
 	if (sidenum == 0)
 	{ // front
@@ -166,7 +166,7 @@ void FNodeBuilder::GroupSegPlanes ()
 		seg->hashnext = NULL;
 	}
 
-	Segs[Segs.Size()-1].next = DWORD_MAX;
+	Segs[Segs.Size()-1].next = UINT32_MAX;
 
 	for (i = planenum = 0; i < (int)Segs.Size(); ++i)
 	{
@@ -287,7 +287,7 @@ void FNodeBuilder::FindPolyContainers (TArray<FPolyStart> &spots, TArray<FPolySt
 				// Scan right for the seg closest to the polyobject's center after it
 				// gets moved to its start spot.
 				fixed_t closestdist = FIXED_MAX;
-				DWORD closestseg = 0;
+				uint32_t closestseg = 0;
 
 				P(Printf ("start %d,%d -- center %d, %d\n", spot->x>>16, spot->y>>16, center.x>>16, center.y>>16));
 
@@ -333,9 +333,9 @@ void FNodeBuilder::FindPolyContainers (TArray<FPolyStart> &spots, TArray<FPolySt
 	}
 }
 
-int FNodeBuilder::MarkLoop (DWORD firstseg, int loopnum)
+int FNodeBuilder::MarkLoop (uint32_t firstseg, int loopnum)
 {
-	int seg;
+	uint32_t seg;
 	int sec = Segs[firstseg].frontsector;
 
 	if (Segs[firstseg].loopnum != 0)
@@ -355,12 +355,12 @@ int FNodeBuilder::MarkLoop (DWORD firstseg, int loopnum)
 				Vertices[s1->v1].x>>16, Vertices[s1->v1].y>>16,
 				Vertices[s1->v2].x>>16, Vertices[s1->v2].y>>16));
 
-		DWORD bestseg = DWORD_MAX;
-		DWORD tryseg = Vertices[s1->v2].segs;
+		uint32_t bestseg = UINT32_MAX;
+		uint32_t tryseg = Vertices[s1->v2].segs;
 		angle_t bestang = ANGLE_MAX;
 		angle_t ang1 = s1->angle;
 
-		while (tryseg != DWORD_MAX)
+		while (tryseg != UINT32_MAX)
 		{
 			FPrivSeg *s2 = &Segs[tryseg];
 
@@ -379,7 +379,7 @@ int FNodeBuilder::MarkLoop (DWORD firstseg, int loopnum)
 		}
 
 		seg = bestseg;
-	} while (seg != (int)DWORD_MAX && Segs[seg].loopnum == 0);
+	} while (seg != UINT32_MAX && Segs[seg].loopnum == 0);
 
 	return loopnum + 1;
 }
@@ -419,7 +419,7 @@ bool FNodeBuilder::GetPolyExtents (int polynum, fixed_t bbox[4])
 			AddSegToBBox (bbox, &Segs[i]);
 			vert = Segs[i].v2;
 			i = Vertices[vert].segs;
-		} while (--count && i != DWORD_MAX && (Vertices[vert].x != start.x || Vertices[vert].y != start.y));
+		} while (--count && i != UINT32_MAX && (Vertices[vert].x != start.x || Vertices[vert].y != start.y));
 
 		return true;
 	}
@@ -518,8 +518,8 @@ int FNodeBuilder::FVertexMap::InsertVertex (FNodeBuilder::FPrivVert &vert)
 {
 	int vertnum;
 
-	vert.segs = DWORD_MAX;
-	vert.segs2 = DWORD_MAX;
+	vert.segs = UINT32_MAX;
+	vert.segs2 = UINT32_MAX;
 	vertnum = (int)MyBuilder.Vertices.Push (vert);
 
 	// If a vertex is near a block boundary, then it will be inserted on

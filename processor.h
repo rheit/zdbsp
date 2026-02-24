@@ -18,19 +18,19 @@ class ZLibOut
 public:
 	ZLibOut (FWadWriter &out);
 
-	ZLibOut &operator << (BYTE);
-	ZLibOut &operator << (WORD);
-	ZLibOut &operator << (SWORD);
-	ZLibOut &operator << (DWORD);
+	ZLibOut &operator << (uint8_t);
+	ZLibOut &operator << (uint16_t);
+	ZLibOut &operator << (int16_t);
+	ZLibOut &operator << (uint32_t);
 	ZLibOut &operator << (fixed_t);
-	void Write (BYTE *data, int len);
+	void Write (uint8_t *data, int len);
 	void Finish ();
 
 private:
 	enum { BUFFER_SIZE = 8192 };
 
 	z_stream Stream;
-	BYTE Buffer[BUFFER_SIZE];
+	uint8_t Buffer[BUFFER_SIZE];
 
 	FWadWriter &Out;
 };
@@ -55,7 +55,7 @@ private:
 	MapSubsectorEx *SubsectorsToEx (const MapSubsector *ssec, int count);
 	MapSegGLEx *SegGLsToEx (const MapSegGL *segs, int count);
 
-	BYTE *FixReject (const BYTE *oldreject);
+	uint8_t *FixReject (const uint8_t *oldreject);
 	bool CheckForFracSplitters(const MapNodeEx *nodes, int count);
 
 	void WriteLines (FWadWriter &out);

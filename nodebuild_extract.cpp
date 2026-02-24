@@ -77,7 +77,7 @@ void FNodeBuilder::GetGLNodes (MapNodeEx *&outNodes, int &nodeCount,
 
 	for (i = 0; i < segCount; ++i)
 	{
-		if (outSegs[i].partner != DWORD_MAX)
+		if (outSegs[i].partner != UINT32_MAX)
 		{
 			outSegs[i].partner = Segs[outSegs[i].partner].storedseg;
 		}
@@ -317,7 +317,7 @@ int FNodeBuilder::OutputDegenerateSubsector (TArray<MapSegGLEx> &segs, int subse
 	return count;
 }
 
-DWORD FNodeBuilder::PushGLSeg (TArray<MapSegGLEx> &segs, const FPrivSeg *seg)
+uint32_t FNodeBuilder::PushGLSeg (TArray<MapSegGLEx> &segs, const FPrivSeg *seg)
 {
 	MapSegGLEx newseg;
 
@@ -372,7 +372,7 @@ void FNodeBuilder::PushConnectingGLSeg (int subsector, TArray<MapSegGLEx> &segs,
 	newseg.v2 = v2;
 	newseg.linedef = NO_INDEX;
 	newseg.side = 0;
-	newseg.partner = DWORD_MAX;
+	newseg.partner = UINT32_MAX;
 	segs.Push (newseg);
 }
 

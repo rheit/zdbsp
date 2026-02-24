@@ -21,8 +21,8 @@ struct node_t
 
 struct subsector_t
 {
-	DWORD numlines;
-	DWORD firstline;
+	uint32_t numlines;
+	uint32_t firstline;
 };
 
 

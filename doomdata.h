@@ -5,6 +5,7 @@
 #pragma once
 #endif
 
+#include "zdbsp.h"
 #include "tarray.h"
 
 enum
@@ -20,30 +21,30 @@ struct UDMFKey
 
 struct MapVertex
 {
-	short x, y;
+	int16_t x, y;
 };
 
 struct WideVertex
 {
 	fixed_t x, y;
-	int index;
+	int32_t index;
 };
 
 struct MapSideDef
 {
-	short	textureoffset;
-	short	rowoffset;
+	int16_t	textureoffset;
+	int16_t	rowoffset;
 	char	toptexture[8];
 	char	bottomtexture[8];
 	char	midtexture[8];
-	WORD	sector;
+	uint16_t sector;
 };
 
 struct IntSideDef
 {
 	// the first 5 values are only used for binary format maps
-	short	textureoffset;
-	short	rowoffset;
+	int16_t	textureoffset;
+	int16_t	rowoffset;
 	char	toptexture[8];
 	char	bottomtexture[8];
 	char	midtexture[8];
@@ -55,45 +56,45 @@ struct IntSideDef
 
 struct MapLineDef
 {
-	WORD	v1;
-	WORD	v2;
-	short	flags;
-	short	special;
-	short	tag;
-	WORD	sidenum[2];
+	uint16_t	v1;
+	uint16_t	v2;
+	int16_t		flags;
+	int16_t		special;
+	int16_t		tag;
+	uint16_t	sidenum[2];
 };
 
 struct MapLineDef2
 {
-	WORD	v1;
-	WORD	v2;
-	short	flags;
-	unsigned char	special;
-	unsigned char	args[5];
-	WORD	sidenum[2];
+	uint16_t	v1;
+	uint16_t	v2;
+	int16_t		flags;
+	uint8_t		special;
+	uint8_t		args[5];
+	uint16_t	sidenum[2];
 };
 
 struct IntLineDef
 {
-	DWORD v1;
-	DWORD v2;
+	uint32_t v1;
+	uint32_t v2;
 	int flags;
 	int special;
 	int args[5];
-	DWORD sidenum[2];
+	uint32_t sidenum[2];
 
 	TArray<UDMFKey> props;
 };
 
 struct MapSector
 {
-	short	floorheight;
-	short	ceilingheight;
+	int16_t	floorheight;
+	int16_t	ceilingheight;
 	char	floorpic[8];
 	char	ceilingpic[8];
-	short	lightlevel;
-	short	special;
-	short	tag;
+	int16_t	lightlevel;
+	int16_t	special;
+	int16_t	tag;
 };
 
 struct IntSector
@@ -109,52 +110,52 @@ struct IntSector
 
 struct MapSubsector
 {
-	WORD	numlines;
-	WORD	firstline;
+	uint16_t	numlines;
+	uint16_t	firstline;
 };
 
 struct MapSubsectorEx
 {
-	DWORD	numlines;
-	DWORD	firstline;
+	uint32_t	numlines;
+	uint32_t	firstline;
 };
 
 struct MapSeg
 {
-	WORD	v1;
-	WORD	v2;
-	WORD	angle;
-	WORD	linedef;
-	short	side;
-	short	offset;
+	uint16_t	v1;
+	uint16_t	v2;
+	uint16_t	angle;
+	uint16_t	linedef;
+	int16_t		side;
+	int16_t		offset;
 };
 
 struct MapSegEx
 {
-	DWORD	v1;
-	DWORD	v2;
-	WORD	angle;
-	WORD	linedef;
-	short	side;
-	short	offset;
+	uint32_t	v1;
+	uint32_t	v2;
+	uint16_t	angle;
+	uint16_t	linedef;
+	int16_t		side;
+	int16_t		offset;
 };
 
 struct MapSegGL
 {
-	WORD	v1;
-	WORD	v2;
-	WORD	linedef;
-	WORD	side;
-	WORD	partner;
+	uint16_t	v1;
+	uint16_t	v2;
+	uint16_t	linedef;
+	uint16_t	side;
+	uint16_t	partner;
 };
 
 struct MapSegGLEx
 {
-	DWORD	v1;
-	DWORD	v2;
-	DWORD	linedef;
-	WORD	side;
-	DWORD	partner;
+	uint32_t	v1;
+	uint32_t	v2;
+	uint32_t	linedef;
+	uint16_t	side;
+	uint32_t	partner;
 };
 
 #define NF_SUBSECTOR	0x8000
@@ -162,59 +163,59 @@ struct MapSegGLEx
 
 struct MapNode
 {
-	short 	x,y,dx,dy;
-	short 	bbox[2][4];
-	WORD	children[2];
+	int16_t		x,y,dx,dy;
+	int16_t		bbox[2][4];
+	uint16_t	children[2];
 };
 
 struct MapNodeExO
 {
-	short	x,y,dx,dy;
-	short	bbox[2][4];
-	DWORD	children[2];
+	int16_t		x,y,dx,dy;
+	int16_t		bbox[2][4];
+	uint32_t	children[2];
 };
 
 struct MapNodeEx
 {
-	int		x,y,dx,dy;
-	short	bbox[2][4];
-	DWORD	children[2];
+	int32_t		x,y,dx,dy;
+	int16_t		bbox[2][4];
+	uint32_t	children[2];
 };
 
 struct MapThing
 {
-	short		x;
-	short		y;
-	short		angle;
-	short		type;
-	short		flags;
+	int16_t		x;
+	int16_t		y;
+	int16_t		angle;
+	int16_t		type;
+	int16_t		flags;
 };
 
 struct MapThing2
 {
-	unsigned short thingid;
-	short		x;
-	short		y;
-	short		z;
-	short		angle;
-	short		type;
-	short		flags;
-	char		special;
-	char		args[5];
+	uint16_t	thingid;
+	int16_t		x;
+	int16_t		y;
+	int16_t		z;
+	int16_t		angle;
+	int16_t		type;
+	int16_t		flags;
+	uint8_t		special;
+	uint8_t		args[5];
 };
 
 struct IntThing
 {
-	unsigned short thingid;
+	uint16_t	thingid;
 	fixed_t		x;	// full precision coordinates for UDMF support
 	fixed_t		y;
 	// everything else is not needed or has no extended form in UDMF
-	short		z;
-	short		angle;
-	short		type;
-	short		flags;
-	char		special;
-	char		args[5];
+	int16_t		z;
+	int16_t		angle;
+	int16_t		type;
+	int16_t		flags;
+	uint8_t		special;
+	uint8_t		args[5];
 
 	TArray<UDMFKey> props;
 };
@@ -238,18 +239,18 @@ struct FLevel
 	MapSubsectorEx *Subsectors;	int NumSubsectors;
 	MapSegEx *Segs;				int NumSegs;
 	MapNodeEx *Nodes;			int NumNodes;
-	WORD *Blockmap;				int BlockmapSize;
-	BYTE *Reject;				int RejectSize;
+	uint16_t *Blockmap;			int BlockmapSize;
+	uint8_t *Reject;			int RejectSize;
 
 	MapSubsectorEx *GLSubsectors;	int NumGLSubsectors;
 	MapSegGLEx *GLSegs;				int NumGLSegs;
 	MapNodeEx *GLNodes;				int NumGLNodes;
 	WideVertex *GLVertices;			int NumGLVertices;
-	BYTE *GLPVS;					int GLPVSSize;
+	uint8_t *GLPVS;					int GLPVSSize;
 
 	int NumOrgVerts;
 
-	DWORD *OrgSectorMap;			int NumOrgSectors;
+	uint32_t *OrgSectorMap;			int NumOrgSectors;
 
 	fixed_t MinX, MinY, MaxX, MaxY;
 
