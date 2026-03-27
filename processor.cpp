@@ -37,11 +37,6 @@ enum
 	PO_SPAWNHURT_TYPE
 };
 
-FLevel::FLevel ()
-{
-	memset (this, 0, sizeof(*this));
-}
-
 FLevel::~FLevel ()
 {
 	if (Vertices)		delete[] Vertices;

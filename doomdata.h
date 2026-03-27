@@ -227,32 +227,31 @@ struct IntVertex
 
 struct FLevel
 {
-	FLevel ();
 	~FLevel ();
 
-	WideVertex *Vertices;		int NumVertices;
-	TArray<IntVertex>			VertexProps;
-	TArray<IntSideDef>			Sides;
-	TArray<IntLineDef>			Lines;
-	TArray<IntSector>			Sectors;
-	TArray<IntThing>			Things;
-	MapSubsectorEx *Subsectors;	int NumSubsectors;
-	MapSegEx *Segs;				int NumSegs;
-	MapNodeEx *Nodes;			int NumNodes;
-	uint16_t *Blockmap;			int BlockmapSize;
-	uint8_t *Reject;			int RejectSize;
+	WideVertex		  *Vertices = nullptr;		int NumVertices = 0;
+	TArray<IntVertex>  VertexProps;
+	TArray<IntSideDef> Sides;
+	TArray<IntLineDef> Lines;
+	TArray<IntSector>  Sectors;
+	TArray<IntThing>   Things;
+	MapSubsectorEx	  *Subsectors = nullptr;	int NumSubsectors = 0;
+	MapSegEx		  *Segs = nullptr;			int NumSegs = 0;
+	MapNodeEx		  *Nodes = nullptr;			int NumNodes = 0;
+	uint16_t		  *Blockmap = nullptr;		int BlockmapSize = 0;
+	uint8_t			  *Reject = nullptr;		int RejectSize = 0;
 
-	MapSubsectorEx *GLSubsectors;	int NumGLSubsectors;
-	MapSegGLEx *GLSegs;				int NumGLSegs;
-	MapNodeEx *GLNodes;				int NumGLNodes;
-	WideVertex *GLVertices;			int NumGLVertices;
-	uint8_t *GLPVS;					int GLPVSSize;
+	MapSubsectorEx	  *GLSubsectors = nullptr;	int NumGLSubsectors = 0;
+	MapSegGLEx		  *GLSegs = nullptr;		int NumGLSegs = 0;
+	MapNodeEx		  *GLNodes = nullptr;		int NumGLNodes = 0;
+	WideVertex		  *GLVertices = nullptr;	int NumGLVertices = 0;
+	uint8_t			  *GLPVS = nullptr;			int GLPVSSize = 0;
 
-	int NumOrgVerts;
+	int NumOrgVerts = 0;
 
-	uint32_t *OrgSectorMap;			int NumOrgSectors;
+	uint32_t		  *OrgSectorMap = nullptr;	int NumOrgSectors = 0;
 
-	fixed_t MinX, MinY, MaxX, MaxY;
+	fixed_t MinX = 0, MinY = 0, MaxX = 0, MaxY = 0;
 
 	TArray<UDMFKey> props;
 
