@@ -476,7 +476,7 @@ FNodeBuilder::FVertexMap::~FVertexMap ()
 int FNodeBuilder::FVertexMap::SelectVertexExact (FNodeBuilder::FPrivVert &vert)
 {
 	TArray<int> &block = VertexGrid[GetBlock (vert.x, vert.y)];
-	FPrivVert *vertices = &MyBuilder.Vertices[0];
+	TArray<FPrivVert> &vertices = MyBuilder.Vertices;
 	unsigned int i;
 
 	for (i = 0; i < block.Size(); ++i)

@@ -352,8 +352,8 @@ void FBlockmapBuilder::CreateUnpackedBlockmap (TArray<uint16_t> *blocks, int bma
 
 static unsigned int BlockHash (TArray<uint16_t> *block)
 {
-	int hash = 0;
-	uint16_t *ar = &(*block)[0];
+	unsigned int hash = 0;
+	TArray<uint16_t> &ar = *block;
 	for (size_t i = 0; i < block->Size(); ++i)
 	{
 		hash = hash * 12235 + ar[i];
@@ -392,7 +392,6 @@ void FBlockmapBuilder::CreatePackedBlockmap (TArray<uint16_t> *blocks, int bmapw
 	TArray<uint16_t> *block;
 	uint16_t zero = 0;
 	uint16_t terminator = 0xffff;
-	uint16_t *array;
 	int i, hash;
 	int hashed = 0, nothashed = 0;
 
@@ -425,7 +424,7 @@ void FBlockmapBuilder::CreatePackedBlockmap (TArray<uint16_t> *blocks, int bmapw
 			buckets[hash] = uint16_t(i);
 			BlockMap[4+i] = uint16_t(BlockMap.Size());
 			BlockMap.Push (zero);
-			array = &(*block)[0];
+			TArray<uint16_t> &array = *block;
 			for (size_t j = 0; j < block->Size(); ++j)
 			{
 				BlockMap.Push (array[j]);
