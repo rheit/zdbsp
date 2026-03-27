@@ -475,15 +475,16 @@ int FNodeBuilder::SelectSplitter (uint32_t set, node_t &node, uint32_t &splitseg
 		seg = pseg->next;
 	}
 
+	splitseg = bestseg;
+
 	if (bestseg == UINT32_MAX)
 	{ // No lines split any others into two sets, so this is a convex region.
-	D(Printf ("set %d, step %d, nosplit %d has no good splitter (%d)\n", set, step, nosplit, nosplitters));
+		D(Printf ("set %d, step %d, nosplit %d has no good splitter (%d)\n", set, step, nosplit, nosplitters));
 		return nosplitters ? -1 : 0;
 	}
 
 	D(Printf ("split seg %u in set %u, score %d, step %d, nosplit %d\n", bestseg, set, bestvalue, step, nosplit));
 
-	splitseg = bestseg;
 	SetNodeFromSeg (node, &Segs[bestseg]);
 	return 1;
 }
@@ -519,6 +520,7 @@ int FNodeBuilder::Heuristic (node_t &node, uint32_t set, bool honorNoSplit)
 		if (HackSeg == i)
 		{
 			side = 1;
+			sidev[0] = sidev[1] = 1;
 		}
 		else
 		{

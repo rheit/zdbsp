@@ -167,7 +167,8 @@ void FNodeBuilder::AddMinisegs (const node_t &node, uint32_t splitseg, uint32_t 
 	{
 		if (prev != NULL)
 		{
-			uint32_t fseg1, bseg1, fseg2, bseg2;
+			uint32_t fseg1, bseg1;
+			[[maybe_unused]] uint32_t fseg2, bseg2;
 			uint32_t fnseg, bnseg;
 
 			// Minisegs should only be added when they can create valid loops on both the front and

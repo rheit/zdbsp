@@ -381,7 +381,10 @@ void FProcessor::ParseTextMap(int lump)
 	}
 	Level.Vertices = new WideVertex[Vertices.Size()];
 	Level.NumVertices = Vertices.Size();
-	memcpy(Level.Vertices, &Vertices[0], Vertices.Size() * sizeof(WideVertex));
+	if (Level.NumVertices != 0)
+	{
+		memcpy(Level.Vertices, &Vertices[0], Vertices.Size() * sizeof(WideVertex));
+	}
 	SC_Close();
 	delete[] buffer;
 }

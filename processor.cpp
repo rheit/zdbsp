@@ -674,7 +674,7 @@ void FProcessor::Write (FWadWriter &out)
 				if (lump >= 0)
 				{
 					ReadLump<uint8_t> (Wad, lump, Level.Reject, Level.RejectSize);
-					if (Level.RejectSize != (Level.NumOrgSectors*Level.NumOrgSectors + 7) / 8)
+					if (Level.RejectSize != (Level.NumOrgSectors*Level.NumOrgSectors + 7) / 8 || Level.Reject == nullptr)
 					{
 						// If the reject is the wrong size, don't use it.
 						delete[] Level.Reject;
@@ -725,7 +725,6 @@ void FProcessor::Write (FWadWriter &out)
 	
 	if (!isUDMF)
 	{
-
 		if (Level.GLNodes != NULL )
 		{
 			gl5 = V5GLNodes ||

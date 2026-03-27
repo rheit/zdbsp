@@ -98,7 +98,6 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 
 	first = Subsectors[subsector].firstline;
 	max = first + Subsectors[subsector].numlines;
-	count = 0;
 
 	accumx = accumy = 0.0;
 	diffplanes = false;
@@ -156,7 +155,7 @@ int FNodeBuilder::CloseSubsector (TArray<MapSegGLEx> &segs, int subsector)
 		{
 			angle_t bestdiff = ANGLE_MAX;
 			FPrivSeg *bestseg = NULL;
-			int bestj = -1;
+			[[maybe_unused]] int bestj = -1;
 			for (j = first; j < max; ++j)
 			{
 				seg = &Segs[SegList[j].SegNum];

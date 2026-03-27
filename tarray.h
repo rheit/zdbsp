@@ -117,6 +117,7 @@ public:
 	// Return a reference to an element
 	T &operator[] (unsigned int index) const
 	{
+		assert(index <= Count);
 		return Array[index];
 	}
 	// Returns the value of an element
@@ -215,13 +216,14 @@ public:
 	// further growing.
 	void Grow (unsigned int amount)
 	{
-		if (Count + amount > Most)
+		const unsigned int choicea = Count + amount;
+		if (choicea > Most)
 		{
-			const unsigned int choicea = Count + amount;
 			const unsigned int choiceb = Most = (Most >= 16) ? Most + Most / 2 : 16;
 			Most = (choicea > choiceb ? choicea : choiceb);
 			DoResize ();
 		}
+		assert(Count < Most);
 	}
 	// Resize Array so that it has exactly amount entries in use.
 	void Resize (unsigned int amount)
