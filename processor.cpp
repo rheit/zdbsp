@@ -48,6 +48,7 @@ FLevel::~FLevel ()
 	if (GLSubsectors)	delete[] GLSubsectors;
 	if (GLSegs)			delete[] GLSegs;
 	if (GLNodes)		delete[] GLNodes;
+	if (GLVertices)		delete[] GLVertices;
 	if (GLPVS)			delete[] GLPVS;
 	if (OrgSectorMap)	delete[] OrgSectorMap;
 }
@@ -218,6 +219,7 @@ void FProcessor::LoadVertices ()
 		Level.Vertices[i].y = LittleShort(verts[i].y) << FRACBITS;
 		Level.Vertices[i].index = 0; // we don't need this value for non-UDMF maps
 	}
+	delete[] verts;
 }
 
 void FProcessor::LoadSides ()
@@ -253,6 +255,7 @@ void FProcessor::LoadSectors ()
 	{
 		Level.Sectors[i].data = Sectors[i];
 	}
+	delete[] Sectors;
 }
 
 void FLevel::FindMapBounds ()
@@ -1022,6 +1025,7 @@ void FProcessor::WriteSectors (FWadWriter &out)
 	}
 
 	out.WriteLump ("SECTORS", Sectors, Level.NumSectors()*sizeof(*Sectors));
+	delete[] Sectors;
 }
 
 void FProcessor::WriteSegs (FWadWriter &out)
@@ -1043,6 +1047,7 @@ void FProcessor::WriteSegs (FWadWriter &out)
 		segdata[i].offset = LittleShort(Level.Segs[i].offset);
 	}
 	out.WriteLump ("SEGS", segdata, sizeof(*segdata)*Level.NumSegs);
+	delete[] segdata;
 
 	if (Level.NumSegs >= 65536)
 	{
