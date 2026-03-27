@@ -132,30 +132,31 @@ int FWadReader::FindLump (const char *name, int index) const
 
 int FWadReader::FindMapLump (const char *name, int map) const
 {
-	int i, j, k;
-	++map;
+	int findNameNum;
 
-	for (i = 0; i < 12; ++i)
+	// Figure out where this map lump should be
+	for (findNameNum = 0; findNameNum < 12; ++findNameNum)
 	{
-		if (strnicmp (MapLumpNames[i], name, 8) == 0)
+		if (strnicmp (MapLumpNames[findNameNum], name, 8) == 0)
 		{
 			break;
 		}
 	}
-	if (i == 12)
+	if (findNameNum == 12)
 	{
 		return -1;
 	}
 
-	for (j = k = 0; j < 12; ++j)
+	// Find it, if it's here
+	for (int lumpNum = map + 1, nameNum = 0; nameNum < 12; ++nameNum)
 	{
-		if (strnicmp (Lumps[map+k].Name, MapLumpNames[j], 8) == 0)
+		if (lumpNum < NumLumps() && strnicmp (Lumps[lumpNum].Name, MapLumpNames[nameNum], 8) == 0)
 		{
-			if (i == j)
+			if (nameNum == findNameNum)
 			{
-				return map+k;
+				return lumpNum;
 			}
-			k++;
+			lumpNum++;
 		}
 	}
 	return -1;
@@ -163,37 +164,28 @@ int FWadReader::FindMapLump (const char *name, int map) const
 
 bool FWadReader::isUDMF (int index) const
 {
-	index++;
+	if (++index >= NumLumps()) { return false; }
 
-	if (strnicmp(Lumps[index].Name, "TEXTMAP", 8) == 0)
-	{
-		// UDMF map
-		return true;
-	}
-	return false;
+	return strnicmp(Lumps[index].Name, "TEXTMAP", 8) == 0;
 }
 
 
 bool FWadReader::IsMap (int index) const
 {
-	int i, j;
-
 	if (isUDMF(index)) return true;
 
-	index++;
-
-	for (i = j = 0; i < 12; ++i)
+	for (int lumpNum = index + 1, nameNum = 0; nameNum < 12; ++nameNum)
 	{
-		if (strnicmp (Lumps[index+j].Name, MapLumpNames[i], 8) != 0)
+		if (lumpNum >= NumLumps() || strnicmp(Lumps[lumpNum].Name, MapLumpNames[nameNum], 8) != 0)
 		{
-			if (MapLumpRequired[i])
+			if (MapLumpRequired[nameNum])
 			{
 				return false;
 			}
 		}
 		else
 		{
-			j++;
+			lumpNum++;
 		}
 	}
 	return true;
@@ -362,6 +354,8 @@ FWadWriter::FWadWriter (const char *filename, bool iwad)
 	head.Magic[1] = 'W';
 	head.Magic[2] = 'A';
 	head.Magic[3] = 'D';
+	head.NumLumps = 0;
+	head.Directory = 0;
 
 	SafeWrite (&head, sizeof(head));
 }
