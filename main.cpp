@@ -95,7 +95,6 @@ const char		*OutName = "tmp.wad";
 bool			 BuildNodes = true;
 bool			 BuildGLNodes = false;
 bool			 ConformNodes = false;
-bool			 NoPrune = false;
 EBlockmapMode	 BlockmapMode = EBM_Rebuild;
 ERejectMode		 RejectMode = ERM_DontTouch;
 bool			 WriteComments = false;
@@ -138,7 +137,6 @@ static option long_opts[] =
 	{"split-cost",		required_argument,	0,	's'},
 	{"diagonal-cost",	required_argument,	0,	'd'},
 	{"no-polyobjs",		no_argument,		0,	'P'},
-	{"no-prune",		no_argument,		0,	'q'},
 	{"no-timing",		no_argument,		0,	't'},
 	{"compress",		no_argument,		0,	'z'},
 	{"compress-normal",	no_argument,		0,	'Z'},
@@ -447,7 +445,6 @@ static void ShowUsage ()
 "Usage: zdbsp [options] sourcefile.wad\n"
 "  -m, --map=MAP            Only affect the specified map\n"
 "  -o, --output=FILE        Write output to FILE instead of tmp.wad\n"
-"  -q, --no-prune           Keep unused sidedefs and sectors\n"
 "  -N, --no-nodes           Do not rebuild nodes\n"
 "  -g, --gl                 Build GL-friendly nodes\n"
 "  -G, --gl-matching        Build GL-friendly nodes that match normal nodes\n"

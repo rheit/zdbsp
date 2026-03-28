@@ -257,8 +257,6 @@ struct FLevel
 
 	void FindMapBounds ();
 	void RemoveExtraLines ();
-	void RemoveExtraSides ();
-	void RemoveExtraSectors ();
 
 	int NumSides() const { return Sides.Size(); }
 	int NumLines() const { return Lines.Size(); }
