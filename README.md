@@ -111,13 +111,6 @@ the short form depending on your preference.
   make it write to a different file instead. In the case of WadAuthor, this is 
   used to make ZDBSP overwrite the original file with the new one, because
   that's what WadAuthor expects the node builder to do.
-* **--no-prune** or **-q**  
-  Normally, ZDBSP removes unused sidedefs and sectors from a map as a cleanup
-  step. With this option, ZDBSP leaves them intact instead. However, with or
-  without this option, ZDBSP always removes 0-length linedefs from a map
-  because it's possible for them to make the game crash under certain
-  circumstances. Moreover, ZDoom will itself remove 0-length linedefs and
-  rebuild the nodes if it finds any.
 * **--comments** or **-c**  
   Write thing, linedef, sidedef, sector, and vertex indices as comments in
   UDMF maps.

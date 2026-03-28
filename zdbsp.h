@@ -36,7 +36,6 @@ extern const char		*Map;
 extern const char		*InName;
 extern const char		*OutName;
 extern bool				 BuildNodes, BuildGLNodes, ConformNodes, GLOnly, WriteComments;
-extern bool				 NoPrune;
 extern EBlockmapMode	 BlockmapMode;
 extern ERejectMode		 RejectMode;
 extern int				 MaxSegs;
