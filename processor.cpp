@@ -1170,7 +1170,7 @@ void FProcessor::WriteNodes5 (FWadWriter &out, const char *name, const MapNodeEx
 			nodes[i].children[j] = LittleLong(zaNodes[i].children[j]);
 		}
 	}
-	out.WriteLump (name, nodes, count * sizeof(MapNodeEx));
+	out.WriteLump (name, nodes, count * sizeof(*nodes));
 	delete[] nodes;
 }
 
@@ -1308,13 +1308,10 @@ void FProcessor::WriteGLSegs (FWadWriter &out, bool v5)
 
 void FProcessor::WriteGLSegs5 (FWadWriter &out)
 {
-	int i, count;
-	MapSegGLEx *segdata;
+	int count = Level.NumGLSegs;
+	MapSegGL5 *segdata = new MapSegGL5[count];
 
-	count = Level.NumGLSegs;
-	segdata = new MapSegGLEx[count];
-
-	for (i = 0; i < count; ++i)
+	for (int i = 0; i < count; ++i)
 	{
 		if (Level.GLSegs[i].v1 < (uint32_t)Level.NumOrgVerts)
 		{
@@ -1336,7 +1333,7 @@ void FProcessor::WriteGLSegs5 (FWadWriter &out)
 		segdata[i].side = LittleShort(Level.GLSegs[i].side);
 		segdata[i].partner = LittleLong(Level.GLSegs[i].partner);
 	}
-	out.WriteLump ("GL_SEGS", segdata, sizeof(MapSegGLEx)*count);
+	out.WriteLump ("GL_SEGS", segdata, sizeof(*segdata)*count);
 	delete[] segdata;
 }
 

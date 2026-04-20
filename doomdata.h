@@ -149,6 +149,15 @@ struct MapSegGL
 	uint16_t	partner;
 };
 
+struct MapSegGL5
+{
+	uint32_t	v1;
+	uint32_t	v2;
+	uint16_t	linedef;
+	uint16_t	side;
+	uint32_t	partner;
+};
+
 struct MapSegGLEx
 {
 	uint32_t	v1;
