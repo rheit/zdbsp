@@ -5,14 +5,14 @@
 class FBlockmapBuilder
 {
 public:
-	FBlockmapBuilder (FLevel &level);
-	uint16_t *GetBlockmap (int &size);
+	FBlockmapBuilder(FLevel &level);
+	uint32_t *GetBlockmap(int &size) const;
 
 private:
 	FLevel &Level;
-	TArray<uint16_t> BlockMap;
+	TArray<uint32_t> BlockMap;
 
-	void BuildBlockmap ();
-	void CreateUnpackedBlockmap (TArray<uint16_t> *blocks, int bmapwidth, int bmapheight);
-	void CreatePackedBlockmap (TArray<uint16_t> *blocks, int bmapwidth, int bmapheight);
+	void BuildBlockmap();
+	void CreateUnpackedBlockmap(TArray<uint32_t> *blocks, int bmapwidth, int bmapheight);
+	void CreatePackedBlockmap(TArray<uint32_t> *blocks, int bmapwidth, int bmapheight);
 };

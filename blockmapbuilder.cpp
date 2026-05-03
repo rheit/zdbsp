@@ -1,6 +1,6 @@
 /*
     Routines for building a Doom map's BLOCKMAP lump.
-    Copyright (C) 2002 Marisa Heit
+    Copyright (C) 2002,2026 Marisa Heit
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 */
+#include <array>
 #include <stdio.h>
 #include <string.h>
 
@@ -72,9 +73,11 @@ int BoxOnSide (int bx1, int by1, int bx2, int by2,
 }
 #endif
 
-uint16_t *FBlockmapBuilder::GetBlockmap (int &size)
+uint32_t *FBlockmapBuilder::GetBlockmap (int &size) const
 {
 #ifdef BLOCK_TEST
+	/* This is no doubt broken at the moment due to the jump to building uint32_t blocks */
+
 	FILE *f = fopen ("blockmap.lmp", "rb");
 	if (f)
 	{
@@ -172,11 +175,10 @@ notest:
 
 void FBlockmapBuilder::BuildBlockmap ()
 {
-	TArray<uint16_t> *BlockLists, *block, *endblock;
-	uint16_t adder;
-	int bmapwidth, bmapheight;
-	int minx, maxx, miny, maxy;
-	uint16_t line;
+	TArray<uint32_t> *BlockLists, *block, *endblock;
+	uint32_t bmapwidth, bmapheight;
+	int32_t minx, maxx, miny, maxy;
+	uint32_t line;
 
 	if (Level.NumVertices <= 0)
 		return;
@@ -203,12 +205,12 @@ void FBlockmapBuilder::BuildBlockmap ()
 	bmapwidth =	 ((maxx - minx) >> BLOCKBITS) + 1;
 	bmapheight = ((maxy - miny) >> BLOCKBITS) + 1;
 
-	adder = uint16_t(minx);			BlockMap.Push (adder);
-	adder = uint16_t(miny);			BlockMap.Push (adder);
-	adder = uint16_t(bmapwidth);	BlockMap.Push (adder);
-	adder = uint16_t(bmapheight);	BlockMap.Push (adder);
+	BlockMap.Push(minx << FRACBITS);
+	BlockMap.Push(miny << FRACBITS);
+	BlockMap.Push(bmapwidth);
+	BlockMap.Push(bmapheight);
 
-	BlockLists = new TArray<uint16_t>[bmapwidth * bmapheight];
+	BlockLists = new TArray<uint32_t>[bmapwidth * bmapheight];
 
 	for (line = 0; line < Level.NumLines(); ++line)
 	{
@@ -331,15 +333,15 @@ void FBlockmapBuilder::BuildBlockmap ()
 	delete[] BlockLists;
 }
 
-void FBlockmapBuilder::CreateUnpackedBlockmap (TArray<uint16_t> *blocks, int bmapwidth, int bmapheight)
+void FBlockmapBuilder::CreateUnpackedBlockmap (TArray<uint32_t> *blocks, int bmapwidth, int bmapheight)
 {
-	TArray<uint16_t> *block;
-	uint16_t zero = 0;
-	uint16_t terminator = 0xffff;
+	TArray<uint32_t> *block;
+	const uint32_t zero = 0;
+	const uint32_t terminator = UINT32_MAX;
 
 	for (int i = 0; i < bmapwidth * bmapheight; ++i)
 	{
-		BlockMap[4+i] = uint16_t(BlockMap.Size());
+		BlockMap[4+i] = uint32_t(BlockMap.Size());
 		BlockMap.Push (zero);
 		block = &blocks[i];
 		for (unsigned int j = 0; j < block->Size(); ++j)
@@ -350,10 +352,10 @@ void FBlockmapBuilder::CreateUnpackedBlockmap (TArray<uint16_t> *blocks, int bma
 	}
 }
 
-static unsigned int BlockHash (TArray<uint16_t> *block)
+static unsigned int BlockHash (TArray<uint32_t> *block)
 {
 	unsigned int hash = 0;
-	TArray<uint16_t> &ar = *block;
+	TArray<uint32_t> &ar = *block;
 	for (size_t i = 0; i < block->Size(); ++i)
 	{
 		hash = hash * 12235 + ar[i];
@@ -361,7 +363,7 @@ static unsigned int BlockHash (TArray<uint16_t> *block)
 	return hash & 0x7fffffff;
 }
 
-static bool BlockCompare (TArray<uint16_t> *block1, TArray<uint16_t> *block2)
+static bool BlockCompare (TArray<uint32_t> *block1, TArray<uint32_t> *block2)
 {
 	size_t size = block1->Size();
 
@@ -373,8 +375,8 @@ static bool BlockCompare (TArray<uint16_t> *block1, TArray<uint16_t> *block2)
 	{
 		return true;
 	}
-	uint16_t *ar1 = &(*block1)[0];
-	uint16_t *ar2 = &(*block2)[0];
+	uint32_t *ar1 = &(*block1)[0];
+	uint32_t *ar2 = &(*block2)[0];
 	for (size_t i = 0; i < size; ++i)
 	{
 		if (ar1[i] != ar2[i])
@@ -385,27 +387,29 @@ static bool BlockCompare (TArray<uint16_t> *block1, TArray<uint16_t> *block2)
 	return true;
 }
 
-void FBlockmapBuilder::CreatePackedBlockmap (TArray<uint16_t> *blocks, int bmapwidth, int bmapheight)
+void FBlockmapBuilder::CreatePackedBlockmap (TArray<uint32_t> *blocks, int bmapwidth, int bmapheight)
 {
-	uint16_t buckets[4096];
-	uint16_t *hashes, hashblock;
-	TArray<uint16_t> *block;
-	uint16_t zero = 0;
-	uint16_t terminator = 0xffff;
+	std::array<uint32_t, 4096> buckets;
+	uint32_t hashblock;
+	TArray<uint32_t> *block;
+	const uint32_t zero = 0;
+	const uint32_t terminator = UINT32_MAX;
 	int i, hash;
 	int hashed = 0, nothashed = 0;
 
-	hashes = new uint16_t[bmapwidth * bmapheight];
+	TArray<uint32_t> hashes;
 
-	memset (hashes, 0xff, sizeof(uint16_t)*bmapwidth*bmapheight);
-	memset (buckets, 0xff, sizeof(buckets));
+	hashes.Reserve(bmapwidth * bmapheight);
+	std::fill(&hashes[0], &hashes[bmapwidth * bmapheight], UINT32_MAX);
+	std::fill(buckets.begin(), buckets.end(), UINT32_MAX); 
 
 	for (i = 0; i < bmapwidth * bmapheight; ++i)
 	{
+		// Look for an already-written block with the same contents as this one
 		block = &blocks[i];
-		hash = BlockHash (block) % 4096;
+		hash = BlockHash (block) % buckets.size();
 		hashblock = buckets[hash];
-		while (hashblock != 0xffff)
+		while (hashblock != UINT32_MAX)
 		{
 			if (BlockCompare (block, &blocks[hashblock]))
 			{
@@ -413,18 +417,20 @@ void FBlockmapBuilder::CreatePackedBlockmap (TArray<uint16_t> *blocks, int bmapw
 			}
 			hashblock = hashes[hashblock];
 		}
-		if (hashblock != 0xffff)
+		if (hashblock != UINT32_MAX)
 		{
+			// Found a duplicate, so use it
 			BlockMap[4+i] = BlockMap[4+hashblock];
 			hashed++;
 		}
 		else
 		{
+			// This is unique so far, so write a new block
 			hashes[i] = buckets[hash];
-			buckets[hash] = uint16_t(i);
-			BlockMap[4+i] = uint16_t(BlockMap.Size());
+			buckets[hash] = uint32_t(i);
+			BlockMap[4+i] = uint32_t(BlockMap.Size());
 			BlockMap.Push (zero);
-			TArray<uint16_t> &array = *block;
+			TArray<uint32_t> &array = *block;
 			for (size_t j = 0; j < block->Size(); ++j)
 			{
 				BlockMap.Push (array[j]);
@@ -433,8 +439,6 @@ void FBlockmapBuilder::CreatePackedBlockmap (TArray<uint16_t> *blocks, int bmapw
 			nothashed++;
 		}
 	}
-
-	delete[] hashes;
 
 //	printf ("%d blocks written, %d blocks saved\n", nothashed, hashed);
 }

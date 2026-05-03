@@ -1,6 +1,6 @@
 /*
     Reads wad files, builds nodes, and saves new wad files.
-    Copyright (C) 2002-2006 Marisa Heit
+    Copyright (C) 2002-2006,2026 Marisa Heit
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -655,9 +655,9 @@ void FProcessor::Write (FWadWriter &out)
 	if (!isUDMF)
 	{
 		FBlockmapBuilder bbuilder (Level);
-		uint16_t *blocks = bbuilder.GetBlockmap (Level.BlockmapSize);
-		Level.Blockmap = new uint16_t[Level.BlockmapSize];
-		memcpy (Level.Blockmap, blocks, Level.BlockmapSize*sizeof(uint16_t));
+		uint32_t *blocks = bbuilder.GetBlockmap (Level.BlockmapSize);
+		Level.Blockmap = new uint32_t[Level.BlockmapSize];
+		memcpy (Level.Blockmap, blocks, Level.BlockmapSize*sizeof(*blocks));
 
 		Level.RejectSize = (Level.NumSectors()*Level.NumSectors() + 7) / 8;
 		Level.Reject = NULL;
@@ -1176,47 +1176,65 @@ void FProcessor::WriteNodes5 (FWadWriter &out, const char *name, const MapNodeEx
 
 void FProcessor::WriteBlockmap (FWadWriter &out)
 {
-	if (BlockmapMode == EBM_Create0)
+	if (BlockmapMode == EBM_Create0 || Level.Blockmap == nullptr)
 	{
 		out.CreateLabel ("BLOCKMAP");
 		return;
 	}
-
-	size_t i, count;
-	uint16_t *blocks;
-
-	count = Level.BlockmapSize;
-	blocks = Level.Blockmap;
-
-	for (i = 0; i < count; ++i)
+	if (Level.BlockmapSize >= 65536)
 	{
-		blocks[i] = LittleShort(blocks[i]);
+		printf("   Using extended format for large BLOCKMAP.\n");
+		WriteBlockmap32(out);
 	}
-	out.WriteLump ("BLOCKMAP", blocks, int(sizeof(*blocks)*count));
+	else
+	{
+		if (Level.BlockmapSize >= 32768)
+		{
+			printf("   BLOCKMAP is too big for vanilla Doom.\n");
+		}
+		WriteBlockmap16(out);
+	}
+}
+
+void FProcessor::WriteBlockmap16(FWadWriter &out)
+{
+	int count = Level.BlockmapSize;
+	TArray<uint16_t> blocks;
+
+	blocks.Resize(count);
+	blocks[0] = LittleShort(Level.Blockmap[0] >> FRACBITS);
+	blocks[1] = LittleShort(Level.Blockmap[1] >> FRACBITS);
+	for (int i = 2; i < count; ++i)
+	{
+		blocks[i] = LittleShort(uint16_t(Level.Blockmap[i]));
+	}
+	out.WriteLump ("BLOCKMAP", &blocks[0], int(sizeof(blocks[0]) * count));
 
 #ifdef BLOCK_TEST
 	FILE *f = fopen ("blockmap.lm2", "wb");
 	if (f)
 	{
-		fwrite (blocks, count, sizeof(*blocks), f);
+		fwrite (&blocks[0], count, sizeof(blocks[0]), f);
 		fclose (f);
 	}
 #endif
+}
 
-	for (i = 0; i < count; ++i)
-	{
-		blocks[i] = LittleShort(blocks[i]);
-	}
+void FProcessor::WriteBlockmap32(FWadWriter &out)
+{
+	int count = Level.BlockmapSize;
+	uint32_t *blocks = Level.Blockmap;
 
-	if (count >= 65536)
+	for (int i = 0; i < count; ++i)
 	{
-		printf ("   BLOCKMAP is so big that ports will have to recreate it.\n"
-				"   Vanilla Doom cannot handle it at all. If this map is for ZDoom 2+,\n"
-				"   you should use the -b switch to save space in the wad.\n");
+		blocks[i] = LittleLong(blocks[i]);
 	}
-	else if (count >= 32768)
+	out.StartWritingLump("BLOCKMAP");
+	out.AddToLump("XBM1\0\0\0", 8);
+	out.AddToLump(blocks, int(sizeof(blocks[0]) * count));
+	for (int i = 0; i < count; ++i)
 	{
-		printf ("   BLOCKMAP is too big for vanilla Doom.\n");
+		blocks[i] = LittleLong(blocks[i]);
 	}
 }
 

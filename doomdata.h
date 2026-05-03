@@ -247,7 +247,7 @@ struct FLevel
 	MapSubsectorEx	  *Subsectors = nullptr;	int NumSubsectors = 0;
 	MapSegEx		  *Segs = nullptr;			int NumSegs = 0;
 	MapNodeEx		  *Nodes = nullptr;			int NumNodes = 0;
-	uint16_t		  *Blockmap = nullptr;		int BlockmapSize = 0;
+	uint32_t		  *Blockmap = nullptr;		int BlockmapSize = 0;
 	uint8_t			  *Reject = nullptr;		int RejectSize = 0;
 
 	MapSubsectorEx	  *GLSubsectors = nullptr;	int NumGLSubsectors = 0;

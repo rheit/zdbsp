@@ -66,6 +66,8 @@ private:
 	void WriteSSectors (FWadWriter &out) const;
 	void WriteNodes (FWadWriter &out) const;
 	void WriteBlockmap (FWadWriter &out);
+	void WriteBlockmap16 (FWadWriter &out);
+	void WriteBlockmap32 (FWadWriter &out);
 	void WriteReject (FWadWriter &out);
 
 	void WriteGLVertices (FWadWriter &out, bool v5);
